@@ -2,7 +2,7 @@
 
 Postgrade Portal is a React-based web application that streamlines academic activities, including course management, assignments, research, and communication. Featuring dynamic sidebars, real-time progress tracking, and a modular architecture, it enhances the user experience for students and lecturers.
 
-## Vite React Project
+## Vite Tailwind CSS React Project
 
 This project was bootstrapped with [Vite](https://vitejs.dev/).
 
