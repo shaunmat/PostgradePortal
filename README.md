@@ -6,8 +6,6 @@ Postgrade Portal is a React-based web application that streamlines academic acti
 
 This project was bootstrapped with [Vite](https://vitejs.dev/).
 
-This project is licensed under the MIT License. See the [LICENSE](./LICENSE) file for details.
-
 ## Cloning the Project
 
 To clone this project, run the following command:
