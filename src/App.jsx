@@ -21,13 +21,12 @@ function App() {
     return () => clearTimeout(timer);
   }, [location]);
 
-  if (loading) {
-    return <LogoLoader />;
-  }
+  // if (loading) {
+  //   return <LogoLoader />;
+  // }
 
   return (
     <Routes>
-      {/* Redirect from the root path to /login */}
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/*" element={<PageRoutes />} />
