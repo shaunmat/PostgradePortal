@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
-import { Login } from './components/Shared/Login';
+import { Login } from '../src/components/Shared/Login';
 import { PageRoutes } from './pages/PageRoutes';
 import { LogoLoader } from './components/LogoLoader';
+import { useAuth } from './backend/authcontext';
 
 function App() {
+  const {CurrentUser,LoggedInUser,Loading}=useAuth()||{};
+
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
@@ -24,13 +27,19 @@ function App() {
   // if (loading) {
   //   return <LogoLoader />;
   // }
-
+  const email = CurrentUser?.email || '' ;
+  const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student':'';
+  console.log(CurrentUser +"Is the current user from the the database")
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
       <Route path="/*" element={<PageRoutes />} />
-    </Routes>
+      {/* Redirect based on userType */}
+      {userType === '' && <Route path="*" element={<Navigate to="/login" />} />}
+      </Routes>
+    </> 
   );
 }
 
