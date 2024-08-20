@@ -5,14 +5,14 @@ import interactionPlugin from "@fullcalendar/interaction" // needed for dayClick
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import Swal from 'sweetalert2';
-import { useAuth } from "../backend/authcontext"
+import {useAuth} from '../backend/AuthContext'
 import { getDocs, query, collection, where } from 'firebase/firestore'; // Import Firestore functions
 import { db, auth } from '../backend/config';
 import { onAuthStateChanged } from 'firebase/auth';
 
 export const Calendar = () => {
-    //const { CurrentUser } = useAuth();
-    const {CurrentUser}="Supervisor"
+    const { CurrentUser } = useAuth();
+    //const {CurrentUser}="Supervisor"
     const [SupervisorID, setSupervisorID] = useState(null);
     const [events, setEvents] = useState([
         { title: 'Software Testing', start: '2024-07-01', end: '2024-07-15', backgroundColor: '#378006', borderColor: '#378006' },

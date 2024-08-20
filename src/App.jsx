@@ -1,10 +1,10 @@
+import { useAuth } from './backend/AuthContext';
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Login } from '../src/components/Shared/Login';
 import { PageRoutes } from './pages/PageRoutes';
 import { LogoLoader } from './components/LogoLoader';
-import { useAuth } from './backend/authcontext';
-
+import { AuthProvider } from './backend/AuthContext';
 function App() {
   const {CurrentUser,LoggedInUser,Loading}=useAuth()||{};
 
@@ -31,7 +31,7 @@ function App() {
   const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student':'';
   console.log(CurrentUser +"Is the current user from the the database")
   return (
-    <>
+    <AuthProvider>
       <Routes>
       <Route path="/" element={<Navigate to="/login" />} />
       <Route path="/login" element={<Login />} />
@@ -39,7 +39,7 @@ function App() {
       {/* Redirect based on userType */}
       {userType === '' && <Route path="*" element={<Navigate to="/login" />} />}
       </Routes>
-    </> 
+    </AuthProvider> 
   );
 }
 

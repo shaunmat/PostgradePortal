@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../backend/config';
-import { useAuth } from '../../backend/authcontext'; // Import useAuth to get CurrentUser
 
 import Logo from '../../assets/images/University_of_Johannesburg_Logo.png';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
