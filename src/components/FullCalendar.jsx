@@ -1,12 +1,13 @@
 import { useState,useEffect,useContext,createContext } from 'react';
-import FullCalendar from '@fullcalendar/react'
-import dayGridPlugin from '@fullcalendar/daygrid' // a plugin!
-import interactionPlugin from "@fullcalendar/interaction" // needed for dayClick
+import FullCalendar from '@fullcalendar/react';
+import dayGridPlugin from '@fullcalendar/daygrid' ;// a plugin!
+import timeGridPlugin from '@fullcalendar/timegrid';
+import interactionPlugin from "@fullcalendar/interaction" ;// needed for dayClick
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import Swal from 'sweetalert2';
 import {useAuth} from '../backend/AuthContext'
-import { getDocs, query, collection, where } from 'firebase/firestore'; // Import Firestore functions
+import { getDocs, query, collection, where, addDoc,setDoc,doc } from 'firebase/firestore'; // Import Firestore functions
 import { db, auth } from '../backend/config';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -14,31 +15,38 @@ export const Calendar = () => {
     const { CurrentUser } = useAuth();
     //const {CurrentUser}="Supervisor"
     const [SupervisorID, setSupervisorID] = useState(null);
-    const [events, setEvents] = useState([
-        { title: 'Software Testing', start: '2024-07-01', end: '2024-07-15', backgroundColor: '#378006', borderColor: '#378006' },
-        { title: 'Research Paper Calendar', start: '2024-07-02', end: '2024-07-05', backgroundColor: '#ff9f89', borderColor: '#ff9f89' }
-      ]);
-      const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', color: '' });
-      const [moduleTitles, setModuleTitles] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', color: '' });
+    const [moduleTitles, setModuleTitles] = useState([]);
+    const [role,setRole]=useState(null);
       useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async(user) => {
           if (user) {
-            setSupervisorID(user.email.substring(0, 9));
-            console.log(user.email.substring(0,9));
+        const userId=user.email.substring(0,9);
+            setSupervisorID(userId);
+            const userDoc=await getDocs(query(collection(db,'Supervisor'),where('SupervisorID','==',Math.floor(userId))));
+            if(!userDoc.empty){
+              setRole('Supervisor');
+            }else{
+              const studentDc=await getDocs(query(collection(db,'Student'),where('StudentID','==',userId)));
+              if(!studentDc.empty){
+                setRole('Student');
+              }
+            }
+            console.log(user.email.substring(0,9),"This the id at this present momment");
           } else {
             setSupervisorID(null);
+            setRole(null);
           }
         });
-    
         return () => unsubscribe();
       }, []);
       useEffect(() => {
         const fetchModules = async () => {
-          if (!SupervisorID) return;
-    
           try {
-    
-            const q = query(collection(db, 'Module'), where('SupervisorID', '==', Math.floor(SupervisorID)));
+            let q;
+            q=collection(db, 'Module');
+            q = query(q, where('SupervisorID', '==', Math.floor(SupervisorID)));
             const querySnapshot = await getDocs(q);
             const modulesArray = [];
             querySnapshot.forEach((doc) => {
@@ -49,13 +57,29 @@ export const Calendar = () => {
             console.error("Error fetching modules:", error);
           }
         };
-    
         fetchModules();
         // console.log(SupervisorID+"this is the id afterr");
       }, [SupervisorID]);
       const handleDateClick = (arg) => {
         setNewEvent({ ...newEvent, start: arg.dateStr, end: arg.dateStr });
       };
+      const fetcheventsArray=[];
+      useEffect(()=>{
+        const fetchEvents=async()=>{
+          if(!SupervisorID || !role)return;
+          try{
+            let q;
+            if(role=='Supervisor'){
+              q=collection(db,'Events');
+              q=query(q,where)
+            }
+          }
+          catch(error){
+            console.error("Error fetching details",error)
+          }
+        }
+      })
+
       const showEventPopup = async () => {
         const moduleOptions = moduleTitles.map((title) => `<option value="${title}">${title}</option>`).join('');
         const { value: formValues } = await Swal.fire({
@@ -78,51 +102,63 @@ export const Calendar = () => {
             </select>
           `,
           focusConfirm: false,
+          confirmButtonColor: '#343a40',
           preConfirm: () => {
+
+              // const title=document.getElementById('swak-input').value
+              // const start = document.getElementById('swal-input2').value;
+              // const end = document.getElementById('swal-input3').value;
+              // const color = document.getElementById('swal-input4').value;
+              // const module = document.getElementById('swal-input5').value;
+      
             return [
               document.getElementById('swal-input1').value,
               document.getElementById('swal-input2').value,
               document.getElementById('swal-input3').value,
               document.getElementById('swal-input4').value,
-              document.getElementById('swal-input5').value
+              document.getElementById('swal-input5').value,
             ];
           }
         });
     
         if (formValues) {
           const [title, start, end, color, module] = formValues;
-          setEvents([...events, { title, start, end, module, backgroundColor: color, borderColor: color }]);
-          Swal.fire('Event Added', JSON.stringify(formValues));
+          const userId=CurrentUser.email.substring(0,9);
+          const newEvent = { title, start, end, module, backgroundColor: color, borderColor: color,userId:userId};
+          try{
+            //await addDoc(collection(db,'Events'),newEvent);
+            await setDoc(doc(db,'Events',SupervisorID),newEvent);
+            setEvents([...events,newEvent]);
+            Swal.fire('Event Added',JSON.stringify(formValues));
+          }
+          catch(error){
+            console.error("Error adding event:",error);
+            Swal.fire('Error','Failed to add event.Please try again','error')
+          }
+    
         }
       };
-    
       const userType = CurrentUser?.email.startsWith('7') ? 'Supervisor' : '';
 
     return (
+      <div>
+      {userType === 'Supervisor' && (
+        <button className="btn btn-primary" onClick={showEventPopup}>Add Event</button>
+      )}
         <FullCalendar
-        plugins={[ dayGridPlugin, interactionPlugin ]}
-            initialView="dayGridMonth"
-            // weekends={false}
-            events={
-                [
-                    { title: 'Business Analysis 3A', date: '2024-08-01' },
-                    { title: 'Development Software 3B', date: '2024-08-02' }
-                ]
-            }
-
-            dateClick={function(info) {
-                // Add event to calendar when date is clicked
-                const event = prompt('Enter event name');
-                if (event) {
-                    info.view.calendar.addEvent({
-                        title: event,
-                        start: info.dateStr,
-                        allDay: true
-                    });
-                }
+        plugins={[ dayGridPlugin, interactionPlugin,timeGridPlugin]}
+            initialView={"dayGridMonth"}
+            weekends={false}
+            headerToolbar={{
+              start:'today prev,next',
+              center:'title',
+              end:'dayGridMonth,timeGridWeek,timeGridDay'
             }}
-
+            height={"90vh"}
+            dateClick={handleDateClick}
+            events={events}
         />
+        </div>
     )
 }
 
