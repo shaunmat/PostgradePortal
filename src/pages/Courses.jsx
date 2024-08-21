@@ -1,3 +1,4 @@
+import { db,auth } from "../backend/config";
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -10,8 +11,10 @@ import RegImage4 from '../assets/images/RegImage4.jpg';
 
 export const Courses = () => {
     // Assuming the role is fetched from somewhere, hardcoding for this example
+    const { CurrentUser } = useAuth();
     const [userRole, setUserRole] = useState("lecturer"); // 'student' or 'lecturer'
-
+    const [supervisorID, setSupervisorID ] = useState(null);
+    
     const subjects = [
         {
             routeId: 'courses/course/Business Analysis',
@@ -87,7 +90,7 @@ export const Courses = () => {
                                 My Courses
                             </h1>
                             <p className="text-lg font-normal mt-5 text-gray-700 dark:text-gray-400">
-                                Here are your current courses
+                                Here are your current courses below
                             </p>
                         </>
                     ) : (
