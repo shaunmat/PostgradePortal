@@ -1,13 +1,13 @@
-import { useAuth } from './backend/AuthContext';
+import { useAuth } from './backend/authcontext';
 import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Login } from '../src/components/Shared/Login';
 import { PageRoutes } from './pages/PageRoutes';
 import { LogoLoader } from './components/LogoLoader';
-import { AuthProvider } from './backend/AuthContext';
+import { AuthProvider } from './backend/authcontext';
 function App() {
   const {CurrentUser,LoggedInUser,Loading}=useAuth()||{};
-
+  const [userType,setUserType]=useState('')
   const [loading, setLoading] = useState(false);
   const location = useLocation();
 
@@ -24,13 +24,26 @@ function App() {
     return () => clearTimeout(timer);
   }, [location]);
 
-  // if (loading) {
-  //   return <LogoLoader />;
-  // }
-  const email = CurrentUser?.email || '' ;
-  const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student':'';
+  useEffect(()=>{
+    if(!Loading && CurrentUser){
+      const email=CurrentUser.email||'';
 
-  console.log(userType +"Is the current user from the the database!!!!!");
+        if (email.startsWith('7')) {
+            setUserType('Supervisor');
+            console.log("Is the current user from the the database!!",userType);
+    
+        } else if (email.startsWith('2')) {
+            setUserType('Student');
+            console.log("Is the current user from the the database!!",userType);
+        }
+        else {
+      console.log("The current user's email doesn't match known user types.");
+    }
+    }
+  },[CurrentUser,Loading]);
+ 
+
+
   return (
     <AuthProvider>
       <Routes>
