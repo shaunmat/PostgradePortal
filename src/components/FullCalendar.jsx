@@ -7,7 +7,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min';
 import Swal from 'sweetalert2';
 import { useAuth } from '../backend/authcontext';
-import { getDocs, query, collection, where, updateDoc, doc, arrayUnion } from 'firebase/firestore';
+import { getDocs, query, collection, where, updateDoc, doc, arrayUnion,getDoc } from 'firebase/firestore';
 import { db, auth } from '../backend/config';
 
 export const Calendar = () => {
@@ -17,7 +17,7 @@ export const Calendar = () => {
     const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', color: '' });
     const [moduleTitles, setModuleTitles] = useState([]);
     const [role, setRole] = useState(null);
-
+   
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -33,7 +33,7 @@ export const Calendar = () => {
                         setRole('Student');
                     }
                 }
-                fetchEvents(userId, role);
+               
             } else {
                 setSupervisorID(null);
                 setRole(null);
@@ -42,6 +42,38 @@ export const Calendar = () => {
         });
         return () => unsubscribe();
     }, [role]);
+
+    const fetchEvents = async (userId, role) => {
+        try {
+            const eventDocRef = doc(db, 'Events', userId);
+            const eventDocSnap = await getDoc(eventDocRef);
+
+            if (eventDocSnap.exists()) {
+                const data = eventDocSnap.data();
+                setEvents(data.events || []); // Set the events from the document
+            } else {
+                console.warn('No events found for the given userId');
+            }
+        } catch (error) {
+            console.error("Error fetching events:", error);
+        }
+    };
+    useEffect(() => {
+        if (SupervisorID && role) {
+            fetchEvents(SupervisorID, role);
+        }
+    }, [SupervisorID, role]);
+
+    // const fetchModules = async () => {
+    //     try {
+    //         const q = doc(db, 'Module', SupervisorID);
+    //         const querySnapshot = await getDoc(q);
+    //         const modulesArray = querySnapshot.data().ModuleTitle || [];
+    //         setModuleTitles(modulesArray);
+    //     } catch (error) {
+    //         console.error("Error fetching modules:", error);
+    //     }
+    // };
 
     const fetchModules = async () => {
         try {
@@ -60,27 +92,68 @@ export const Calendar = () => {
         }
     }, [SupervisorID]);
 
-    const fetchEvents = async (userId, userRole) => {
-        try {
-            let q;
-            if (userRole === 'Supervisor') {
-                q = query(collection(db, 'Events'), where('SupervisorID', '==', userId));
-            } else if (userRole === 'Student') {
-                q = query(collection(db, 'Events'), where('StudentID', '==', userId));
-            }
+    // useEffect(() => {
+    //     if (SupervisorID && role) {
+    //         fetchEvents(SupervisorID, role);
+    //     } else {
+    //         console.log("SupervisorID or role is not set yet:", { SupervisorID, role });
+    //     }
+    // }, [SupervisorID, role]);
 
-            const querySnapshot = await getDocs(q);
-            const fetchedEvents = querySnapshot.docs.map(doc => {
-                const event = doc.data();
-                const eventEndDate = new Date(event.end);
-                return eventEndDate >= new Date() ? event : null;
-            }).filter(event => event !== null);
+
+    // const fetchEvents = async (userId, role) => {
+    //     console.log("Fetching events for userId:", userId, "and role:", role);
+    //     try {
+    //         let q;
+    //         console.log("Fetching events for userId:", userId, "and role:", role,'Under let q');
+
+    //         if (role === 'Supervisor') {
+    //             q = query(collection(db, 'Events'), where('SupervisorID', '==', userId));
+    //         } else if (role === 'Student') {
+    //             q = query(collection(db, 'Events'), where('StudentID', '==', userId));
+    //         }
+    //         if (!q) {
+    //             console.error('Query is undefined');
+    //             return;
+    //         }
+           
+    //     const querySnapshot = await getDocs(q);
+    //     if (querySnapshot.empty) {
+    //         console.warn('No events found for the given query');
+    //         return;
+    //     }
+    //     const fetchedEvents = querySnapshot.docs.map(doc => {
+    //         const event = doc.data();
+    //         const eventEndDate = new Date(event.end);
+    //         return eventEndDate >= new Date() ? event : null;
+    //     }).filter(event => event !== null);    
+
+    //         setEvents(fetchedEvents);
+    //     } catch (error) {
+    //         console.error("Error fetching events:", error);
+    //     }
+    // };
+
+    // const fetchEvents = async (userId, role) => {
+    //     try {
+    //         let q;
+    //         if (role === 'Supervisor') {
+    //             q = query(collection(db, 'Events'), where('SupervisorID', '==', userId));
+    //         } else if (role === 'Student') {
+    //             q = query(collection(db, 'Events'), where('StudentID', '==', userId));
+    //         }
+    //         const querySnapshot = await getDocs(q);
+    //         const fetchedEvents = querySnapshot.docs.map(doc => {
+    //             const event = doc.data();
+    //             const eventEndDate = new Date(event.end);
+    //             return eventEndDate >= new Date() ? event : null;
+    //         }).filter(event => event !== null);
             
-            setEvents(fetchedEvents);
-        } catch (error) {
-            console.error("Error fetching events:", error);
-        }
-    };
+    //         setEvents(fetchedEvents);
+    //     } catch (error) {
+    //         console.error("Error fetching events:", error);
+    //     }
+    // };
 
     const handleDateClick = (arg) => {
         setNewEvent({ ...newEvent, start: arg.dateStr, end: arg.dateStr });
@@ -209,6 +282,7 @@ export const Calendar = () => {
 //                 setRole('Student');
 //             }
 //         }
+//             fetcEvents(userId,role);
 //         console.log(user.email.substring(0,9),'This is the id at this present momment');
 //         console.log('userId after unsubscribe',userId);
 //         console.log('role after unsubscribe',role);
