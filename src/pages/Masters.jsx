@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../backend/AuthContext";
-import { collection, getDocs, addDoc, Timestamp, query, orderBy, doc, getDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, Timestamp, query, orderBy } from "firebase/firestore";
 import { db } from "../backend/config";
 import { motion } from "framer-motion";
 import { Footer } from "../components/Footer";
@@ -13,69 +14,41 @@ export const Masters = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTaskName, setNewTaskName] = useState('');
     const [newTaskDescription, setNewTaskDescription] = useState('');
-    const [newTaskDueDate, setNewTaskDueDate] = useState('');
     const [newTaskCreationDate, setNewTaskCreationDate] = useState('');
-    const [RelaventModule, setRelaventModule] = useState(null);
+    const [newTaskDueDate, setNewTaskDueDate] = useState('');
 
     useEffect(() => {
-        const fetchData = async () => {
-            if (!Loading && UserData) {
-                if (UserData.CourseID.length > 1) {
-                    const moduleID = await RelevantCourseCheck(UserData.CourseID);
-                    if (moduleID) {
-                        setRelaventModule(moduleID);
-                        fetchAssignmentData(moduleID);
-                    }
-                } else {
-                    setRelaventModule(UserData.CourseID[0]);
-                    fetchAssignmentData(UserData.CourseID[0]);
-                }
-            }
-        };
+        if (!Loading && UserData) {
+            fetchAssignmentData();
+        }
+    }, [Loading, UserData]);
 
-        fetchData();
-    }, );
-
-    const fetchAssignmentData = async (courseID) => {
-        const courseTypesArray = await fetchResearchAssignments(courseID);
+    const fetchAssignmentData = async () => {
+        const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
         setAssignments(courseTypesArray);
     };
 
-    const RelevantCourseCheck = async (CourseIDs) => {
-        try {
-            for (const courseID of CourseIDs) {
-                const moduleRef = doc(db, 'Module', courseID); 
-                const moduleSnap = await getDoc(moduleRef);
-
-                if (moduleSnap.exists()) {
-                    const moduleData = moduleSnap.data();
-                    if (moduleData.ModuleType === "Masters") {
-                        return courseID; // Return the relevant courseID
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error fetching course types:', error);
-        }
-        return null; // Return null if no relevant module found
-    };
-
-    const fetchResearchAssignments = async (courseID) => {
+    const fetchResearchAssignments = async (CourseIDs) => {
         const typesSet = [];
 
         try {
-            const AssignmentRef = collection(db, 'Module', courseID, "Assignments");
-            const q = query(AssignmentRef, orderBy("AssignmentCreation", "desc")); // Order by creation date, descending
-            const AssignmentSnap = await getDocs(q);
+            for (const courseID of CourseIDs) {
+                const AssignmentRef = collection(db, 'Module', courseID, "Assignments");
+                const q = query(AssignmentRef, orderBy("AssignmentCreation", "desc")); // Order by creation date, descending
+                const AssignmentSnap = await getDocs(q);
 
-            AssignmentSnap.forEach((docSnap) => {
-                if (docSnap.exists()) {
-                    const moduleData = docSnap.data();
-                    typesSet.push(moduleData);
-                }
-            });
+                AssignmentSnap.forEach((docSnap) => {
+                    if (docSnap.exists()) {
+                        const moduleData = docSnap.data();
+                        typesSet.push({
+                            id: docSnap.id, // Add the document ID
+                            ...moduleData,
+                        });
+                    }
+                });
+            }
         } catch (error) {
-            console.error('Error fetching assignments:', error);
+            console.error('Error fetching course types:', error);
         }
 
         return typesSet;
@@ -87,9 +60,9 @@ export const Masters = () => {
             console.error("Please fill all fields.");
             return;
         }
-
+    
         try {
-            console.log(newTaskCreationDate)
+            console.log(newTaskCreationDate);
             // Get current date and time for the creation date
             const creationDate = new Date();
             
@@ -97,8 +70,8 @@ export const Masters = () => {
             const dueDate = new Date(newTaskDueDate); // Convert due date to Date object
             const creationTimestamp = Timestamp.fromDate(creationDate); // Convert to Firestore Timestamp
             
-            // Use the relevant module for the collection path
-            const courseID = RelaventModule;
+            // Use the first element of the CourseID array for the collection path
+            const courseID = UserData.CourseID[0];
     
             // Add the new assignment to Firestore
             await addDoc(collection(db, 'Module', courseID, "Assignments"), {
@@ -109,7 +82,7 @@ export const Masters = () => {
             });
     
             // Close modal and reset state
-            await fetchAssignmentData(courseID);
+            await fetchAssignmentData();
             setIsModalOpen(false);
             setNewTaskName("");
             setNewTaskDescription("");
@@ -117,7 +90,7 @@ export const Masters = () => {
         } catch (error) {
             console.error("Error adding new assignment:", error);
         }
-    };
+    };    
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
@@ -141,24 +114,29 @@ export const Masters = () => {
                     </button>
                 </section>
 
-                <div className="flex flex-wrap gap-7">
+                <div className="flex flex-col gap-7">
                     {Assignments.length > 0 ? Assignments.map((assignment, index) => (
-                        <motion.div 
+                        // Pass both courseId and assignmentId in the Link
+                        <Link 
+                            to={`/courses/${UserData.CourseID[0]}/assignments/${assignment.id}`}
                             key={index} 
-                            className="border-2 rounded-lg overflow-hidden shadow-md p-4 w-full"
-                            whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)" }}
-                            transition={{ type: "spring", stiffness: 300 }}
+                            className="block w-full"
                         >
-                            <h2 className="text-xl font-bold">{assignment.AssignmentTitle}</h2>
-                            <p>{assignment.AssignmentDescription}</p>
-                            <p>Due Date: {new Date(assignment.AssignmentDueDate.seconds * 1000).toLocaleString()}</p>
-                            <p>Created On: {new Date(assignment.AssignmentCreation.seconds * 1000).toLocaleString()}</p>
-                        </motion.div>
+                            <motion.div 
+                                className="border-2 rounded-lg overflow-hidden shadow-md p-4 w-full"
+                                whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)" }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                            >
+                                <h2 className="text-xl font-bold">{assignment.AssignmentTitle}</h2>
+                                <p>{assignment.AssignmentDescription}</p>
+                                <p>Due Date: {new Date(assignment.AssignmentDueDate.seconds * 1000).toLocaleString()}</p>
+                                <p>Created On: {new Date(assignment.AssignmentCreation.seconds * 1000).toLocaleString()}</p>
+                            </motion.div>
+                        </Link>
                     )) : (
                         <p>No assignments available.</p>
                     )}
                 </div>
-
                 {/* Task Modal */}
                 <TaskModal 
                     isOpen={isModalOpen} 
