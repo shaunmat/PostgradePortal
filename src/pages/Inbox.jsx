@@ -6,61 +6,73 @@ import avatar from "../assets/images/avatar.png";
 import { auth, db } from "../backend/config"; // Import your firebase config
 import { getDocs, query, collection, where } from "firebase/firestore";
 import { useAuth } from "../backend/authcontext";
-
+import Dropdown from 'react-bootstrap/Dropdown';
+import DropdownButton from 'react-bootstrap/DropdownButton';
 export const Inbox = () => {
     const { CurrentUser } = useAuth();
     const [studentDetails, setStudentDetails] = useState([]);
     const [selectedLecturer, setSelectedLecturer] = useState(null);
     const [supervisorDetails, setSupervisorDetails] = useState([]);
     const [SupervisorID, setSupervisorID] = useState(null);
+    const [StudentID, setStudentID] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [courseOptions, setCourseOptions] = useState([]);
     const [role, setRole] = useState(null);
     const [filterCourseID, setFilterCourseID] = useState(null);
+    const [selectedStudentType,setSelectedStudentType]=useState(null);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
                 const userId = user.email.substring(0, 9);
-                setSupervisorID(userId);
-
-                const userDoc = await getDocs(query(collection(db, 'Supervisor'), where('SupervisorID', '==', Math.floor(userId))));
-
-                if (!userDoc.empty) {
-                    setRole('Supervisor');
-                } else {
-                    const studentDoc = await getDocs(query(collection(db, 'Student'), where('StudentID', '==', userId)));
-                    if (!studentDoc.empty) {
-                        setRole('Student');
+                console.log("Here is the userId", userId)
+                try {
+                    const userDoc = await getDocs(query(collection(db, 'Supervisor'), where('ID', '==', Math.floor(userId))));
+                    console.log("Supervisor query executed, document snapshot:", userDoc);
+                    if (!userDoc.empty) {
+                        setRole('Supervisor');
+                        setSupervisorID(userId);
+                        console.log("Its empyt")
+                    } else {
+                        const studentDoc = await getDocs(query(collection(db, 'Student'), where('ID', '==', userId)));
+                        console.log("Student query executed, document snapshot:", studentDoc);
+                        if (!studentDoc.empty) {
+                            setRole('Student');
+                            setStudentID(userId);
+                            console.log("Role set to Student");
+                        }
+                        else {
+                            console.log("No matching records found in Supervisor or Student collections");
+                        }
                     }
+                }
+                catch (error) {
+                    console.error("Error querying Firestore:", error);
+
                 }
             } else {
                 setSupervisorID(null);
+                setStudentID(null);
                 setRole(null);
-            }
-        });
+                console.log("No user is logged in");
 
+            }
+
+        });
         return () => unsubscribe();
     }, []);
 
     useEffect(() => {
-        const fetchModules = async () => {
+        const fetchDetails = async () => {
             if (!SupervisorID || !role) return;
             try {
                 let q;
                 if (role === 'Supervisor') {
-                    q = collection(db, 'Student');
-                    if (filterCourseID) {
-                        q = query(q, where('SupervisorID', 'array-contains', Math.floor(SupervisorID)), where('CourseID', '==', Math.floor(filterCourseID)));
-                    } else {
-                        q = query(q, where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
-                    }
+                    q = query(collection(db, 'Student'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
                 } else if (role === 'Student') {
-                    q = collection(db, 'Supervisor');
-                    q = query(q, where('StudentID', '==', Math.floor(SupervisorID)));
+                    q = query(collection(db, 'Supervisor'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
                 }
-
                 const querySnapshot = await getDocs(q);
                 const studentdetsArray = [];
                 const supervisorsArray = [];
@@ -71,18 +83,19 @@ export const Inbox = () => {
                     if (role === 'Supervisor') {
                         studentdetsArray.push({
                             ProfilePicture: data.ProfilePicture,
-                            StudentID: data.StudentID,
-                            StudentName: data.StudentName,
-                            StudentSurname: data.StudentSurname,
-                            lastInteraction: "Just now"
+                            StudentID: data.ID,
+                            StudentName: data.Name,
+                            StudentSurname: data.Surname,
+                            lastInteraction: "Just now",
+                            StudentType: data.StudentType
                         });
                         courseIdArray.push({
-                            CourseID: data.CourseID
+                            CourseID: data.StudentType
                         });
                     } else if (role === 'Student') {
                         supervisorsArray.push({
                             ProfilePicture: data.ProfilePicture,
-                            SupervisorID: data.SupervisorID,
+                            SupervisorID: data.ID,
                             SupervisorName: data.SupervisorName,
                             SupervisorSurname: data.SupervisorSurname,
                         });
@@ -97,7 +110,7 @@ export const Inbox = () => {
             }
         };
 
-        fetchModules();
+        fetchDetails();
     }, [SupervisorID, role, filterCourseID]);
 
     const handleLecturerClick = (lecturer) => {
@@ -114,10 +127,13 @@ export const Inbox = () => {
         setIsModalOpen(false);
     };
 
-    const handleFilterByCourseID = (CourseID) => {
-        setFilterCourseID(CourseID);
+    const handleFilterByStudentType = (studentType) => {
+        setSelectedStudentType(studentType); // Set the selected student type
     };
-
+    const filteredStudents=studentDetails.filter(student=>{
+        if(!selectedStudentType) return true;
+        return student.StudentType== selectedStudentType;
+    })
     const borderColors = ['border-[#00ad43]', 'border-[#00bfff]', 'border-[#590098]', 'border-[#FF8503]'];
 
     return (
@@ -135,7 +151,6 @@ export const Inbox = () => {
                 </section>
                 {/* Display lecturers */}
                 {role === 'Student' ? (
-                    
                     <div className="flex flex-wrap gap-2 max-w-full">
                         {supervisorDetails &&
                             supervisorDetails.map((lecturer, index) => (
@@ -169,18 +184,14 @@ export const Inbox = () => {
                     </div>
                 ) : role === 'Supervisor' ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
-                        <div className="course-filter mb-4">
-                            <label>Filter by Course ID:</label>
-                            <select onChange={(e) => handleFilterByCourseID(e.target.value)}>
-                                <option value="">All courses</option>
-                                {courseOptions.map((course, index) => (
-                                    <option key={index} value={course.CourseID}>
-                                        {course.CourseID}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        {studentDetails.map((student, index) => (
+                        <DropdownButton id="dropdown-basic-button" title="Student Courses"style={{ backgroundColor: 'orange', borderColor: 'orange' }}>
+                            <Dropdown.Item onClick={() => handleFilterByStudentType('Honours')}>Honours</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterByStudentType('Masters')}>Masters</Dropdown.Item>
+                            <Dropdown.Item onClick={() => handleFilterByStudentType('PhD')}>PhD</Dropdown.Item>
+                        </DropdownButton>
+
+                        {/* </div> */}
+                        {filteredStudents.map((student, index) => (
                             <motion.div
                                 key={student.StudentID}
                                 className={`flex items-center p-4 mb-4 bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 w-full rounded-lg shadow-md ${borderColors[index % borderColors.length]} border-2`}
@@ -200,7 +211,7 @@ export const Inbox = () => {
                                         {student.StudentName} {student.StudentSurname}
                                     </h2>
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        Course Id: {student.CourseID}
+                                        Student Type: {student.StudentType}
                                     </p>
                                     <p className="text-gray-600 dark:text-gray-400">
                                         Stu No.: {student.StudentID}
@@ -209,9 +220,9 @@ export const Inbox = () => {
                             </motion.div>
                         ))}
                     </div>
-                ) : 
-                console.log("There is nothing ")
-            }
+                ) :
+                    console.log("There is nothing ")
+                }
                 <Footer />
             </div>
 
