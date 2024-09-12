@@ -28,28 +28,29 @@ export const Inbox = () => {
                 const userId = user.email.substring(0, 9);
                 console.log("Here is the userId", userId)
                 try {
-                    const userDoc = await getDocs(query(collection(db, 'Supervisor'), where('ID', '==', Math.floor(userId))));
-                    console.log("Supervisor query executed, document snapshot:", userDoc);
-                    if (!userDoc.empty) {
+                    const supervisorDoc = await getDocs(query(collection(db, 'Supervisor'), where('ID', '==', Math.floor(userId))));
+                    console.log("Supervisor query executed, document snapshot:", supervisorDoc);
+                    if (!supervisorDoc.empty) {
                         setRole('Supervisor');
                         setSupervisorID(userId);
-                        console.log("Its empyt")
+                        console.log("Its supervisors inbox empty")
                     } else {
-                        const studentDoc = await getDocs(query(collection(db, 'Student'), where('ID', '==', userId)));
+                        const studentDoc = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(userId))));
                         console.log("Student query executed, document snapshot:", studentDoc);
                         if (!studentDoc.empty) {
                             setRole('Student');
                             setStudentID(userId);
-                            console.log("Role set to Student");
+                            console.log("The student inbox is not empty")
                         }
                         else {
                             console.log("No matching records found in Supervisor or Student collections");
                         }
                     }
+                    console.log("Role set to",role);
+
                 }
                 catch (error) {
                     console.error("Error querying Firestore:", error);
-
                 }
             } else {
                 setSupervisorID(null);
@@ -65,42 +66,58 @@ export const Inbox = () => {
 
     useEffect(() => {
         const fetchDetails = async () => {
-            if (!SupervisorID || !role) return;
+            const studentdetsArray = [];
+            const supervisorsArray = [];
+            const courseIdArray = [];
             try {
                 let q;
                 if (role === 'Supervisor') {
                     q = query(collection(db, 'Student'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
-                } else if (role === 'Student') {
-                    q = query(collection(db, 'Supervisor'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
-                }
-                const querySnapshot = await getDocs(q);
-                const studentdetsArray = [];
-                const supervisorsArray = [];
-                const courseIdArray = [];
-
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
-                    if (role === 'Supervisor') {
-                        studentdetsArray.push({
-                            ProfilePicture: data.ProfilePicture,
-                            StudentID: data.ID,
-                            StudentName: data.Name,
-                            StudentSurname: data.Surname,
-                            lastInteraction: "Just now",
-                            StudentType: data.StudentType
+                    try {
+                        const querySnapshot = await getDocs(q);         
+                        querySnapshot.forEach((doc) => {
+                            const data = doc.data();
+                                studentdetsArray.push({
+                                    ProfilePicture: data.ProfilePicture,
+                                    StudentID: data.ID,
+                                    StudentName: data.Name,
+                                    StudentSurname: data.Surname,
+                                    lastInteraction: "Just now",
+                                    StudentType: data.StudentType
+                                });
+                                courseIdArray.push({
+                                    CourseID: data.StudentType
+                                });
                         });
-                        courseIdArray.push({
-                            CourseID: data.StudentType
-                        });
-                    } else if (role === 'Student') {
-                        supervisorsArray.push({
-                            ProfilePicture: data.ProfilePicture,
-                            SupervisorID: data.ID,
-                            SupervisorName: data.SupervisorName,
-                            SupervisorSurname: data.SupervisorSurname,
-                        });
+                    } catch (error) {
+                        console.error("Error fetching students:", error);
                     }
-                });
+                    
+                } else if (role === 'Student' && StudentID) {
+                    try {
+                        const studentDocs = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(StudentID))));
+                        if (!studentDocs.empty) {
+                            const studentData = studentDocs.docs[0].data();
+                            const supervisorIDs = studentData.SupervisorID;  // Retrieve SupervisorID array from student doc
+    
+                            // Query supervisor collection based on SupervisorIDs
+                            const supervisorDocs = await getDocs(query(collection(db, 'Supervisor'), where('ID', 'in', supervisorIDs)));
+                            supervisorDocs.forEach((doc) => {
+                                const data = doc.data();
+                                supervisorsArray.push({
+                                    SupervisorID: data.ID,
+                                    SupervisorName: data.Name,
+                                    SupervisorSurname: data.Surname,
+                                    ProfilePicture: data.ProfilePicture,
+                                    Title:data.Title
+                                });
+                            });
+                        }
+                    } catch (error) {
+                        console.error("Error fetching supervisors:", error);
+                    }
+                }
+               
 
                 setStudentDetails(studentdetsArray);
                 setSupervisorDetails(supervisorsArray);
@@ -111,7 +128,7 @@ export const Inbox = () => {
         };
 
         fetchDetails();
-    }, [SupervisorID, role, filterCourseID]);
+    }, [StudentID,SupervisorID, role, filterCourseID]);
 
     const handleLecturerClick = (lecturer) => {
         setSelectedLecturer(lecturer);
@@ -170,13 +187,13 @@ export const Inbox = () => {
                                     />
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                            {lecturer.SupervisorName}
+                                            {lecturer.Title} {lecturer.SupervisorName} {lecturer.SupervisorSurname} 
                                         </h2>
                                         <p className="text-gray-600 dark:text-gray-400">
                                             Office Hours: 24hr
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            {lecturer.CourseID}
+                                        Supervisor ID: {lecturer.SupervisorID}
                                         </p>
                                     </div>
                                 </motion.div>
