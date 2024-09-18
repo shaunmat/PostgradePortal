@@ -1,4 +1,4 @@
-import { Footer } from "../components/Footer";
+import { Footer } from "../../components/AdminComponents/Footer";
 import Chart from "react-apexcharts";
 
 export const Analytics = () => {

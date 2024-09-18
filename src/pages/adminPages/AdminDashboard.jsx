@@ -1,16 +1,16 @@
-import { Footer } from "../components/Footer"
+import { Footer } from "../../components/AdminComponents/Footer"
 import { HiAcademicCap, HiDocument } from "react-icons/hi"
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable } from "simple-datatables";
-import { auth, db } from "../backend/config"; // Import your firebase config
+import { auth, db } from "../../backend/config"; // Import your firebase config
 import { getDocs, query, collection, where } from "firebase/firestore";
 import { SupervisorCount } from "../../components/AdminComponents/SupervisorsCount";
 import {Totals} from "../../components/AdminComponents/Totals";
 import { LineChart } from "../../components/AdminComponents/LineChart";
 import {BarChart} from "../../components/AdminComponents/BarChart";
 import Chart from "react-apexcharts";
-export const Dashboard = () => {
+export const AdminDashboard = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [StudentID, setStudentID] = useState(null);
     const [role, setRole] = useState(null);

@@ -14,7 +14,7 @@ const menuItems = [
   ];
 
 
-export const Sidebar = () => {
+export const AdminSidebar = () => {
     const location = useLocation(); // Get the location
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
