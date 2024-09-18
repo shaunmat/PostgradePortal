@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import { Login } from '../src/components/Shared/Login';
 import { PageRoutes } from './pages/PageRoutes';
+import {AdminDashboard} from '../src/pages/adminPages/AdminPageRoutes';
 import { LogoLoader } from './components/LogoLoader';
 import { AuthProvider } from './backend/authcontext';
 function App() {
@@ -27,23 +28,10 @@ function App() {
   useEffect(()=>{
     if(!Loading && CurrentUser){
       const email=CurrentUser.email||'';
-
-        if (email.startsWith('7')) {
-            setUserType('Supervisor');
-            console.log("Is the current user from the the database!!",userType);
-    
-        } else if (email.startsWith('2')) {
-            setUserType('Student');
-            console.log("Is the current user from the the database!!",userType);
-        }
-        else {
-      console.log("The current user's email doesn't match known user types.");
-    }
+      const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student'?'Admin':email=="220143805@uj.ac.za":'';
+      console.log(CurrentUser +"Is the current user from the the database")
     }
   },[CurrentUser,Loading]);
- 
-
-
   return (
     <AuthProvider>
       <Routes>
