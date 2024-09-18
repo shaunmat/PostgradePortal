@@ -6,10 +6,10 @@ import { HiLogout, HiFlag, HiChartPie, HiBell, HiSearch, HiAdjustments , HiChart
 
 
 const menuItems = [
-    { path: "/dashboard", label: "Dashboard", icon: <HiChartPie className="w-6 h-6" /> },
+    { path: "/AdminDashboard", label: "Dashboard", icon: <HiChartPie className="w-6 h-6" /> },
     { path: "/analytics", label: "Analytics", icon: <HiChartBar  className="w-6 h-6" /> },
     { path: "/reports", label: "Report", icon: <HiViewBoards className="w-6 h-6" /> },
-    { path: "/settings", label: "Settings", icon: <HiAdjustments  className="w-6 h-6" /> },
+    { path: "/Adminsettings", label: "Settings", icon: <HiAdjustments  className="w-6 h-6" /> },
     { path: "/logout", label: "Log Out", icon: <HiLogout className="w-6 h-6" /> },
   ];
 

@@ -7,7 +7,7 @@ import { auth, db } from "../../backend/config"; // Import your firebase config
 import { getDocs, query, collection, where } from "firebase/firestore";
 import { SupervisorCount } from "../../components/AdminComponents/SupervisorsCount";
 import {Totals} from "../../components/AdminComponents/Totals";
-import { LineChart } from "../../components/AdminComponents/LineChart";
+import {LineChart } from "../../components/AdminComponents/LineChart";
 import {BarChart} from "../../components/AdminComponents/BarChart";
 import Chart from "react-apexcharts";
 export const AdminDashboard = () => {
@@ -32,7 +32,7 @@ export const AdminDashboard = () => {
                 
             </div>
                 <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="relative flex items-center justify-between h-24 rounded-xl bg-white dark:bg-gray-800 px-4">l
+                <div className="relative flex items-center justify-between h-24 rounded-xl bg-white dark:bg-gray-800 px-4">
                     {/* Centered content (e.g., another icon) */}
                     <div className="flex justify-center items-center rounded-xl h-14 p-5 bg-[#FF8503] dark:bg-[#FF8503]">
                         <HiAcademicCap className="text-3xl text-white" />
@@ -135,6 +135,10 @@ export const AdminDashboard = () => {
             <Footer />
         </div>
         </div>
+
+
+       
+
 
     )
 }
