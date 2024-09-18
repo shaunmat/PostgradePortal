@@ -27,7 +27,7 @@ function App() {
   useEffect(()=>{
     if(!Loading && CurrentUser){
       const email=CurrentUser.email||'';
-      const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student'?'Admin':email=="220143805@uj.ac.za":'';
+      const userType = email== "220143805@uj.ac.za"?'Admin': email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student':'';
       setUserType(userType);
       console.log(email +"Is the current user from the the database")
       console.log(userType)
