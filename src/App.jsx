@@ -29,6 +29,8 @@ function App() {
   // }
   const email = CurrentUser?.email || '' ;
   const userType = email.startsWith('7') ? 'Supervisor' : email.startsWith('2') ? 'Student':'';
+ 
+
   console.log(CurrentUser +"Is the current user from the the database")
   return (
     <AuthProvider>

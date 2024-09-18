@@ -5,7 +5,7 @@ import { Footer } from '../components/Footer';
 import { HiPlus } from 'react-icons/hi';
 import { TaskModal } from '../components/TaskModal';
 import { getDoc, doc, updateDoc, collection, setDoc } from 'firebase/firestore';
-import { auth, db } from '../../../PostGrad_System/src/Backend/Config';
+import { auth, db } from '../backend/config';
 
 export const Tasks = () => {
     // State to manage tasks and modal

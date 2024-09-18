@@ -6,8 +6,8 @@ import UserLogo from '../../assets/images/Avatar.png';
 import { HiLogout, HiFlag, HiChartPie, HiAcademicCap, HiMail, HiUserGroup, HiBookOpen, HiViewBoards, HiCollection, HiChevronDown, HiDesktopComputer } from "react-icons/hi";
 import { signOut } from 'firebase/auth';
 import { getDoc, doc } from 'firebase/firestore';
-import { db, auth } from '../../../../PostGrad_System/src/Backend/Config';
-import { useAuth } from '../../backend/AuthContext';
+import { db, auth } from '../../backend/config';
+import { useAuth } from '../../backend/authcontext';
 
 const variants = {
   visible: { opacity: 1, height: 'auto' },
