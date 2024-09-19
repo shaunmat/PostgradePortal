@@ -16,25 +16,21 @@ export const Dashboard = () => {
             name: 'Business Analysis',
             image: RegImage1,
             description: 'Learn the basics of Business Analysis',
-            progress: 50
         },
         {
             name: 'Software Development',
             image: RegImage2,
             description: 'Learn the basics of Software Development',
-            progress: 25
         },
         {
             name: 'Software Project',
             image: RegImage3,
             description: 'Learn the basics of Software Project',
-            progress: 75
         },
         {
             name: 'Software Testing',
             image: RegImage4,
             description: 'Learn the basics of Software Testing',
-            progress: 25
         }
     ];
 
@@ -162,9 +158,7 @@ export const Dashboard = () => {
                                         name={subject.name}
                                         image={subject.image}
                                         description={subject.description}
-                                        progress={subject.progress}
                                         borderColor={borderColors[index % borderColors.length]}
-                                        progressColor={progressColors[index % progressColors.length]}
                                     />
                                 ))}
                             </div>

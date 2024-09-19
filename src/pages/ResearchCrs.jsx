@@ -1,31 +1,164 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../backend/config'; // Import your Firebase configuration
 import { Footer } from '../components/Footer';
 import BannerImage from '../assets/images/research_banner.jpg';
+import { useParams } from 'react-router-dom';
+import { useAuth } from "../backend/AuthContext";
 
 export const ResearchCourse = () => {
-    const { courseId } = useParams(); // Get the courseId from the URL
+    const { UserData } = useAuth();
+    const { researchId } = useParams();
     const [courseDetails, setCourseDetails] = useState(null);
+    const [assignments, setAssignments] = useState([]);
+    const [FileForUpload, setFileForUpload] = useState(null);
+    const [topics, setTopics] = useState([]);
+    const [selectedTopic, setSelectedTopic] = useState(null); // Track selected topic
+    const [feedback, setFeedback] = useState({}); // Store feedback per assignment
+    const [submittedAssignments, setSubmittedAssignments] = useState({}); // Track submitted assignments
 
     useEffect(() => {
-        // Fetch course details based on courseId
         const fetchCourseDetails = async () => {
-            // Replace with actual fetch call
-            const data = {
-                id: courseId,
-                name: 'Sample Course',
-                instructor: 'Dr. John Doe',
-                description: 'This course covers various aspects of software engineering...',
-                syllabus: [
-                    { topic: "Introduction to Software Engineering", subtopics: ["Software Development Life Cycle", "Agile Methodology", "Waterfall Model"] },
-                    { topic: "Software Requirements", subtopics: ["Requirements Elicitation", "Requirements Analysis", "Requirements Specification"] },
-                    { topic: "Software Design", subtopics: ["Design Principles", "Design Patterns", "UML Diagrams"] }
-                ]
-            };
-            setCourseDetails(data);
+            try {
+                if (!researchId) {
+                    throw new Error('Course ID is undefined or null');
+                }
+
+                const moduleRef = doc(db, 'Module', researchId);
+                const moduleSnap = await getDoc(moduleRef);
+
+                if (moduleSnap.exists()) {
+                    const moduleData = moduleSnap.data();
+                    setCourseDetails({
+                        id: researchId,
+                        name: moduleData.ModuleTitle || 'Sample Course',
+                        instructor: 'Dr. Placeholder',
+                        description: moduleData.ModuleDescription || 'Description not available',
+                    });
+
+                    // Fetch assignments
+                    const assignmentsRef = collection(db, 'Module', researchId, 'Assignments');
+                    const assignmentsSnap = await getDocs(assignmentsRef);
+                    const assignmentsArray = assignmentsSnap.docs.map(doc => ({
+                        ...doc.data(),
+                        AssignmentID: doc.id
+                    }));
+                    setAssignments(assignmentsArray);
+
+                    // Fetch feedback and submission status for each assignment
+                    for (let assignment of assignmentsArray) {
+                        const studentRef = doc(db, `Module/${researchId}/Assignments/${assignment.AssignmentID}/StudentID/${UserData.ID}`);
+                        const studentSnap = await getDoc(studentRef);
+
+                        if (studentSnap.exists()) {
+                            const studentData = studentSnap.data();
+
+                            // Set feedback if available
+                            setFeedback(prevFeedback => ({
+                                ...prevFeedback,
+                                [assignment.AssignmentID]: studentData
+                            }));
+
+                            // Set submission status
+                            setSubmittedAssignments(prevState => ({
+                                ...prevState,
+                                [assignment.AssignmentID]: studentData.submitted || false // Check if the assignment was submitted
+                            }));
+                        }
+                    }
+                } else {
+                    console.error('No such module!');
+                }
+            } catch (error) {
+                console.error('Error fetching course details:', error);
+            }
         };
+
+        const fetchTopics = async () => {
+            try {
+                const storageRef = ref(storage, 'r_topics/topics.json');
+                const url = await getDownloadURL(storageRef);
+                const response = await fetch(url);
+                const data = await response.json();
+                setTopics(data);
+            } catch (error) {
+                console.error('Error fetching topics:', error);
+            }
+        };
+
         fetchCourseDetails();
-    }, [courseId]);
+        fetchTopics();
+    }, [researchId, UserData.ID]);
+
+    const handleFileChange = (event) => {
+        setFileForUpload(event.target.files[0]);
+    };
+
+    const UploadDocument = async (assignmentID) => {
+        if (!FileForUpload) {
+            alert("Please select a file to upload");
+            return;
+        }
+
+        try {
+            const storageRef = ref(storage, `Submissions/${researchId}/Assignments/${assignmentID}/StudentID/${UserData.ID}/${FileForUpload.name}`);
+            const uploadTask = await uploadBytes(storageRef, FileForUpload);
+            const downloadURL = await getDownloadURL(uploadTask.ref);
+
+            const submissionDocRef = doc(db, `Module/${researchId}/Assignments/${assignmentID}/StudentID/${UserData.ID}`);
+            await setDoc(submissionDocRef, {
+                downloadURL: downloadURL,
+                submittedAt: new Date(),
+                fileName: FileForUpload.name,
+                submitted: true // Add the submitted flag
+            });
+
+            // Mark assignment as submitted in local state
+            setSubmittedAssignments(prevState => ({
+                ...prevState,
+                [assignmentID]: true // Set this assignment as submitted
+            }));
+
+            alert('File uploaded successfully and submission saved!');
+        } catch (error) {
+            console.error('Error uploading file and saving submission:', error);
+            alert('Error uploading file or saving submission. Please try again later.');
+        }
+    };
+
+    const handleSelectTopic = async (topic) => {
+        if (topic.isSelected) {
+            alert('This topic has already been selected by another student.');
+            return;
+        }
+
+        if (selectedTopic) {
+            alert('You have already selected a topic.');
+            return;
+        }
+
+        try {
+            // Mark the topic as selected
+            const updatedTopics = topics.map(t => 
+                t.topicName === topic.topicName ? { ...t, isSelected: true, selectedBy: UserData.ID } : t
+            );
+
+            // Upload the updated topics file to Firebase Storage
+            const topicsBlob = new Blob([JSON.stringify(updatedTopics)], { type: 'application/json' });
+            const topicsRef = ref(storage, 'r_topics/topics.json');
+            await uploadBytes(topicsRef, topicsBlob);
+
+            // Update local state
+            setTopics(updatedTopics);
+            setSelectedTopic(topic);
+
+            alert(`You have successfully selected the topic: ${topic.topicName}`);
+        } catch (error) {
+            console.error('Error selecting topic:', error);
+            alert('Error selecting topic. Please try again later.');
+        }
+    };
 
     if (!courseDetails) {
         return <div>Loading...</div>;
@@ -34,15 +167,13 @@ export const ResearchCourse = () => {
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Stretch Banner Image with Course Name */}
-                <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg">
+                <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg relative">
                     <img src={BannerImage} alt="Banner" className="w-full h-full object-cover" />
                     <h1 className="absolute text-4xl font-bold tracking-wider text-white dark:text-gray-200">
                          {courseDetails.name}
                     </h1>
                 </section>
 
-                {/* Course Details */}
                 <section className="mt-6">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                         Welcome to {courseDetails.name}
@@ -55,25 +186,87 @@ export const ResearchCourse = () => {
                     </p>
                 </section>
 
-                {/* Syllabus */}
                 <section className="mt-6">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Syllabus</h2>
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Available Topics</h2>
                     <ul className="mt-4 space-y-4">
-                        {courseDetails.syllabus.map((topic, index) => (
+                        {topics.length > 0 ? topics.map((topic, index) => (
                             <li key={index} className="border p-4 rounded-lg shadow dark:bg-gray-900 dark:border-gray-700">
-                                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{topic.topic}</h3>
-                                <ul className="mt-2 list-disc list-inside text-gray-700 dark:text-gray-400">
-                                    {topic.subtopics.map((subtopic, subIndex) => (
-                                        <li key={subIndex} className="ml-4">{subtopic}</li>
-                                    ))}
-                                </ul>
+                                <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{topic.topicName}</h3>
+                                <p>{topic.description}</p>
+                                <p>Status: {topic.isSelected ? "Selected" : "Available"}</p>
+                                {!topic.isSelected && !selectedTopic && (
+                                    <button
+                                        className="mt-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                        onClick={() => handleSelectTopic(topic)}
+                                    >
+                                        Select Topic
+                                    </button>
+                                )}
+                                {selectedTopic === topic && <p className="text-green-600">You have selected this topic.</p>}
                             </li>
-                        ))}
+                        )) : (
+                            <p>No topics available.</p>
+                        )}
                     </ul>
                 </section>
 
-                <Footer />
+                {/* Assignments Section */}
+                <section className="mt-6">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Assignments</h2>
+                    <ul className="mt-4 space-y-4">
+                        {assignments.length > 0 ? assignments.map((assignment, index) => {
+                            const dueDate = new Date(assignment.AssignmentDueDate.seconds * 1000);
+                            const isPastDue = dueDate < new Date();
+                            const assignmentFeedback = feedback[assignment.AssignmentID]; // Get feedback for assignment
+
+                            return (
+                                <li key={index} className="border p-4 rounded-lg shadow dark:bg-gray-900 dark:border-gray-700">
+                                    <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{assignment.AssignmentTitle}</h3>
+                                    <p>{assignment.AssignmentDescription}</p>
+                                    <p>Due Date: {dueDate.toLocaleString()}</p>
+                                    <p>Created On: {new Date(assignment.AssignmentCreation.seconds * 1000).toLocaleString()}</p>
+
+                                    {!isPastDue && !submittedAssignments[assignment.AssignmentID] ? (
+                                        <>
+                                            <input type="file" onChange={handleFileChange} />
+                                            <button
+                                                className="mt-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+                                                onClick={() => UploadDocument(assignment.AssignmentID)}
+                                            >
+                                                Submit
+                                            </button>
+                                        </>
+                                    ) : isPastDue ? (
+                                        <p className="text-red-600">Submission Closed</p>
+                                    ) : (
+                                        <p className="text-green-600">Submitted</p>
+                                    )}
+
+                                    {assignmentFeedback && assignmentFeedback.marks && (
+                                        <div className="mt-4 bg-green-100 p-4 rounded-lg">
+                                            <h4 className="font-semibold">Feedback:</h4>
+                                            <p><strong>Marks:</strong> {assignmentFeedback.marks}</p>
+                                            <p><strong>Comments:</strong> {assignmentFeedback.comments}</p>
+                                            {assignmentFeedback.downloadURL && (
+                                                <a
+                                                    href={assignmentFeedback.downloadURL}
+                                                    className="mt-2 inline-block text-blue-600"
+                                                    target="_blank" rel="noopener noreferrer"
+                                                >
+                                                    Download Feedback
+                                                </a>
+                                            )}
+                                        </div>
+                                    )}
+                                </li>
+                            );
+                        }) : (
+                            <p>No assignments available.</p>
+                        )}
+                    </ul>
+                </section>
             </div>
+            <Footer />
         </div>
     );
 };

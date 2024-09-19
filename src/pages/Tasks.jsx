@@ -1,49 +1,164 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { KanbanCard } from '../components/KanbanCard';
 import { Footer } from '../components/Footer';
 import { HiPlus } from 'react-icons/hi';
 import { TaskModal } from '../components/TaskModal';
+import { getDoc, doc, updateDoc, collection, setDoc } from 'firebase/firestore';
+import { auth, db } from '../backend/config';
 
 export const Tasks = () => {
     // State to manage tasks and modal
-    const [tasks, setTasks] = useState([
-        { id: 1, courseId: 1, name: "Business Analysis", description: "Complete the business analysis document", dueDate: "2024-06-15", status: "Pending" },
-        { id: 2, courseId: 1, name: "Software Development", description: "Design and develop the software application", dueDate: "2024-06-30", status: "In Progress" },
-        { id: 3, courseId: 2, name: "Software Project", description: "Complete the software project documentation", dueDate: "2024-07-15", status: "Complete" },
-        { id: 4, courseId: 2, name: "Software Testing", description: "Perform software testing and debugging", dueDate: "2024-07-30", status: "Pending" },
-        { id: 5, courseId: 2, name: "Business Analysis", description: "Complete the business analysis document", dueDate: "2024-06-15", status: "Not Started" },
-    ]);
+    const [tasks, setTasks] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [newTaskName, setNewTaskName] = useState("");
+    const [newTaskDescription, setNewTaskDescription] = useState("");
 
-    // Sample user role state
-    const [userRole, setUserRole] = useState('student'); // or 'lecturer'
+    const [userRole, setUserRole] = useState('');
 
     const { id } = useParams();
     const courseId = id ? parseInt(id) : null;
+    const UserID = auth.currentUser.email.substring(0, 9);
     const filteredTasks = courseId ? tasks.filter(task => task.courseId === courseId) : tasks;
 
-    const handleTaskCompletion = (taskId) => {
-        setTasks(tasks.map(task => {
-            if (task.id === taskId) {
-                let newStatus;
-                if (task.status === "Pending") {
-                    newStatus = "In Progress";
-                } else if (task.status === "In Progress") {
-                    newStatus = "Complete";
-                } else {
-                    newStatus = "Pending";
+    useEffect(() =>{
+        if (UserID) {
+            let Role = "";
+              if (UserID.startsWith('7')) {
+                Role = "Supervisor"
+              } else if (UserID.startsWith('2')){
+                Role = "Student"
+              } else {
+                alert("IDK something is tweaking")
+              }
+            setUserRole(Role);  
+        }
+    }, [UserID])
+    useEffect(() => {
+        if (userRole && UserID) {
+            const fetchTasks = async () => {
+                try {
+                    const UserDocRef = doc(db, userRole, UserID);
+                    const UserDoc = await getDoc(UserDocRef);
+                    if (UserDoc.exists()) {
+                        const kanban = UserDoc.data().Kanban;
+                        let allTasks = [];
+                        for (const [kanbanId, task] of Object.entries(kanban)) {
+                            allTasks.push({
+                                id: kanbanId,
+                                courseId: task.ModuleName,
+                                name: task.ModuleName,
+                                description: task.TaskDescription,
+                                dueDate: task.TaskCreation.seconds,
+                                status: task.TaskStatus
+                            });
+                        }
+                if (courseId) {
+                    allTasks = allTasks.filter(task => task.courseId === courseId);
                 }
-                return { ...task, status: newStatus };
+
+                setTasks(allTasks);
+                    } else {
+                        console.log('No such document!');
+                    }
+                } catch (error) {
+                    console.error('Error fetching tasks: ', error);
+                }
             }
-            return task;
-        }));
+            fetchTasks();
+        }
+    }, [userRole, UserID]);
+
+    const handleTaskCompletion = async (taskId) => {
+        try {
+            const taskIndex = tasks.findIndex(task => task.id === taskId);
+            if (taskIndex === -1) return;
+
+            let newStatus;
+            if (tasks[taskIndex].status === "Pending") {
+                newStatus = "In Progress";
+            } else if (tasks[taskIndex].status === "In Progress") {
+                newStatus = "Complete";
+            } else {
+                newStatus = "Pending";
+            }
+
+            const taskDocRef = doc(db, userRole, UserID);
+            const taskDoc = await getDoc(taskDocRef);
+
+            if (taskDoc.exists) {
+                const kanban = taskDoc.data().Kanban;
+                kanban[taskId].TaskStatus = newStatus;
+
+                await updateDoc(taskDocRef, { Kanban: kanban });
+
+                setTasks(tasks.map(task => {
+                    if (task.id === taskId) {
+                        return { ...task, status: newStatus };
+                    }
+                    return task;
+                }));
+            } else {
+                console.error('Task document does not exist');
+            }
+            console.log("status Changed successfully")
+        } catch (error) {
+            console.error('Error updating task status: ', error);
+        }
     };
 
-    const addNewTask = (newTask) => {
-        const newTaskWithId = { ...newTask, id: tasks.length + 1, courseId: courseId || 1 };
-        setTasks([...tasks, newTaskWithId]);
+    const addNewTask = async () => {
+        try {
+            // Create a new task object
+            const newTask = {
+                TaskStatus: "Not Started",
+                TaskCreation: {
+                    seconds: new Date().getTime() / 1000, 
+                    nanoseconds: 0
+                },
+                ModuleName: newTaskName,
+                TaskDescription: newTaskDescription
+            };
+    
+            // Reference to the user's document
+            const UserDocRef = doc(db, userRole, UserID);
+            const UserDoc = await getDoc(UserDocRef);
+    
+            if (!UserDoc.exists()) {
+                console.error('User document not found');
+                return;
+            }
+    
+            // Get the Kanban data from the user document
+            const kanban = UserDoc.data().Kanban || {}; // Ensure Kanban is initialized
+    
+            // Add the new task to the Kanban
+            const newTaskRef = doc(collection(db, userRole, UserID, 'Kanban')); // Use doc instead of addDoc to get a reference
+            await setDoc(newTaskRef, newTask); // Use setDoc to set the task data
+    
+            // Update the Kanban object in the user's document
+            kanban[newTaskRef.id] = newTask;
+            await updateDoc(UserDocRef, { Kanban: kanban });
+    
+            // Update local state
+            setTasks([...tasks, {
+                id: newTaskRef.id,
+                courseId: newTask.ModuleName,
+                name: newTask.ModuleName,
+                description: newTask.TaskDescription,
+                dueDate: newTask.TaskCreation.seconds,
+                status: newTask.TaskStatus
+            }]);
+    
+            // Close the modal and reset the form
+            setIsModalOpen(false);
+            setNewTaskName("");
+            setNewTaskDescription("");
+        } catch (error) {
+            console.error('Error adding task: ', error);
+        }
     };
+    
 
     const pendingTasks = filteredTasks.filter(task => task.status === "Pending");
     const inProgressTasks = filteredTasks.filter(task => task.status === "In Progress");
@@ -62,22 +177,20 @@ export const Tasks = () => {
                     </p>
                 </section>
 
-                {userRole === 'lecturer' && (
-                    <section className="mt-6 mb-6 flex justify-between items-center">
-                        <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                            All Tasks
-                        </h1>
-                        <div className="flex items-center">
-                            <button 
-                                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg"
-                                onClick={() => setIsModalOpen(true)}
-                            >
-                                <HiPlus className="mr-2" />
-                                Add New Task
-                            </button>
-                        </div>
-                    </section>
-                )}
+                <section className="mt-6 mb-6 flex justify-between items-center">
+                    <h1 className="text-xl font-bold text-gray-800 dark:text-gray-200">
+                        All Tasks
+                    </h1>
+                    <div className="flex items-center">
+                        <button 
+                            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            <HiPlus className="mr-2" />
+                            Add New Task
+                        </button>
+                    </div>
+                </section>
 
                 {/* Add horizontal line */}
                 <hr className="border-t-2 border-gray-200 dark:border-gray-700 mb-6" />
@@ -111,13 +224,13 @@ export const Tasks = () => {
 
                 <Footer />
             </div>
-            {userRole === 'lecturer' && (
-                <TaskModal
-                    isOpen={isModalOpen}
-                    onClose={() => setIsModalOpen(false)}
-                    onSave={addNewTask}
-                />
-            )}
+            <TaskModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                onSave={addNewTask}
+                setNewTaskName={setNewTaskName}
+                setNewTaskDescription={setNewTaskDescription}
+            />
         </div>
     );
 };

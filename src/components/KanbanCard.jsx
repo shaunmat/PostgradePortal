@@ -33,7 +33,7 @@ export const KanbanCard = ({ id, name, description, dueDate, status, onTaskCompl
             <div>
                 <h5 className="mb-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white">{name}</h5>
                 <p className="font-normal text-gray-700 dark:text-gray-400">{description}</p>
-                <p className="font-normal text-gray-700 dark:text-gray-400" style={{ color: getStatusColor(status) }}>Due Date: {dueDate}</p>
+                <p className="font-normal text-gray-700 dark:text-gray-400" style={{ color: getStatusColor(status) }}>Due Date: {new Date(dueDate * 1000).toLocaleDateString()}</p>
             </div>
             <div className="mt-4">
                 <p className="font-normal text-gray-700 dark:text-gray-400">Status: {status}</p>
