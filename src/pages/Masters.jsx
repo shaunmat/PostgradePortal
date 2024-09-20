@@ -14,7 +14,6 @@ export const Masters = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTaskName, setNewTaskName] = useState('');
     const [newTaskDescription, setNewTaskDescription] = useState('');
-    const [newTaskCreationDate, setNewTaskCreationDate] = useState('');
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
 
     useEffect(() => {
@@ -24,8 +23,14 @@ export const Masters = () => {
     }, [Loading, UserData]);
 
     const fetchAssignmentData = async () => {
-        const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
-        setAssignments(courseTypesArray);
+        const cachedAssignments = localStorage.getItem('mastersAssignments');
+        if (cachedAssignments) {
+            setAssignments(JSON.parse(cachedAssignments));
+        } else {
+            const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
+            setAssignments(courseTypesArray);
+            localStorage.setItem('mastersAssignments', JSON.stringify(courseTypesArray)); // Cache data
+        }
     };
 
     const fetchResearchAssignments = async (CourseIDs) => {
@@ -62,7 +67,6 @@ export const Masters = () => {
         }
     
         try {
-            console.log(newTaskCreationDate);
             // Get current date and time for the creation date
             const creationDate = new Date();
             
@@ -81,7 +85,7 @@ export const Masters = () => {
                 AssignmentCreation: creationTimestamp,
             });
     
-            // Close modal and reset state
+            // Fetch and cache updated assignment data
             await fetchAssignmentData();
             setIsModalOpen(false);
             setNewTaskName("");
@@ -145,7 +149,6 @@ export const Masters = () => {
                     setNewTaskName={setNewTaskName} 
                     setNewTaskDescription={setNewTaskDescription} 
                     setNewTaskDueDate={setNewTaskDueDate} 
-                    setNewTaskCreationDate={setNewTaskCreationDate}
                 />
 
                 <Footer />

@@ -19,13 +19,25 @@ export const PhD = () => {
 
     useEffect(() => {
         if (!Loading && UserData) {
-            fetchAssignmentData();
+            const cachedData = JSON.parse(localStorage.getItem('phdAssignments'));
+            const cacheTimestamp = JSON.parse(localStorage.getItem('phdAssignmentsTimestamp'));
+
+            // Check if cache is available and is less than 10 minutes old
+            const cacheIsValid = cacheTimestamp && (Date.now() - cacheTimestamp < 10 * 60 * 1000);
+
+            if (cachedData && cacheIsValid) {
+                setAssignments(cachedData);
+            } else {
+                fetchAssignmentData();
+            }
         }
     }, [Loading, UserData]);
 
     const fetchAssignmentData = async () => {
         const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
         setAssignments(courseTypesArray);
+        localStorage.setItem('phdAssignments', JSON.stringify(courseTypesArray));
+        localStorage.setItem('phdAssignmentsTimestamp', JSON.stringify(Date.now()));
     };
 
     const fetchResearchAssignments = async (CourseIDs) => {
@@ -55,33 +67,24 @@ export const PhD = () => {
     };
 
     const handleSave = async () => {
-        // Check if all required fields are filled
         if (!newTaskName || !newTaskDescription || !newTaskDueDate) {
             console.error("Please fill all fields.");
             return;
         }
     
         try {
-            console.log(newTaskCreationDate);
-            // Get current date and time for the creation date
             const creationDate = new Date();
-            
-            // Convert dates to Firestore Timestamp format
-            const dueDate = new Date(newTaskDueDate); // Convert due date to Date object
-            const creationTimestamp = Timestamp.fromDate(creationDate); // Convert to Firestore Timestamp
-            
-            // Use the first element of the CourseID array for the collection path
+            const dueDate = new Date(newTaskDueDate);
+            const creationTimestamp = Timestamp.fromDate(creationDate);
             const courseID = UserData.CourseID[0];
     
-            // Add the new assignment to Firestore
             await addDoc(collection(db, 'Module', courseID, "Assignments"), {
                 AssignmentTitle: newTaskName,
                 AssignmentDescription: newTaskDescription,
-                AssignmentDueDate: Timestamp.fromDate(dueDate), // Convert to Firestore Timestamp
+                AssignmentDueDate: Timestamp.fromDate(dueDate),
                 AssignmentCreation: creationTimestamp,
             });
     
-            // Close modal and reset state
             await fetchAssignmentData();
             setIsModalOpen(false);
             setNewTaskName("");
@@ -95,7 +98,6 @@ export const PhD = () => {
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Header with Add Button */}
                 <section className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
@@ -116,7 +118,6 @@ export const PhD = () => {
 
                 <div className="flex flex-col gap-7">
                     {Assignments.length > 0 ? Assignments.map((assignment, index) => (
-                        // Pass both courseId and assignmentId in the Link
                         <Link 
                             to={`/courses/${UserData.CourseID[0]}/assignments/${assignment.id}`}
                             key={index} 
@@ -137,7 +138,7 @@ export const PhD = () => {
                         <p>No assignments available.</p>
                     )}
                 </div>
-                {/* Task Modal */}
+                
                 <TaskModal 
                     isOpen={isModalOpen} 
                     onClose={() => setIsModalOpen(false)} 

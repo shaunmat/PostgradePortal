@@ -42,9 +42,11 @@ export function AuthProvider({ children }) {
           Role = "Supervisor";
         } else if (UserID.startsWith('2')) {
           Role = "Student";
+        } else if (UserID.endsWith('@externalexaminer.co.za')) {
+          Role = "Examiner";
         } else {
           alert("Invalid user type");
-        }
+        } 
         setUserRole(Role);
         setCurrentUser(user);
         setLoggedInUser(true);

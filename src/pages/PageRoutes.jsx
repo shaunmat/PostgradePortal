@@ -1,5 +1,5 @@
-import { memo, lazy, Suspense } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { useState, useEffect, useMemo, memo } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { RightSidebar } from '../components/Shared/RightSidebar';
 import { SidebarComponent } from '../components/Shared/Sidebar';
 import { Dashboard } from '../pages/Dashboard';
@@ -17,56 +17,75 @@ import { Settings } from './Settings';
 import { Tasks } from './Tasks';
 import { TopicContent } from './SyllabusPage';
 import { LogoLoader } from '../components/LogoLoader';
+import { Review } from './Reviews';
+import { motion } from 'framer-motion';
+
+// Memoize the Sidebar and RightSidebar components to prevent re-renders
 const MemoizedSidebarComponent = memo(SidebarComponent);
 const MemoizedRightSidebar = memo(RightSidebar);
-const MemoizedDashboard = memo(Dashboard);
-const MemoizedCourses = memo(Courses);
-const MemoizedMasters = memo(Masters);
-const MemoizedHonours = memo(Honours);
-const MemoizedPhD = memo(PhD);
-const MemoizedResearch = memo(Research);
-const MemoizedCourse = memo(Course);
-const MemorizedAssignments = memo(Assignments);
-const MemoizedResearchCourse = memo(ResearchCourse);
-const MemoizedInbox = memo(Inbox);
-const MemoizedMilestones = memo(Milestones);
-const MemoizedSettings = memo(Settings);
-const MemoizedTasks = memo(Tasks);
-const MemoizedTopicContent = memo(TopicContent);
-const MemoizedLogoLoader = memo(LogoLoader);
 
 export const PageRoutes = () => {
+  const [loading, setLoading] = useState(false);
+  const location = useLocation();
 
-    const isLoading = false;
+  // Memoize the routes only once since these don't change
+  const routes = useMemo(
+    () => (
+      <Routes>
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/courses" element={<Courses />} />
+        <Route path="/courses/course/:courseId" element={<Course />} />
+        <Route path="/courses/:courseId/assignments/:assignmentId" element={<Assignments />} />
+        <Route path="/courses/course/:courseId/topic/:topicId" element={<TopicContent />} />
+        <Route path="/research" element={<Research />} />
+        <Route path="/research/:researchId" element={<ResearchCourse />} />
+        <Route path="/honours" element={<Honours />} />
+        <Route path="/honours/:studentID" element={<ResearchCourse />} />
+        <Route path="/phd" element={<PhD />} />
+        <Route path="/phd/:studentID" element={<ResearchCourse />} />
+        <Route path="/masters" element={<Masters />} />
+        <Route path="/masters/:studentID" element={<ResearchCourse />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/inbox" element={<Inbox />} />
+        <Route path="/milestones" element={<Milestones />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/review-submissions" element={<Review />} />
+      </Routes>
+    ),
+    [] // Empty dependencies as routes don't change
+  );
 
-    if (isLoading) {
-        return <MemoizedLogoLoader />;
-    }
-    return (
-        <div className="flex">
-            <MemoizedSidebarComponent />
-            <main>
-                <Routes>
-                    <Route path="/dashboard" element={<MemoizedDashboard />} />
-                    <Route path="/courses/course" element={<MemoizedCourses />} />
-                    <Route path="/courses/course/:courseId" element={<MemoizedCourse />} />
-                    <Route path="/courses/:courseId/assignments/:assignmentId" element={<MemorizedAssignments />} />
-                    <Route path="/courses/course/:courseId/topic/:topicId" element={<MemoizedTopicContent />} />
-                    <Route path="/courses/research" element={<MemoizedResearch />} />
-                    <Route path="/courses/research/:researchId" element={<MemoizedResearchCourse />} />
-                    <Route path="/courses/Honours" element={<MemoizedHonours />} />
-                    <Route path="/courses/Honours/:StudentID" element={<MemoizedResearchCourse />} />
-                    <Route path="/courses/PhD" element={<MemoizedPhD />} />
-                    <Route path="/courses/PhD/:StudentID" element={<MemoizedResearchCourse />} />
-                    <Route path="/courses/Masters" element={<MemoizedMasters />} />
-                    <Route path="/courses/Masters/:StudentID" element={<MemoizedResearchCourse />} />
-                    <Route path="/tasks" element={<MemoizedTasks />} />
-                    <Route path="/inbox" element={<MemoizedInbox />} />
-                    <Route path="/milestones" element={<MemoizedMilestones />} />
-                    <Route path="/settings" element={<MemoizedSettings />} />
-                </Routes>
-            </main>
-            <MemoizedRightSidebar />
-        </div>
-    )
-}
+  // Effect to manage loading based on location change
+  useEffect(() => {
+    const handleStart = () => setLoading(true);
+    const handleComplete = () => setLoading(false);
+
+    handleStart(); // Start loading
+
+    const timer = setTimeout(() => {
+      handleComplete(); // Stop loading after a short delay
+    }, 1000); // Adjust the duration to match your actual loading times
+
+    return () => clearTimeout(timer); // Cleanup timer
+  }, [location]); // Re-run effect only when location changes
+
+  return (
+    <div className="flex">
+      <MemoizedSidebarComponent />
+      <main className="flex-1 relative">
+        {loading ? (
+          <LogoLoader />
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+          >
+            {routes}
+          </motion.div>
+        )}
+      </main>
+      <MemoizedRightSidebar />
+    </div>
+  );
+};

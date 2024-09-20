@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../backend/AuthContext";
 import { collection, getDocs, addDoc, Timestamp, query, orderBy } from "firebase/firestore";
-import { db, storage } from "../backend/config"; // Add storage here
+import { db, storage } from "../backend/config";
 import { motion } from "framer-motion";
 import { Footer } from "../components/Footer";
 import { HiPlus } from "react-icons/hi";
-import { TaskModal } from "../components/TaskModal"; // Adjust the import path as needed
-import { ref, getDownloadURL, uploadBytes } from "firebase/storage"; // Import Firebase storage functions
-import { v4 as uuidv4 } from 'uuid'; // For generating unique IDs for topics
+import { TaskModal } from "../components/TaskModal";
+import { ref, getDownloadURL, uploadBytes } from "firebase/storage";
+import { v4 as uuidv4 } from 'uuid';
 
 export const Honours = () => {
     const { UserData, Loading } = useAuth();
@@ -16,9 +16,7 @@ export const Honours = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [newTaskName, setNewTaskName] = useState('');
     const [newTaskDescription, setNewTaskDescription] = useState('');
-    const [newTaskCreationDate, setNewTaskCreationDate] = useState('');
     const [newTaskDueDate, setNewTaskDueDate] = useState('');
-
     const [topics, setTopics] = useState([]);
     const [newTopicName, setNewTopicName] = useState('');
     const [newTopicDescription, setNewTopicDescription] = useState('');
@@ -32,24 +30,29 @@ export const Honours = () => {
     }, [Loading, UserData]);
 
     const fetchAssignmentData = async () => {
-        const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
-        setAssignments(courseTypesArray);
+        const cachedAssignments = localStorage.getItem('assignments');
+        if (cachedAssignments) {
+            setAssignments(JSON.parse(cachedAssignments));
+        } else {
+            const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
+            setAssignments(courseTypesArray);
+            localStorage.setItem('assignments', JSON.stringify(courseTypesArray)); // Cache data
+        }
     };
 
     const fetchResearchAssignments = async (CourseIDs) => {
         const typesSet = [];
-
         try {
             for (const courseID of CourseIDs) {
                 const AssignmentRef = collection(db, 'Module', courseID, "Assignments");
-                const q = query(AssignmentRef, orderBy("AssignmentCreation", "desc")); // Order by creation date, descending
+                const q = query(AssignmentRef, orderBy("AssignmentCreation", "desc"));
                 const AssignmentSnap = await getDocs(q);
 
                 AssignmentSnap.forEach((docSnap) => {
                     if (docSnap.exists()) {
                         const moduleData = docSnap.data();
                         typesSet.push({
-                            id: docSnap.id, // Add the document ID
+                            id: docSnap.id,
                             ...moduleData,
                         });
                     }
@@ -58,35 +61,35 @@ export const Honours = () => {
         } catch (error) {
             console.error('Error fetching course types:', error);
         }
-
         return typesSet;
     };
 
-    // Fetch existing topics from Firebase Storage
     const fetchTopics = async () => {
-        try {
-            const topicsRef = ref(storage, 'r_topics/topics.json');
-            const url = await getDownloadURL(topicsRef);
-            const response = await fetch(url);
-            const topicsData = await response.json();
-            setTopics(topicsData);
-        } catch (error) {
-            console.error("Error fetching topics:", error);
-            setTopics([]); // Set an empty array if no topics are found
+        const cachedTopics = localStorage.getItem('topics');
+        if (cachedTopics) {
+            setTopics(JSON.parse(cachedTopics));
+        } else {
+            try {
+                const topicsRef = ref(storage, 'r_topics/topics.json');
+                const url = await getDownloadURL(topicsRef);
+                const response = await fetch(url);
+                const topicsData = await response.json();
+                setTopics(topicsData);
+                localStorage.setItem('topics', JSON.stringify(topicsData)); // Cache data
+            } catch (error) {
+                console.error("Error fetching topics:", error);
+                setTopics([]);
+            }
         }
     };
 
-    // Handle form submission to add a new topic
     const handleAddTopic = async () => {
         if (!newTopicName || !newTopicDescription) {
             alert("Please fill in both the topic name and description.");
             return;
         }
-
         setLoading(true);
-
         try {
-            // Create new topic object
             const newTopic = {
                 id: uuidv4(),
                 topicName: newTopicName,
@@ -94,24 +97,14 @@ export const Honours = () => {
                 isSelected: false,
                 selectedBy: null
             };
-
-            // Add the new topic to the existing topics array
             const updatedTopics = [...topics, newTopic];
-
-            // Convert the updated topics array to JSON format
             const updatedTopicsBlob = new Blob([JSON.stringify(updatedTopics)], { type: 'application/json' });
-
-            // Upload the updated topics file to Firebase Storage
             const topicsRef = ref(storage, 'r_topics/topics.json');
             await uploadBytes(topicsRef, updatedTopicsBlob);
-
-            // Clear form fields after submission
             setNewTopicName('');
             setNewTopicDescription('');
-
-            // Update local state with the newly added topic
             setTopics(updatedTopics);
-
+            localStorage.setItem('topics', JSON.stringify(updatedTopics)); // Update cache
             alert("Topic added successfully!");
         } catch (error) {
             console.error("Error adding topic:", error);
@@ -122,34 +115,24 @@ export const Honours = () => {
     };
 
     const handleSave = async () => {
-        // Check if all required fields are filled
         if (!newTaskName || !newTaskDescription || !newTaskDueDate) {
             console.error("Please fill all fields.");
             return;
         }
-
         try {
-            console.log(newTaskCreationDate);
-            // Get current date and time for the creation date
             const creationDate = new Date();
-
-            // Convert dates to Firestore Timestamp format
-            const dueDate = new Date(newTaskDueDate); // Convert due date to Date object
-            const creationTimestamp = Timestamp.fromDate(creationDate); // Convert to Firestore Timestamp
-
-            // Use the first element of the CourseID array for the collection path
+            const dueDate = new Date(newTaskDueDate);
+            const creationTimestamp = Timestamp.fromDate(creationDate);
             const courseID = UserData.CourseID[0];
 
-            // Add the new assignment to Firestore
             await addDoc(collection(db, 'Module', courseID, "Assignments"), {
                 AssignmentTitle: newTaskName,
                 AssignmentDescription: newTaskDescription,
-                AssignmentDueDate: Timestamp.fromDate(dueDate), // Convert to Firestore Timestamp
+                AssignmentDueDate: Timestamp.fromDate(dueDate),
                 AssignmentCreation: creationTimestamp,
             });
 
-            // Close modal and reset state
-            await fetchAssignmentData();
+            await fetchAssignmentData(); // Refresh assignment data
             setIsModalOpen(false);
             setNewTaskName("");
             setNewTaskDescription("");
@@ -203,20 +186,17 @@ export const Honours = () => {
                     )}
                 </div>
 
-                {/* Task Modal */}
                 <TaskModal 
                     isOpen={isModalOpen} 
                     onClose={() => setIsModalOpen(false)} 
                     onSave={handleSave} 
                     setNewTaskName={setNewTaskName} 
                     setNewTaskDescription={setNewTaskDescription} 
-                    setNewTaskDueDate={setNewTaskDueDate} 
-                    setNewTaskCreationDate={setNewTaskCreationDate}
+                    setNewTaskDueDate={setNewTaskDueDate}
                 />
 
                 <h2 className="text-2xl font-bold mt-6 text-gray-800 dark:text-gray-200">Add Research Topics</h2>
 
-                {/* Form to Add New Topic */}
                 <div className="mt-6">
                     <label className="block text-gray-800 dark:text-gray-200 font-bold">Topic Name:</label>
                     <input
@@ -242,7 +222,6 @@ export const Honours = () => {
                     </button>
                 </div>
 
-                {/* Display Existing Topics */}
                 <h2 className="text-2xl font-bold mt-6 text-gray-800 dark:text-gray-200">Existing Topics</h2>
                 <ul className="mt-4 space-y-4">
                     {topics.length > 0 ? (

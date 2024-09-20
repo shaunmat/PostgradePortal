@@ -106,8 +106,8 @@ export const RightSidebar = () => {
                 </div>
 
                 {/* Homework progress section, conditional rendering based on userRole */}
-                {userRole === 'lecturer' ? (
-                    <div className="mb-4">
+                {userRole === 'Supervisior' ? (
+                    <div className="mb-4" style={{display: 'none'}}>
                         <h2 className="text-xl font-bold text-gray-800 text-center mb-4 dark:text-gray-300 tracking-wider">Manage Assignment Progress</h2>
                         <div className="w-full h-0.5 mb-4 bg-gray-300 dark:bg-gray-600"></div>
                         <div className="flex flex-col items-center justify-center">
@@ -134,7 +134,7 @@ export const RightSidebar = () => {
                         </div>                  
                     </div>
                 ) : (
-                    <div className="mb-4">
+                    <div className="mb-4" style={{display: 'none'}}>
                         <h2 className="text-xl font-bold text-gray-800 mb-4 dark:text-gray-300">Assignment Progress</h2>
                         {/* <div className="w-full h-0.5 mb-4 bg-gray-300 dark:bg-gray-600"></div> */}
                         <hr className="border-0 h-0.5 mb-4 bg-gray-300 dark:bg-gray-600" />

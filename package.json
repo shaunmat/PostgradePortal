@@ -17,6 +17,8 @@
     "@fullcalendar/interaction": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@react-pdf-viewer/core": "^3.12.0",
+    "@react-pdf-viewer/default-layout": "^3.12.0",
     "bootstrap": "^5.3.3",
     "diff2html": "^3.4.48",
     "firebase": "^10.12.4",

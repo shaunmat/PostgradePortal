@@ -133,7 +133,7 @@ export const Login = () => {
             {isDesktopOrLaptop && (
                 <footer className="absolute bottom-0 w-full p-4 text-center text-gray-700 dark:text-gray-400">
                     <p className="text-sm font-normal text-center text-white dark:text-gray-400">
-                        &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal Dashboard</span> is a product of University Of Johannesburg.
+                        &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal</span> is a product of University Of Johannesburg.
                     </p>
                 </footer>
             )}
@@ -311,7 +311,7 @@ export const Login = () => {
 //             {isDesktopOrLaptop && (
 //                 <footer className="absolute bottom-0 w-full p-4 text-center text-gray-700 dark:text-gray-400">
 //                     <p className="text-sm font-normal text-center text-white dark:text-gray-400">
-//                         &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal Dashboard</span> is a product of University Of Johannesburg.
+//                         &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal</span> is a product of University Of Johannesburg.
 //                     </p>
 //                 </footer>
 //             )}

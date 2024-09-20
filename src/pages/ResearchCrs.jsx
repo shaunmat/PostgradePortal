@@ -5,7 +5,7 @@ import { db, storage } from '../backend/config'; // Import your Firebase configu
 import { Footer } from '../components/Footer';
 import BannerImage from '../assets/images/research_banner.jpg';
 import { useParams } from 'react-router-dom';
-import { useAuth } from "../backend/AuthContext";
+import { useAuth } from '../backend/authcontext'
 
 export const ResearchCourse = () => {
     const { UserData } = useAuth();

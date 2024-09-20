@@ -1,256 +1,218 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import RegImage1 from '../assets/images/RegImage1.jpg';
 import RegImage2 from '../assets/images/RegImage2.jpg';
 import RegImage3 from '../assets/images/RegImage3.jpg';
 import RegImage4 from '../assets/images/RegImage4.jpg';
+import UserLogo from '../assets/images/Avatar.png';
 import { CourseCard } from '../components/CourseCard';
 import { Calendar } from '../components/FullCalendar';
 import { UpcomingMilestones } from '../components/Milestones';
 import { Footer } from '../components/Footer';
+import { useAuth } from '../backend/authcontext';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from '../backend/config';
 
 export const Dashboard = () => {
-    const [userRole, setUserRole] = useState('lecturer'); // Can be 'student' or 'lecturer'
+    const [userName, setUserName] = useState('');
+    const [userSurname, setUserSurname] = useState('');
+    const [userID, setUserID] = useState('');
+    const [ProfilePicture, setProfilePicture] = useState('');
+    const [UserLevel, setUserLevel] = useState('');
+    const [CourseIDs, setCourseIDs] = useState([]);
+    const { UserData, UserRole, Loading } = useAuth();
+    const [modules, setModules] = useState([]);
 
-    const subjects = [
-        {
-            name: 'Business Analysis',
-            image: RegImage1,
-            description: 'Learn the basics of Business Analysis',
-        },
-        {
-            name: 'Software Development',
-            image: RegImage2,
-            description: 'Learn the basics of Software Development',
-        },
-        {
-            name: 'Software Project',
-            image: RegImage3,
-            description: 'Learn the basics of Software Project',
-        },
-        {
-            name: 'Software Testing',
-            image: RegImage4,
-            description: 'Learn the basics of Software Testing',
+    useEffect(() => {
+        const cachedUserData = localStorage.getItem('userData');
+        if (cachedUserData) {
+            const user = JSON.parse(cachedUserData);
+            setUserData(user);
+            fetchModules(user.CourseID);
+        } else if (!Loading && UserData) {
+            localStorage.setItem('userData', JSON.stringify(UserData)); // Cache user data
+            setUserData(UserData);
+            fetchModules(UserData.CourseID);
         }
+    }, [Loading, UserData, UserRole]);
+
+    const setUserData = (user) => {
+        setUserName(user.Name);
+        setUserSurname(user.Surname);
+        setUserID(user.ID);
+        setCourseIDs(user.CourseID);
+        setProfilePicture(user.ProfilePicture || UserLogo);
+        setUserLevel(UserRole === 'Student' ? user.StudentType : UserRole);
+    };
+
+    const fetchModules = async (courseIDs) => {
+        try {
+            const cachedModules = localStorage.getItem('modules');
+            if (cachedModules) {
+                setModules(JSON.parse(cachedModules));
+                return; // Skip fetching if we have cached data
+            }
+
+            const fetchedModules = [];
+            for (const courseID of courseIDs) {
+                const moduleRef = collection(db, 'Module');
+                const q = query(moduleRef, where('__name__', '==', courseID)); // Use '==' for exact match
+                const querySnapshot = await getDocs(q);
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    fetchedModules.push({ id: doc.id, ...data });
+                });
+            }
+
+            // Update state with the fetched modules and cache them
+            setModules(fetchedModules);
+            localStorage.setItem('modules', JSON.stringify(fetchedModules));
+        } catch (error) {
+            console.error('Error fetching modules:', error);
+        }
+    };
+
+    const pendingReviews = [
+        { id: '1', title: 'Review of Thesis Proposal', description: 'Detailed review of the thesis proposal submitted by student A.' },
+        { id: '2', title: 'Final Project Report', description: 'Evaluation of the final project report from student B.' },
+        { id: '3', title: 'Research Paper Draft', description: 'Initial draft of research paper for student C.' },
+        { id: '4', title: 'Project Presentation', description: 'Review of the project presentation slides from student D.' },
+        { id: '5', title: 'Dissertation Chapter', description: 'Review of the dissertation chapter submitted by student E.' }
     ];
 
-    const borderColors = [
-        'border-[#00ad43]', 
-        'border-[#00bfff]', 
-        'border-[#590098]', 
-        'border-[#FF8503]'
+    const upcomingDeadlines = [
+        { id: '1', title: 'Thesis Review', date: '2024-09-30' },
+        { id: '2', title: 'Project Proposal', date: '2024-10-15' },
+        { id: '3', title: 'Final Submission', date: '2024-10-25' },
     ];
 
-    const progressColors = [
-        'bg-[#00ad43]', 
-        'bg-[#00bfff]', 
-        'bg-[#590098]', 
-        'bg-[#FF8503]'   
-    ];
+    const images = [RegImage1, RegImage2, RegImage3, RegImage4];
+    const borderColors = ['border-[#00ad43]', 'border-[#00bfff]', 'border-[#590098]', 'border-[#FF8503]'];
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Conditional Content Based on Role */}
-                {userRole === 'student' ? (
+                {UserRole === 'Student' ? (
                     <>
-                        {/* Welcome Header */}
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back Shaun
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here&rsquo;s what&rsquo;s happening with your studies today
+                                Here’s what’s happening with your studies today
                             </p>
-
-                            <div className="flex items-center mt-4">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 3 new tasks to complete
-                                </p>
-
-                                <button className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div className="flex items-center mt-2">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 1 new message
-                                </p>
-
-                                <button className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            <div className="flex items-center mt-2">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 2 new milestones
-                                </p>
-
-                                <button className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                    </svg>
-                                </button>
-                            </div>
-                            
-                            <div className="flex items-center mt-2">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 1 new lecture
-                                </p>
-
-                                {/* Add close button svg with ml for spacing */}
-                                {/* <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                    <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                </svg> */}
-
-                                <button className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
-                                    <svg className="w-3 h-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 14">
-                                        <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6"/>
-                                    </svg>
-                                </button>
-                            </div>
-
-                            {/* View full notification button */}
-                            {/* <div className="mt-4">
-                                <button className="text-sm font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                                    View all notifications
-                                </button>
-                            </div> */}
-                
-
                         </section>
 
-                        {/* My Courses */}
                         <section className="mt-8">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                My Courses
+                                Your Courses
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                                {subjects.map((subject, index) => (
+                                {modules.map((module, index) => (
                                     <CourseCard
                                         key={index}
-                                        name={subject.name}
-                                        image={subject.image}
-                                        description={subject.description}
+                                        name={module.ModuleTitle}
+                                        image={images[index % images.length]}
+                                        description={module.ModuleDescription}
                                         borderColor={borderColors[index % borderColors.length]}
                                     />
                                 ))}
                             </div>
                         </section>
 
-                        {/* My Schedule */}
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                My Schedule
+                                Your Schedule
                             </h2>
                             <div className="mt-6">
                                 <Calendar />
                             </div>
                         </section>
 
-                        {/* Upcoming Milestones */}
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
                                 Upcoming Milestones
                             </h2>
-
                             <div className="mt-6">
                                 <UpcomingMilestones />
                             </div>
                         </section>
                     </>
-                ) : (
+                ) : UserRole === 'Supervisor' ? (
                     <>
-                        {/* Welcome Header for Lecturer */}
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back Dr. John Doe
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Dr. {userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here&rsquo;s your overview for today
+                                Here’s your overview for today
                             </p>
-
-                            <div className="flex items-center mt-4">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 3 courses to manage
-                                </p>
-                            </div>
-
-                            <div className="flex items-center mt-2">
-                                <div className="flex items-center justify-center w-10 h-10 bg-gray-200 dark:bg-gray-700 rounded-full">
-                                    <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Zm0 2a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0 3a1 1 0 0 0-1 1v3.5a1 1 0 0 0 2 0V8a1 1 0 0 0-1-1Zm0 7a1 1 0 0 0 1-1v-1.5a1 1 0 0 0-2 0V13a1 1 0 0 0 1 1Z"></path>
-                                    </svg>
-                                </div>
-                                <p className="ml-2 text-sm font-normal text-gray-700 dark:text-gray-400">
-                                    You have 1 upcoming lecture
-                                </p>
-                            </div>
                         </section>
 
-                        {/* Managed Courses */}
                         <section className="mt-8">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Managed Courses
+                                Supervised Courses
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                                {subjects.map((subject, index) => (
+                                {modules.map((module, index) => (
                                     <CourseCard
                                         key={index}
-                                        name={subject.name}
-                                        image={subject.image}
-                                        description={subject.description}
-                                        progress={subject.progress}
+                                        name={module.ModuleTitle}
+                                        image={images[index % images.length]}
+                                        description={module.ModuleDescription}
                                         borderColor={borderColors[index % borderColors.length]}
-                                        progressColor={progressColors[index % progressColors.length]}
                                     />
                                 ))}
                             </div>
                         </section>
 
-                        {/* Upcoming Lectures */}
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
                                 Upcoming Lectures
                             </h2>
-
                             <div className="mt-6">
                                 <Calendar />
                             </div>
                         </section>
                     </>
-                )}
+                ) : UserRole === 'Examiner' ? (
+                    <>
+                        <section className="mb-6">
+                            <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Examiner {userName} {userSurname}</span>
+                            </h1>
+                            <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
+                                Here’s your overview for today
+                            </p>
+                        </section>
+
+                        <section className="mt-8">
+                            <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                                Pending Review Submissions
+                            </h2>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
+                                {pendingReviews.map((review) => (
+                                    <div key={review.id} className="p-4 bg-white shadow-md rounded-lg dark:bg-gray-800 dark:text-gray-200">
+                                        <h3 className="text-lg font-semibold">{review.title}</h3>
+                                        <p className="mt-2 text-gray-600 dark:text-gray-400">{review.description}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section className="mt-10">
+                            <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                                Upcoming Deadlines
+                            </h2>
+                            <div className="mt-6">
+                                <ul className="list-disc list-inside">
+                                    {upcomingDeadlines.map(deadline => (
+                                        <li key={deadline.id} className="mt-2 text-gray-600 dark:text-gray-400">{deadline.title} - {deadline.date}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </section>
+                    </>
+                ) : null}
 
                 {/* Footer */}
                 <Footer />
