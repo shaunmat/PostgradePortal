@@ -1,0 +1,14 @@
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\bin\Debug\net8.0\TestVSCode.exe
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\bin\Debug\net8.0\TestVSCode.deps.json
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\bin\Debug\net8.0\TestVSCode.runtimeconfig.json
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\bin\Debug\net8.0\TestVSCode.dll
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\bin\Debug\net8.0\TestVSCode.pdb
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.AssemblyInfoInputs.cache
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.AssemblyInfo.cs
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.csproj.CoreCompileInputs.cache
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.dll
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\refint\TestVSCode.dll
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.pdb
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\TestVSCode.genruntimeconfig.cache
+C:\Users\Melinkosi.Kanengoni\Documents\Code\TestVSCode\obj\Debug\net8.0\ref\TestVSCode.dll

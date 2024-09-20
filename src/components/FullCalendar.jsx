@@ -9,6 +9,7 @@ import Swal from 'sweetalert2';
 import { useAuth } from '../backend/authcontext';
 import { getDoc, doc, updateDoc, arrayUnion } from 'firebase/firestore';
 import { db, auth } from '../backend/config';
+import '../index.css';
 
 export const Calendar = () => {
     const { CurrentUser } = useAuth();
@@ -90,15 +91,15 @@ export const Calendar = () => {
         const { value: formValues } = await Swal.fire({
             title: 'Add Event',
             html: `
-                <input id="swal-input1" class="swal2-input" placeholder="Event Title">
-                <input id="swal-input2" class="swal2-input" type="date" value="${newEvent.start}">
-                <input id="swal-input3" class="swal2-input" type="date" value="${newEvent.end}">
+                <input id="swal-input1" class="swal2-input custom-swal-input" placeholder="Event Title">
+                <input id="swal-input2" class="swal2-input custom-swal-input" type="date" value="${newEvent.start}">
+                <input id="swal-input3" class="swal2-input custom-swal-input" type="date" value="${newEvent.end}">
                 <select id="swal-input4" class="swal2-input">
                     <option value="" disabled selected>Select a color</option>
                     <option value="#378006" style="background-color: #378006; color: #378006;">● Green</option>
                     <option value="#ff9f89" style="background-color: #ff9f89; color: #ff9f89;">● Pink</option>
                     <option value="#1e90ff" style="background-color: #1e90ff; color: #1e90ff;">● Blue</option>
-                    <option value="#ff6347" style="background-color: #806CA5; color: #806CA5;">● Purple</option>
+                    <option value="#ff6347" style="background-color: #ff6347; color: #ff6347;">● Red</option>
                     <option value="#ffa500" style="background-color: #ffa500; color: #ffa500;">● Orange</option>
                 </select>
                 <select id="swal-input5" class="swal2-input">
@@ -146,9 +147,16 @@ export const Calendar = () => {
     const userType = CurrentUser?.email.startsWith('7') ? 'Supervisor' : '';
 
     return (
-        <div>
+        <div className="p-4">
             {userType === 'Supervisor' && (
-                <button className="btn btn-primary" onClick={showEventPopup}>Add Event</button>
+                <div className="flex justify-end mb-4">
+                    <button 
+                        className="btn btn-primary py-2 px-4 rounded shadow-md hover:bg-blue-700 transition-colors" 
+                        onClick={showEventPopup}
+                    >
+                        Add Event
+                    </button>
+                </div>
             )}
             <FullCalendar
                 plugins={[dayGridPlugin, interactionPlugin, timeGridPlugin]}
@@ -166,33 +174,3 @@ export const Calendar = () => {
         </div>
     );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,42 +1,25 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Card } from "../components/Card";
 import { motion } from "framer-motion";
 import { Footer } from "../components/Footer";
+import { useAuth } from "../backend/authcontext";
 import RegImage1 from '../assets/images/RegImage1.jpg';
 import RegImage2 from '../assets/images/RegImage2.jpg';
 import RegImage3 from '../assets/images/RegImage3.jpg';
 import RegImage4 from '../assets/images/RegImage4.jpg';
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { db } from "../backend/config";
+import { CourseCard } from "../components/CourseCard"; // Import CourseCard
 
 export const Research = () => {
-    const subjects = [
-        {
-            routeId: 'courses/research/Thesis Writing',
-            name: 'Thesis Writing',
-            image: RegImage1,
-            description: 'Learn the basics of Thesis Writing',
-            lecturer: 'Dr. John Doe',
-        },
-        {
-            routeId: 'courses/research/Research Methodology',
-            name: 'Research Method',
-            image: RegImage2,
-            description: 'Learn the basics of Research Methodology',
-            lecturer: 'Dr. Jane Doe',
-        },
-        {
-            routeId: 'courses/research/Literature Review',
-            name: 'Literature Review',
-            image: RegImage3,
-            description: 'Learn the basics of Literature Review',
-            lecturer: 'Dr. John Doe'
-        },
-        {
-            routeId: 'courses/research/Data Analysis',
-            name: 'Data Analysis',
-            image: RegImage4,
-            description: 'Learn the basics of Data Analysis',
-            lecturer: 'Dr. Jane Doe',
-        }
+    const { UserData, Loading } = useAuth();
+    const [modules, setModules] = useState([]);
+
+    const images = [
+        RegImage1,
+        RegImage2,
+        RegImage3,
+        RegImage4
     ];
 
     const borderColors = [
@@ -46,6 +29,46 @@ export const Research = () => {
         'border-[#FF8503]'
     ];
 
+    useEffect(() => {
+        if (!Loading && UserData) {
+            fetchModules(UserData.CourseID);
+        }
+    }, [Loading, UserData]);
+
+    const fetchModules = async (courseIDs) => {
+        const cacheKey = `modules-${courseIDs.join(',')}`;
+        const cachedModules = localStorage.getItem(cacheKey);
+
+        // Check if cached data exists and is valid
+        if (cachedModules) {
+            setModules(JSON.parse(cachedModules));
+            return;
+        }
+
+        try {
+            const fetchedModules = [];
+            for (const courseID of courseIDs) {
+                const moduleRef = collection(db, 'Module');
+                const q = query(moduleRef, where('__name__', 'in', [courseID]));
+                const querySnapshot = await getDocs(q);
+
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    fetchedModules.push({
+                        id: doc.id,
+                        ...data
+                    });
+                });
+            }
+
+            // Cache the fetched data
+            localStorage.setItem(cacheKey, JSON.stringify(fetchedModules));
+            setModules(fetchedModules);
+        } catch (error) {
+            console.error('Error fetching modules:', error);
+        }
+    };
+
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
@@ -54,29 +77,29 @@ export const Research = () => {
                     <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                         Research
                     </h1>
-                    <p className="text-lg font-normal mt-5 text-gray-700 dark:text-gray-400">
+                    <p className="text-lg font-normal mt-2 text-gray-700 dark:text-gray-400">
                         Here are your current research courses
                     </p>
                 </section>
-                    
+
                 {/* Courses */}
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-                    {subjects.map((subject, index) => (
-                            <Link to={`/${subject.routeId}`} key={index} className="block">
-                                <motion.div
-                                    className={`border-2 rounded-lg overflow-hidden shadow-md ${borderColors[index % borderColors.length]}`}
-                                    whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)" }}
-                                    transition={{ type: "spring", stiffness: 300 }}
-                                    >
-                                <Card 
-                                    name={subject.name}
-                                    image={subject.image}
-                                    description={subject.description}
-                                    lecturer={subject.lecturer}
-                                    borderColor={borderColors[index]}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
+                    {modules.map((module, index) => (
+                        <Link to={`/research/${module.id}`} key={module.id} className="block">
+                            <motion.div
+                                className={`border-2 rounded-lg overflow-hidden shadow-md ${borderColors[index % borderColors.length]}`}
+                                whileHover={{ scale: 1.05, boxShadow: "0px 10px 30px rgba(0, 0, 0, 0.2)" }}
+                                transition={{ type: "spring", stiffness: 300 }}
+                            >
+                                <CourseCard
+                                    key={index}
+                                    name={module.ModuleTitle}
+                                    image={images[index % images.length]}
+                                    description={module.ModuleDescription}
+                                    borderColor={borderColors[index % borderColors.length]}
                                 />
-                                </motion.div>
-                            </Link>
+                            </motion.div>
+                        </Link>
                     ))}
                 </div>
 
@@ -84,4 +107,4 @@ export const Research = () => {
             </div>
         </div>
     );
-}
+};
