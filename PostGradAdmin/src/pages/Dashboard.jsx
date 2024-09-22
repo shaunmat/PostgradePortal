@@ -1,3 +1,6 @@
+
+
+
 import { Footer } from "../components/Footer"
 import { HiAcademicCap, HiDocument } from "react-icons/hi"
 import { useEffect, useState } from "react";
