@@ -30,23 +30,20 @@ export const Honours = () => {
     }, [Loading, UserData]);
 
     const fetchAssignmentData = async () => {
-        const cachedAssignments = localStorage.getItem('assignments');
-        if (cachedAssignments) {
-            setAssignments(JSON.parse(cachedAssignments));
-        } else {
-            const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
-            setAssignments(courseTypesArray);
-            localStorage.setItem('assignments', JSON.stringify(courseTypesArray)); // Cache data
-        }
+        localStorage.removeItem('assignments'); // Clear cache for fresh data
+        const courseTypesArray = await fetchResearchAssignments(UserData.CourseID);
+        setAssignments(courseTypesArray);
+        localStorage.setItem('assignments', JSON.stringify(courseTypesArray)); // Cache data
     };
 
     const fetchResearchAssignments = async (CourseIDs) => {
         const typesSet = [];
         try {
-            for (const courseID of CourseIDs) {
+            const promises = CourseIDs.map(async (courseID) => {
                 const AssignmentRef = collection(db, 'Module', courseID, "Assignments");
                 const q = query(AssignmentRef, orderBy("AssignmentCreation", "desc"));
                 const AssignmentSnap = await getDocs(q);
+                console.log(`Fetched ${AssignmentSnap.size} assignments for course ID: ${courseID}`);
 
                 AssignmentSnap.forEach((docSnap) => {
                     if (docSnap.exists()) {
@@ -57,7 +54,10 @@ export const Honours = () => {
                         });
                     }
                 });
-            }
+            });
+
+            await Promise.all(promises);
+            console.log("Fetched Assignments:", typesSet); // Debug log
         } catch (error) {
             console.error('Error fetching course types:', error);
         }
@@ -144,7 +144,7 @@ export const Honours = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
+            <div className="p-4 border-2 border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
                 <section className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">

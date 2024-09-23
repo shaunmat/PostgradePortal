@@ -78,8 +78,7 @@ export const Courses = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Conditionally Render Header */}
+            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Conditionally Render Header */}
                 <section className="mb-6">
                     {userRole === "lecturer" ? (
                         <>

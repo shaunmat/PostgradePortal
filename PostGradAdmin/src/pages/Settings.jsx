@@ -27,7 +27,7 @@ export const Settings = () => {
     };
     return (
         <div className={`p-4 sm:ml-64 pt-16 ${isDarkMode ? 'bg-gray-900' : ''}`}>
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
+            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700">
                 <section className="mb-4">
                     <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-200">Settings</h2>
                     <p className="text-md mt-2 text-gray-600 dark:text-gray-300">Update your account settings here.</p>

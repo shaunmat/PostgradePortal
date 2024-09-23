@@ -171,7 +171,7 @@ export const Dashboard = () => {
         // const dataTable = new DataTable("#default-table", { data: customData });
     return (
         <div className="p-4 sm:ml-64 pt-16">
-        <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700">
+        <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700">
             <div className="flex flex-col justify-between mb-4">
                 <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-200">
                     Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Mr. Ronny Mabokela</span>

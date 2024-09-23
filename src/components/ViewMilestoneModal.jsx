@@ -1,20 +1,17 @@
 import { AnimatePresence, motion } from 'framer-motion';
 
-export const ViewMilestoneModal = ({ isOpen, onClose, milestone }) => {
+export const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
     if (!isOpen || !milestone) return null;
 
     const moduleColors = {
-        'Software Development': '#00ad43',
         'Software Project': '#00bfff',
         'Software Testing': '#590098',
-        'Business Analysis': '#FF8503'
+        'Business Analysis': '#FF8503',
+        'Research Methodology': '#00ad43',
     };
 
-
-    const outlineColor = moduleColors[milestone.module] || bg-gray-200;
-
-    // console.log(`Milestone Module: ${milestone.module}`);
-    // console.log(`Outline Color: ${outlineColor}`);
+    const outlineColor = moduleColors[milestone.module] || 'bg-gray-200';
+    const assignmentFeedback = feedback[milestone.assignmentID]; // Check if this matches
 
     return (
         <AnimatePresence>
@@ -35,8 +32,8 @@ export const ViewMilestoneModal = ({ isOpen, onClose, milestone }) => {
                         style={{ border: `4px solid ${outlineColor}` }} // Inline style for border color
                     >
                         <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 mb-4">
-                            <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">
-                                {milestone.title}
+                            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
+                                Assignment Details
                             </h2>
                             <button
                                 onClick={onClose}
@@ -60,20 +57,38 @@ export const ViewMilestoneModal = ({ isOpen, onClose, milestone }) => {
                         </div>
                         <div className="space-y-4">
                             <div className="text-gray-800 dark:text-gray-200">
+                                <p className="font-bold">Assignment Title:</p>
+                                <p className="font-semibold text-gray-800 dark:text-gray-200">
+                                    {milestone.title}
+                                </p>
+                            </div>
+                            <div className="text-gray-800 dark:text-gray-200">
                                 <p className="font-bold">Due Date:</p>
-                                <p>{milestone.date}</p>
+                                <p>{new Date(milestone.dueDate).toLocaleString()}</p> {/* Format the due date */}
                             </div>
                             <div className="text-gray-800 dark:text-gray-200">
                                 <p className="font-bold">Description:</p>
                                 <p>{milestone.description}</p>
                             </div>
-                            <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold">Objectives:</p>
-                                <p style={{ whiteSpace: 'pre-line' }}>{milestone.objectives || 'No objectives provided'}</p>
-                            </div>
-                            <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold">Resources:</p>
-                                <p style={{ whiteSpace: 'pre-line' }}>{milestone.resources || 'No resources provided'}</p>
+
+                            {/* Feedback Section */}
+                            <div className="mt-4 bg-green-100 p-4 rounded-lg">
+                                <h4 className="font-extrabold text-lg mb-2">Feedback</h4>
+                                <p className='text-sm font-medium mt-1'>
+                                    <strong>Marks:</strong> {assignmentFeedback ? assignmentFeedback.marks : 'Not Available'}
+                                </p>
+                                <p className='text-sm font-medium mt-1'>
+                                    <strong>Comments:</strong> {assignmentFeedback ? assignmentFeedback.comments : 'Not Available'}
+                                </p>
+                                {assignmentFeedback && assignmentFeedback.downloadURL && (
+                                    <a
+                                        href={assignmentFeedback.downloadURL}
+                                        className="mt-2 inline-block text-blue-600"
+                                        target="_blank" rel="noopener noreferrer"
+                                    >
+                                        Download Feedback
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </motion.div>

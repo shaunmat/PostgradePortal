@@ -161,8 +161,7 @@ export const Honours = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                <section className="mb-6 flex justify-between items-center">
+            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                <section className="mb-6 flex justify-between items-center">
                     <div>
                         <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                             Honours

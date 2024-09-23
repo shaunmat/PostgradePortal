@@ -225,7 +225,7 @@ const Dropzone = ({ onDrop }) => {
     return (
         <div
             {...getRootProps({
-                className: 'dropzone flex items-center justify-center p-6 border-2 border-dashed border-gray-400 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700',
+                className: 'dropzone flex items-center justify-center p-6 border-2  border-gray-400 rounded-lg cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-gray-600 dark:text-gray-300 dark:bg-gray-700',
             })}
         >
             <input {...getInputProps()} />

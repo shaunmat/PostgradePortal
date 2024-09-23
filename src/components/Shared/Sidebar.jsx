@@ -29,7 +29,6 @@ export const SidebarComponent = () => {
 
   useEffect(() => {
     const cachedUserData = localStorage.getItem('userData');
-
     if (cachedUserData) {
       const parsedData = JSON.parse(cachedUserData);
       setUserName(parsedData.Name);
@@ -42,7 +41,7 @@ export const SidebarComponent = () => {
       setProfilePicture(UserData.ProfilePicture || UserLogo);
       localStorage.setItem('userData', JSON.stringify(UserData)); // Cache user data
     }
-  }, [Loading, UserData, UserRole]);
+  }, [Loading, UserData, UserRole]);  
 
   const handleLogout = async () => {
     try {

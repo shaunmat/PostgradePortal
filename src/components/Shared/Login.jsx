@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../../assets/images/University_of_Johannesburg_Logo.png';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../backend/config';
+import { Spinner } from 'flowbite-react'; // Importing Spinner component
+import Logo from '../../assets/images/University_of_Johannesburg_Logo.png';
 
 export const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
-    // const [studentNumber, setStudentNumber] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
+    const [loading, setLoading] = useState(false); // Spinner state
     const navigate = useNavigate();
 
     const handleShowPassword = () => {
@@ -19,30 +20,39 @@ export const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-    
+        setLoading(true); // Show loading spinner
+
         try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          const CurrentUser = userCredential.user;
-    
-          if (CurrentUser) {
-            const userEmail = CurrentUser.email;
-            const userType = userEmail.startsWith('7') ? 'Supervisor' : userEmail.startsWith('2') ? 'Student' : userEmail.endsWith('@externalexaminer.co.za') ? 'Examiner' : '';
-    
-            if (userType) {
-              localStorage.setItem('userRole', userType.toLowerCase());
-              localStorage.setItem('email', userEmail);
-              navigate('/dashboard'); // Redirect after successful login
-            } else {
-              setErrorMessage('Invalid user type.');
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const CurrentUser = userCredential.user;
+
+            if (CurrentUser) {
+                const userEmail = CurrentUser.email;
+                const userType = userEmail.startsWith('7')
+                    ? 'Supervisor'
+                    : userEmail.startsWith('2')
+                    ? 'Student'
+                    : userEmail.endsWith('@externalexaminer.co.za')
+                    ? 'Examiner'
+                    : '';
+
+                if (userType) {
+                    localStorage.setItem('userRole', userType.toLowerCase());
+                    localStorage.setItem('email', userEmail);
+                    navigate('/dashboard'); // Redirect to the dashboard
+                } else {
+                    setErrorMessage('Invalid user type.');
+                }
             }
-          }
         } catch (error) {
-          setErrorMessage('Invalid credentials. Please try again.');
+            setErrorMessage('Invalid credentials. Please try again.');
+        } finally {
+            setLoading(false); // Hide loading spinner
         }
-      };
+    };
 
     return (
-        <div className= "flex items-center justify-center min-h-screen bg-[linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url('../../src/assets/images/uj-campus-apk.jpg')] bg-cover bg-center bg-no-repeat">
+        <div className="flex items-center justify-center min-h-screen bg-[linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url('../../src/assets/images/uj-campus-apk.jpg')] bg-cover bg-center bg-no-repeat">
             <div className="absolute top-7 left-7 flex items-center space-x-4">
                 <img src={Logo} alt="University of Johannesburg Logo" className="w-24 h-w-24 rounded-xl" />
                 <div>
@@ -106,20 +116,13 @@ export const Login = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-between" style={{display: 'none'}}>
-                        <div className="flex items-center">
-                            <input type="checkbox" id="remember_me" className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
-                            <label htmlFor="remember_me" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">Remember me</label>
-                        </div>
-
-                        <div className="text-sm">
-                            <a href="#" className="font-medium text-blue-600 dark:text-blue-500 hover:underline">Forgot your password?</a>
-                        </div>
-                    </div>
-
                     <div className="flex justify-center">
-                        <button type="submit" className="w-full mt-10 px-4 py-2 text-base font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503] dark:bg-gray-700 dark:hover:bg-gray-600">
-                            Login
+                        <button
+                            type="submit"
+                            className="w-full mt-10 px-4 py-2 text-base font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503] dark:bg-gray-700 dark:hover:bg-gray-600"
+                            disabled={loading} // Disable button while loading
+                        >
+                            {loading ? <Spinner className='fill-white' size="md" /> : 'Login'} {/* Show spinner while loading */}
                         </button>
                     </div>
                 </form>
