@@ -1,7 +1,8 @@
 
 import React, { useState, useEffect } from "react";
 import Chart from "react-apexcharts";
-import { db } from '../../backend/config'; // Firebase setup
+//import { db } from '../../backend/config'; // Firebase setup
+import {db} from '../backend/config'
 import { collection, getDocs } from "firebase/firestore"; 
 
 export const LineChart = () => {
