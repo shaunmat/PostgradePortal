@@ -4,8 +4,8 @@ import { Footer } from '../components/Footer';
 import { LogoLoader } from '../components/LogoLoader';
 import BannerImage from '../assets/images/banner.jpg';
 import { SubmissionModal } from '../components/SubmissionModal';
-import { CreateSubmission } from '../components/SubmissionModal';  // Import the CreateSubmission component
-import { ReviewSubmission } from '../components/SubmissionModal';
+// import { CreateSubmission } from '../components/SubmissionModal';  // Import the CreateSubmission component
+// import { ReviewSubmission } from '../components/SubmissionModal';
 
 const userRole = 'lecturer'; // Change this to 'student' or 'lecturer'
 
@@ -97,8 +97,7 @@ export const TopicContent = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Stretch Banner Image with Course Name */}
+            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Stretch Banner Image with Course Name */}
                 <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg relative">
                     <img src={BannerImage} alt="Banner" className="w-full h-full object-cover" />
                     <h1 className="absolute text-4xl font-bold tracking-wider text-white dark:text-gray-200">
@@ -129,7 +128,7 @@ export const TopicContent = () => {
                         {/* List of submissions with dates and submission buttons displayed in a column */}
                         <div className="flex flex-col items-start justify-start">
                             {topicContent.subtopics.map((subtopic, index) => (
-                                <div key={index} className="w-full mb-4 p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                                <div key={index} className="w-full mb-4 p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                                         {subtopic}
                                     </h3>
@@ -180,7 +179,7 @@ export const TopicContent = () => {
 
                         <div className="flex flex-col items-start justify-start mt-4">
                             {topicContent.subtopics.map((subtopic, index) => (
-                                <div key={index} className="w-full mb-4 p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                                <div key={index} className="w-full mb-4 p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">
                                     <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
                                         {subtopic}
                                     </h3>

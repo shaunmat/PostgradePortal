@@ -38,8 +38,7 @@ export const Course = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                {/* Stretch Banner Image with Course Name */}
+            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Stretch Banner Image with Course Name */}
                 <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg relative">
                     <img src={BannerImage} alt="Banner" className="w-full h-full object-cover" />
                     <h1 className="absolute text-4xl font-bold tracking-wider text-white dark:text-gray-200">
