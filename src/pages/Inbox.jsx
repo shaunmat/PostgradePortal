@@ -20,7 +20,7 @@ export const Inbox = () => {
     const [courseOptions, setCourseOptions] = useState([]);
     const [role, setRole] = useState(null);
     const [filterCourseID, setFilterCourseID] = useState(null);
-    const [selectedStudentType,setSelectedStudentType]=useState(null);
+    const [selectedStudentType, setSelectedStudentType] = useState(null);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -33,7 +33,9 @@ export const Inbox = () => {
                     if (!supervisorDoc.empty) {
                         setRole('Supervisor');
                         setSupervisorID(userId);
-                        console.log("Its supervisors inbox empty")
+                        console.log("Its supervisors not inbox empty")
+                        console.log("Role set to", role);
+
                     } else {
                         const studentDoc = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(userId))));
                         console.log("Student query executed, document snapshot:", studentDoc);
@@ -46,7 +48,7 @@ export const Inbox = () => {
                             console.log("No matching records found in Supervisor or Student collections");
                         }
                     }
-                    console.log("Role set to",role);
+                    console.log("Role set to", role);
 
                 }
                 catch (error) {
@@ -74,32 +76,32 @@ export const Inbox = () => {
                 if (role === 'Supervisor') {
                     q = query(collection(db, 'Student'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
                     try {
-                        const querySnapshot = await getDocs(q);         
+                        const querySnapshot = await getDocs(q);
                         querySnapshot.forEach((doc) => {
                             const data = doc.data();
-                                studentdetsArray.push({
-                                    ProfilePicture: data.ProfilePicture,
-                                    StudentID: data.ID,
-                                    StudentName: data.Name,
-                                    StudentSurname: data.Surname,
-                                    lastInteraction: "Just now",
-                                    StudentType: data.StudentType
-                                });
-                                courseIdArray.push({
-                                    CourseID: data.StudentType
-                                });
+                            studentdetsArray.push({
+                                ProfilePicture: data.ProfilePicture,
+                                StudentID: data.ID,
+                                StudentName: data.Name,
+                                StudentSurname: data.Surname,
+                                lastInteraction: "Just now",
+                                StudentType: data.StudentType
+                            });
+                            courseIdArray.push({
+                                CourseID: data.StudentType
+                            });
                         });
                     } catch (error) {
                         console.error("Error fetching students:", error);
                     }
-                    
+
                 } else if (role === 'Student' && StudentID) {
                     try {
                         const studentDocs = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(StudentID))));
                         if (!studentDocs.empty) {
                             const studentData = studentDocs.docs[0].data();
                             const supervisorIDs = studentData.SupervisorID;  // Retrieve SupervisorID array from student doc
-    
+
                             // Query supervisor collection based on SupervisorIDs
                             const supervisorDocs = await getDocs(query(collection(db, 'Supervisor'), where('ID', 'in', supervisorIDs)));
                             supervisorDocs.forEach((doc) => {
@@ -109,7 +111,7 @@ export const Inbox = () => {
                                     SupervisorName: data.Name,
                                     SupervisorSurname: data.Surname,
                                     ProfilePicture: data.ProfilePicture,
-                                    Title:data.Title
+                                    Title: data.Title
                                 });
                             });
                         }
@@ -117,7 +119,7 @@ export const Inbox = () => {
                         console.error("Error fetching supervisors:", error);
                     }
                 }
-               
+
 
                 setStudentDetails(studentdetsArray);
                 setSupervisorDetails(supervisorsArray);
@@ -128,7 +130,7 @@ export const Inbox = () => {
         };
 
         fetchDetails();
-    }, [StudentID,SupervisorID, role, filterCourseID]);
+    }, [StudentID, SupervisorID, role, filterCourseID]);
 
     const handleLecturerClick = (lecturer) => {
         setSelectedLecturer(lecturer);
@@ -147,9 +149,9 @@ export const Inbox = () => {
     const handleFilterByStudentType = (studentType) => {
         setSelectedStudentType(studentType); // Set the selected student type
     };
-    const filteredStudents=studentDetails.filter(student=>{
-        if(!selectedStudentType) return true;
-        return student.StudentType== selectedStudentType;
+    const filteredStudents = studentDetails.filter(student => {
+        if (!selectedStudentType) return true;
+        return student.StudentType == selectedStudentType;
     })
     const borderColors = ['border-[#00ad43]', 'border-[#00bfff]', 'border-[#590098]', 'border-[#FF8503]'];
 
@@ -187,13 +189,13 @@ export const Inbox = () => {
                                     />
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                            {lecturer.Title} {lecturer.SupervisorName} {lecturer.SupervisorSurname} 
+                                            {lecturer.Title} {lecturer.SupervisorName} {lecturer.SupervisorSurname}
                                         </h2>
                                         <p className="text-gray-600 dark:text-gray-400">
                                             Office Hours: 24hr
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                        Supervisor ID: {lecturer.SupervisorID}
+                                            Supervisor ID: {lecturer.SupervisorID}
                                         </p>
                                     </div>
                                 </motion.div>
@@ -201,7 +203,7 @@ export const Inbox = () => {
                     </div>
                 ) : role === 'Supervisor' ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
-                        <DropdownButton id="dropdown-basic-button" title="Student Courses"style={{ backgroundColor: 'orange', borderColor: 'orange' }}>
+                        <DropdownButton id="dropdown-basic-button" title="Student Courses" style={{ backgroundColor: 'orange', borderColor: 'orange' }}>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('Honours')}>Honours</Dropdown.Item>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('Masters')}>Masters</Dropdown.Item>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('PhD')}>PhD</Dropdown.Item>
@@ -244,7 +246,13 @@ export const Inbox = () => {
             </div>
 
             {/* Modal */}
-            <Modal isOpen={isModalOpen} onClose={closeModal} lecturer={selectedLecturer} student={selectedStudent} />
+            {/* <Modal isOpen={isModalOpen} onClose={closeModal} lecturer={selectedLecturer} student={selectedStudent} /> */}
+            <Modal
+                isOpen={isModalOpen}
+                onClose={closeModal}
+                data={role === 'Student' ? selectedLecturer : selectedStudent}
+                role={role}
+            />
         </div>
     );
 };
