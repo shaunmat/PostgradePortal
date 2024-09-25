@@ -1,0 +1,8 @@
+/* chat.css */
+.msg img {
+    width: 40px; /* Set the desired width */
+    height: 40px; /* Set the desired height */
+    border-radius: 50%; /* Make the image circular */
+    object-fit: cover; /* Ensure the image keeps aspect ratio */
+    margin-right: 8px; /* Add some space between the image and text */
+}

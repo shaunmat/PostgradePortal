@@ -34,7 +34,7 @@ export const Inbox = () => {
                         setRole('Supervisor');
                         setSupervisorID(userId);
                         console.log("Its supervisors not inbox empty")
-                        console.log("Role set to", role);
+                        console.log("Role This is the role in the if statement ", role);
 
                     } else {
                         const studentDoc = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(userId))));
