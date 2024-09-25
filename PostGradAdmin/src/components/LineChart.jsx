@@ -108,7 +108,7 @@ export const LineChart = () => {
     return (
         <div className="bg-white dark:bg-gray-1000 p-10 p-6 rounded-lg shadow">
             {studentCounts.some(count => count > 0) || supervisorCounts.some(count => count > 0) ? (
-            <Chart options={options} series={series} type="line" height="300" />
+            <Chart options={options} series={series} type="line" height="300"  width={1200} />
         ) : (
             <p>Loading data...</p>
         )}
