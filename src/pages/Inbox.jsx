@@ -8,6 +8,7 @@ import { getDocs, query, collection, where } from "firebase/firestore";
 import { useAuth } from "../backend/authcontext";
 import Dropdown from 'react-bootstrap/Dropdown';
 import DropdownButton from 'react-bootstrap/DropdownButton';
+import { doc, getDoc, setDoc, updateDoc, arrayUnion, serverTimestamp } from "firebase/firestore";
 export const Inbox = () => {
     const { CurrentUser } = useAuth();
     const [studentDetails, setStudentDetails] = useState([]);
@@ -148,6 +149,24 @@ export const Inbox = () => {
 
     const handleFilterByStudentType = (studentType) => {
         setSelectedStudentType(studentType); // Set the selected student type
+
+    };
+    const createOrGetChat = async (user1, user2) => {
+        const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+        const chatRef = doc(db, 'chats', chatId);
+        
+        // Check if the chat already exists
+        const chatDoc = await getDoc(chatRef);
+        if (!chatDoc.exists()) {
+            // Create a new chat document
+            await setDoc(chatRef, {
+                users: [user1, user2],
+                messages: [],
+                createdAt: serverTimestamp(),
+            });
+        }
+        
+        return chatId; // Return the chat ID to load messages
     };
     const filteredStudents = studentDetails.filter(student => {
         if (!selectedStudentType) return true;

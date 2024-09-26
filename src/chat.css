@@ -6,3 +6,63 @@
     object-fit: cover; /* Ensure the image keeps aspect ratio */
     margin-right: 8px; /* Add some space between the image and text */
 }
+.msg.sent {
+    background-color: #e1ffc7;
+    align-self: flex-end;
+    border-radius: 10px 10px 0 10px;
+}
+
+.msg.received {
+    background-color: #f1f1f1;
+    align-self: flex-start;
+    border-radius: 10px 10px 10px 0;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: gray;
+    margin-top: 5px;
+    display: block;
+    text-align: right;
+}
+.msg {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+    max-width: 60%;
+}
+.msg p {
+    background-color: #f1f1f1;
+    padding: 10px;
+    border-radius: 10px;
+    margin: 0;
+}
+.msg.sent {
+    background-color: #e1ffc7; /* Light green for sent messages */
+    align-self: flex-end;
+    border-radius: 10px 10px 0 10px;
+    justify-content: flex-end; /* Align the message on the right */
+}
+
+.msg.sent img {
+    order: 2; /* Make the avatar appear on the right */
+}
+
+.msg.received {
+    background-color: #f1f1f1; /* Light gray for received messages */
+    align-self: flex-start;
+    border-radius: 10px 10px 10px 0;
+}
+
+.message-time {
+    font-size: 0.75rem;
+    color: black;
+    margin-top: 5px;
+    text-align: right;
+}
+.sendMsg {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-top: 1px solid #2965d6;
+}
