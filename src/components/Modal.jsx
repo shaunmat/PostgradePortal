@@ -54,7 +54,7 @@ export const Modal = ({ isOpen, onClose, data, role }) => {
 
                     {/* Modal window */}
                     <motion.div className="fixed inset-0 z-50 flex items-center justify-center">
-                        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6">
+                        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 w-full max-w-4xl h-3/4"> {/* Increased modal size */}
                             {/* Header */}
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center">
@@ -69,16 +69,16 @@ export const Modal = ({ isOpen, onClose, data, role }) => {
                             <div className="msgs">
                                 {messages.map((message) => (
                                     <div key={message.id} className={`msg ${message.uid === auth.currentUser.uid ? 'sent' : 'received'}`}>
-                                        <img className="w-8 h-8 rounded-full" src={message.photoURL || defaultAvatar} alt="Avatar"  />
+                                        <img src={message.photoURL || defaultAvatar} alt="Avatar" />
                                         <p>{message.text}</p>
                                     </div>
                                 ))}
                             </div>
                             <SendMessage scroll={scroll} />
                             <div ref={scroll}></div>
-
                         </div>
                     </motion.div>
+
                 </>
             )}
         </AnimatePresence>
