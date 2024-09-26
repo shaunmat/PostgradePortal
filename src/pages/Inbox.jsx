@@ -22,6 +22,7 @@ export const Inbox = () => {
     const [role, setRole] = useState(null);
     const [filterCourseID, setFilterCourseID] = useState(null);
     const [selectedStudentType, setSelectedStudentType] = useState(null);
+    const [chatId,setChatId]=useState(null);
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -133,13 +134,50 @@ export const Inbox = () => {
         fetchDetails();
     }, [StudentID, SupervisorID, role, filterCourseID]);
 
-    const handleLecturerClick = (lecturer) => {
+        // Function to create or get the chat document
+        const createOrGetChat = async (user1, user2) => {
+            // Create a consistent chat ID by ordering user IDs
+            const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
+            const chatRef = doc(db, 'chats', chatId);
+    
+            const chatDoc = await getDoc(chatRef);
+            if (!chatDoc.exists()) {
+                // Create a new chat document
+                await setDoc(chatRef, {
+                    users: [user1, user2],
+                    createdAt: serverTimestamp(),
+                });
+                console.log("New chat document created with ID:", chatId);
+            } else {
+                console.log("Chat document already exists with ID:", chatId);
+            }
+    
+            return chatId;
+        };
+
+    const handleLecturerClick = async (lecturer) => {
         setSelectedLecturer(lecturer);
+
+        const currentUserId = role === 'Supervisor' ? SupervisorID : StudentID;
+
+        
+        // Create or get chat between the current user and the selected lecturer
+        const newchatId = await createOrGetChat(currentUserId, lecturer.SupervisorID);
+        
+        // You can now use this chatId to load or send messages
+        setChatId(newchatId);
         setIsModalOpen(true);
     };
 
-    const handleStudentClick = (student) => {
+    const handleStudentClick = async (student) => {
         setSelectedStudent(student);
+        const currentUserId = role === 'Supervisor' ? SupervisorID : StudentID;
+        
+        // Create or get chat between the current user and the selected student
+        const newChatId = await createOrGetChat(currentUserId, student.StudentID);
+        
+        setChatId(newChatId);
+        // You can now use this chatId to load or send messages
         setIsModalOpen(true);
     };
 
@@ -151,27 +189,12 @@ export const Inbox = () => {
         setSelectedStudentType(studentType); // Set the selected student type
 
     };
-    const createOrGetChat = async (user1, user2) => {
-        const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
-        const chatRef = doc(db, 'chats', chatId);
-        
-        // Check if the chat already exists
-        const chatDoc = await getDoc(chatRef);
-        if (!chatDoc.exists()) {
-            // Create a new chat document
-            await setDoc(chatRef, {
-                users: [user1, user2],
-                messages: [],
-                createdAt: serverTimestamp(),
-            });
-        }
-        
-        return chatId; // Return the chat ID to load messages
-    };
+
     const filteredStudents = studentDetails.filter(student => {
         if (!selectedStudentType) return true;
         return student.StudentType == selectedStudentType;
     })
+  
     const borderColors = ['border-[#00ad43]', 'border-[#00bfff]', 'border-[#590098]', 'border-[#FF8503]'];
 
     return (
@@ -271,6 +294,7 @@ export const Inbox = () => {
                 onClose={closeModal}
                 data={role === 'Student' ? selectedLecturer : selectedStudent}
                 role={role}
+                chatId={chatId}
             />
         </div>
     );

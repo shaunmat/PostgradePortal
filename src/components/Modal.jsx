@@ -1,41 +1,42 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatBubble } from './ChatBubble'; // Make sure to import the ChatBubble component
-import { Popover } from './Popover';
 import { SendMessage } from './SendMessage';
 import { db, auth } from '../backend/config'
-import { collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { doc,collection, query, orderBy, limit, onSnapshot,where } from 'firebase/firestore';
 import { Input, Button } from '@material-ui/core'
 import "../../src/chat.css"
-export const Modal = ({ isOpen, onClose, data, role }) => {
+export const Modal = ({ isOpen, onClose, data, role,chatId }) => {
     if (!isOpen) return null;
 
     const defaultAvatar = "/path/to/default-avatar.png"; // Default avatar path
     const [messages, setMessages] = useState([]);
     const scrollRef = useRef(); // Reference for automatic scroll
 
-    // Generate conversationId based on StudentID and SupervisorID
-    const conversationId = role === 'Student'
-    ? `${auth.currentUser.uid}_${data?.SupervisorID}`  // Conversation ID for student
-    : `${data?.StudentID}_${auth.currentUser.uid}`;  
 
     useEffect(() => {
-        // Constructing the Firestore query
-        const q = query(
-            collection(db, 'messages'),
-            where('conversationId', '==', conversationId),
-            orderBy('createdAt'),
-            limit(50)
-        );
-
-        // Fetching messages and updating state with snapshots
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            setMessages(snapshot.docs.map(doc => doc.data())); // Ensure data from Firestore is fetched correctly
-        });
-
-        // Cleanup the listener when the component is unmounted
-        return () => unsubscribe();
-    }, [conversationId]); // Run this effect only once when the component mounts
+        if (chatId && isOpen) {
+            const chatRef = doc(db, 'chats', chatId);
+            
+            const unsubscribe = onSnapshot(chatRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const chatData=docSnap.data();
+                    const messagesQuery=query(
+                        collection(chatRef,'messages'),
+                        orderBy('createdAt','asc')
+                    );
+                    const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+                        const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                        setMessages(msgs);
+                    });
+                    return () => unsubscribeMessages();
+                }else{
+                    setMessages([]);
+                }
+            });
+            
+            return () => unsubscribe();
+        }
+    }, [chatId, isOpen]);
 
     return (
         <AnimatePresence>
@@ -60,21 +61,21 @@ export const Modal = ({ isOpen, onClose, data, role }) => {
                             </div>
                             
                             <div className="msgs overflow-y-auto h-5/6"> 
-                                {messages.map((message) => (
+                                {messages.map((message,index) => (
                                     <div
-                                        key={message.id}
-                                        className={`msg ${message.uid === auth.currentUser.uid ? 'sent' : 'received'}`}
+                                        key={index}
+                                        className={`msg ${message.sender === updateCurrentUser.uid? 'sent' : 'received'}`}
                                     >
                                         <img
                                             className="w-8 h-8 rounded-full"
                                             src={message.photoURL|| defaultAvatar }alt="Avatar"
                                         />
                                         <p>{message.text}</p>
-                                        <span className="message-time">{message.time}</span> 
+                                        <span className="message-time">{new Date(message.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span> 
                                     </div>
                                 ))}
                             </div>
-                            <SendMessage scroll={scrollRef} conversationId={conversationId}/>
+                            <SendMessage scroll={scrollRef} chatId={chatId} />
                             <div ref={scrollRef}></div>
                         </div>
                     </motion.div>
