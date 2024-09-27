@@ -1,5 +1,4 @@
 import flowbite from "flowbite-react/tailwind";
-require('flowbite-typography')
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ["./index.html", 
@@ -13,6 +12,9 @@ export default {
   },
   plugins: [
     require('flowbite-typography'),
+    require('flowbite/plugin')({
+      datatables: true,
+    }),
     flowbite.plugin(),
   ],
 };

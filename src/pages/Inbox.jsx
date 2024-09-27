@@ -3,12 +3,14 @@ import { Footer } from "../components/Footer";
 import { Modal } from "../components/Modal";
 import { motion } from "framer-motion";
 import avatar from "../assets/images/avatar.png";
+import { useTheme } from "../context/ThemeContext";
 
 export const Inbox = () => {
     const [selectedLecturer, setSelectedLecturer] = useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userRole, setUserRole] = useState('');
+    const { isDarkMode } = useTheme();
 
     useEffect(() => {
         const role = localStorage.getItem('userRole');
@@ -104,8 +106,9 @@ export const Inbox = () => {
     ];
 
     return (
-        <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                <section className="mb-6">
+        <div className={`p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72 ${isDarkMode ? 'bg-gray-900' : ''}`}>
+            <div className={`p-4 border-2 min-h-screen border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800 ${isDarkMode ? 'border-gray-700 dark:bg-gray-800' : ''}`}>
+                <section className="mb-6">
                     <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                         {userRole === "student"
                             ? "Your Inbox"

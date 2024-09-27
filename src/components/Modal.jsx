@@ -59,7 +59,7 @@ export const Modal = ({ isOpen, onClose, lecturer, student }) => {
                         exit={{ opacity: 0, scale: 0.8 }}
                         transition={{ duration: 0.3 }}
                     >
-                        <div className="relative w-full max-w-4xl max-h-full">
+                        <div className="relative w-full max-w-2xl max-h-full">
                             <div className="relative bg-white rounded-lg shadow dark:bg-gray-700">
                                 <div className="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                                     <div className="flex items-center">
@@ -68,7 +68,7 @@ export const Modal = ({ isOpen, onClose, lecturer, student }) => {
                                                 <img
                                                     src={lecturer.avatar}
                                                     alt={lecturer.name}
-                                                    className="w-10 h-10 rounded-full mr-4"
+                                                    className="w-8 h-8 rounded-full mr-4"
                                                 />
                                             </Popover>
                                         )}
@@ -76,7 +76,7 @@ export const Modal = ({ isOpen, onClose, lecturer, student }) => {
                                             <img
                                                 src={student.avatar}
                                                 alt={student.name}
-                                                className="w-10 h-10 rounded-full mr-4"
+                                                className="w-8 h-8 rounded-full mr-4"
                                             />
                                         )}
                                         <div>
