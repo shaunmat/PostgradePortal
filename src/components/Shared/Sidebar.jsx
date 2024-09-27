@@ -16,6 +16,9 @@ import {
 import { signOut } from 'firebase/auth';
 import { useAuth } from '../../backend/authcontext';
 import { auth } from '../../backend/config';
+import { useTheme } from '../../context/ThemeContext';
+import { collection, getDocs, query, where } from 'firebase/firestore'; // Ensure Firestore functions are imported
+import { db } from '../../backend/config'; // Adjust path as needed
 
 export const SidebarComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,7 +29,14 @@ export const SidebarComponent = () => {
   const [ProfilePicture, setProfilePicture] = useState('');
   const { UserData, UserRole, Loading } = useAuth();
   const [UserLevel, setUserLevel] = useState('');
+  const { theme } = useTheme();
+  const [supervisedCourses, setSupervisedCourses] = useState({
+    honours: false,
+    masters: false,
+    phd: false,
+  });
 
+  // Check cache on component mount for user data
   useEffect(() => {
     const cachedUserData = localStorage.getItem('userData');
     if (cachedUserData) {
@@ -41,12 +51,66 @@ export const SidebarComponent = () => {
       setProfilePicture(UserData.ProfilePicture || UserLogo);
       localStorage.setItem('userData', JSON.stringify(UserData)); // Cache user data
     }
-  }, [Loading, UserData, UserRole]);  
+  }, [Loading, UserData, UserRole]);
+
+  // Check for cached supervisor modules
+  useEffect(() => {
+    const cachedModules = localStorage.getItem('supervisorModules');
+    const cacheTime = localStorage.getItem('supervisorModulesCacheTime');
+    const isCacheValid = cacheTime && (Date.now() - cacheTime) < (60 * 60 * 1000); // 1-hour cache expiration
+
+    if (UserRole === 'Supervisor' && UserData && UserData.CourseID) {
+      if (cachedModules && isCacheValid) {
+        setSupervisedCourses(JSON.parse(cachedModules));
+      } else {
+        fetchSupervisorModules(UserData.CourseID);
+      }
+    }
+  }, [UserRole, UserData]);
+
+  // Fetch supervisor modules and cache them
+  const fetchSupervisorModules = async (courseIDs) => {
+    try {
+      const honours = [];
+      const masters = [];
+      const phd = [];
+
+      for (const courseID of courseIDs) {
+        const moduleRef = collection(db, 'Module');
+        const q = query(moduleRef, where('ModuleID', '==', courseID));
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          const moduleData = doc.data();
+          if (moduleData.ModuleType === 'Honours') {
+            honours.push(moduleData);
+          } else if (moduleData.ModuleType === 'Masters') {
+            masters.push(moduleData);
+          } else if (moduleData.ModuleType === 'PhD') {
+            phd.push(moduleData);
+          }
+        });
+      }
+
+      const fetchedCourses = {
+        honours: honours.length > 0,
+        masters: masters.length > 0,
+        phd: phd.length > 0,
+      };
+
+      setSupervisedCourses(fetchedCourses);
+      localStorage.setItem('supervisorModules', JSON.stringify(fetchedCourses)); // Cache modules
+      localStorage.setItem('supervisorModulesCacheTime', Date.now()); // Set cache time
+    } catch (error) {
+      console.error('Error fetching supervisor modules:', error);
+    }
+  };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
       localStorage.removeItem('userData'); // Clear cached data on logout
+      localStorage.removeItem('supervisorModules'); // Clear supervisor modules cache on logout
+      localStorage.removeItem('supervisorModulesCacheTime'); // Clear cache time
       navigate('/login');
     } catch (error) {
       console.error('Error logging out', error);
@@ -65,14 +129,15 @@ export const SidebarComponent = () => {
     ],
     Supervisor: [
       { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
-      { path: '/honours', label: 'Honours', icon: <HiAcademicCap className="w-6 h-6" /> },
-      { path: '/masters', label: 'Masters', icon: <HiBookOpen className="w-6 h-6" /> },
-      { path: '/phd', label: 'PhD', icon: <HiCollection className="w-6 h-6" /> },
+      supervisedCourses.honours && { path: '/honours', label: 'Honours', icon: <HiAcademicCap className="w-6 h-6" /> },
+      supervisedCourses.masters && { path: '/masters', label: 'Masters', icon: <HiBookOpen className="w-6 h-6" /> },
+      supervisedCourses.phd && { path: '/phd', label: 'PhD', icon: <HiCollection className="w-6 h-6" /> },
       { path: '/tasks', label: 'Tasks', icon: <HiViewBoards className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
+      { path: '/milestones', label: 'Milestones', icon: <HiFlag className="w-6 h-6" /> },
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
-    ],
+    ].filter(Boolean), // Filter out any false values
     Examiner: [
       { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       { path: '/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
@@ -130,7 +195,6 @@ export const SidebarComponent = () => {
             <div className='text-sm flex-1 overflow-hidden'>
               <p className="font-extrabold text-md text-gray-900 dark:text-white">{userName} {userSurname}</p>
               <p className="font-semibold text-gray-700 dark:text-Black">{UserLevel}</p>
-              
             </div>
           </div>
         </div>

@@ -32,6 +32,7 @@ export const Research = () => {
     useEffect(() => {
         if (!Loading && UserData) {
             fetchModules(UserData.CourseID);
+            console.log(UserData);
         }
     }, [Loading, UserData]);
 

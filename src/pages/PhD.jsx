@@ -118,7 +118,7 @@ export const PhD = () => {
                 <div className="flex flex-col gap-7">
                     {Assignments.length > 0 ? Assignments.map((assignment, index) => (
                         <Link 
-                            to={`/courses/${UserData.CourseID[0]}/assignments/${assignment.id}`}
+                            to={`/phd/${UserData.CourseID[0]}/assignments/${assignment.id}`}
                             key={index} 
                             className="block w-full"
                         >

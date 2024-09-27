@@ -35,16 +35,19 @@ export const PageRoutes = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/courses" element={<Courses />} />
         <Route path="/courses/course/:courseId" element={<Course />} />
-        <Route path="/courses/:courseId/assignments/:assignmentId" element={<Assignments />} />
+        <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
         <Route path="/courses/course/:courseId/topic/:topicId" element={<TopicContent />} />
         <Route path="/research" element={<Research />} />
         <Route path="/research/:researchId" element={<ResearchCourse />} />
         <Route path="/honours" element={<Honours />} />
         <Route path="/honours/:studentID" element={<ResearchCourse />} />
+        <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
         <Route path="/phd" element={<PhD />} />
         <Route path="/phd/:studentID" element={<ResearchCourse />} />
+        <Route path="/phd/:courseId/assignments/:assignmentId" element={<Assignments />} />
         <Route path="/masters" element={<Masters />} />
         <Route path="/masters/:studentID" element={<ResearchCourse />} />
+        <Route path="/masters/:courseId/assignments/:assignmentId" element={<Assignments />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/inbox" element={<Inbox />} />
         <Route path="/milestones" element={<Milestones />} />
@@ -64,7 +67,7 @@ export const PageRoutes = () => {
 
     const timer = setTimeout(() => {
       handleComplete(); // Stop loading after a short delay
-    }, 1000); // Adjust the duration to match your actual loading times
+    }, 3000); // Adjust the duration to match your actual loading times
 
     return () => clearTimeout(timer); // Cleanup timer
   }, [location]); // Re-run effect only when location changes
@@ -79,7 +82,7 @@ export const PageRoutes = () => {
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.5 }}
           >
             {routes}
           </motion.div>

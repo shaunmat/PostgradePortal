@@ -3,8 +3,8 @@ import { useParams } from 'react-router-dom';
 import { KanbanCard } from '../components/KanbanCard';
 import { Footer } from '../components/Footer';
 import { HiPlus } from 'react-icons/hi';
-import { TaskModal } from '../components/TaskModal';
-import { getDoc, doc, updateDoc, collection, setDoc } from 'firebase/firestore';
+// import { TaskModal } from '../components/TaskModal';
+import { getDoc, doc, updateDoc, collection, setDoc, getDocs } from 'firebase/firestore';
 import { auth, db } from '../backend/config';
 
 export const Tasks = () => {
@@ -13,12 +13,14 @@ export const Tasks = () => {
     const [newTaskName, setNewTaskName] = useState("");
     const [newTaskDescription, setNewTaskDescription] = useState("");
     const [userRole, setUserRole] = useState('');
+    const [assignments, setAssignments] = useState([]);
 
     const { id } = useParams();
     const courseId = id ? parseInt(id) : null;
     const UserID = auth.currentUser.email.substring(0, 9);
     const filteredTasks = courseId ? tasks.filter(task => task.courseId === courseId) : tasks;
 
+    // Fetch tasks and assignments
     useEffect(() => {
         if (UserID) {
             let Role = "";
@@ -31,10 +33,9 @@ export const Tasks = () => {
             }
             setUserRole(Role);
         }
-    }, [UserID]);
 
-    useEffect(() => {
-        const fetchTasks = async () => {
+
+        const fetchTasksAndAssignments = async () => {
             try {
                 const UserDocRef = doc(db, userRole, UserID);
                 const UserDoc = await getDoc(UserDocRef);
@@ -58,8 +59,20 @@ export const Tasks = () => {
                 } else {
                     console.log('No such document!');
                 }
+
+                // Fetch assignments if courseId is available
+                if (courseId) {
+                    const assignmentsRef = collection(db, 'Module', courseId.toString(), 'Assignments');
+                    const assignmentsSnap = await getDocs(assignmentsRef);
+                    const assignmentsArray = assignmentsSnap.docs.map(doc => ({
+                        ...doc.data(),
+                        AssignmentID: doc.id
+                    }));
+                    setAssignments(assignmentsArray);
+
+                }
             } catch (error) {
-                console.error('Error fetching tasks: ', error);
+                console.error('Error fetching tasks and assignments: ', error);
             }
         };
 
@@ -69,10 +82,12 @@ export const Tasks = () => {
             setTasks(JSON.parse(cachedTasks));
         } else {
             if (userRole && UserID) {
-                fetchTasks();
+                fetchTasksAndAssignments();
             }
         }
     }, [userRole, UserID]);
+
+    // console.log(userRole, UserID, courseId);
 
     const handleTaskCompletion = async (taskId) => {
         try {
@@ -157,7 +172,7 @@ export const Tasks = () => {
 
     return (
         <div className="tasks-container p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                <section className="mb-6">
+            <div className="p-4 min-h-screen border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                <section className="mb-6">
                     <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                         {userRole === 'student' ? "My Tasks" : "Tasks Assigned to You"}
                     </h1>
@@ -210,15 +225,103 @@ export const Tasks = () => {
                     </div>
                 </div>
 
+                <TaskModal
+                    isOpen={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={addNewTask}
+                    setNewTaskName={setNewTaskName}
+                    setNewTaskDescription={setNewTaskDescription}
+                />
                 <Footer />
             </div>
-            <TaskModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onSave={addNewTask}
-                setNewTaskName={setNewTaskName}
-                setNewTaskDescription={setNewTaskDescription}
-            />
+        </div>
+    );
+};
+
+import { HiOutlineExclamation, HiOutlineXCircle } from "react-icons/hi";
+
+const TaskModal = ({ 
+    isOpen, 
+    onClose, 
+    onSave, 
+    setNewTaskName, 
+    setNewTaskDescription, 
+    setNewTaskDueDate 
+}) => {
+    if (!isOpen) return null;
+
+    const handleSave = () => {
+        onSave(); // Call the onSave function
+        // Clear input values if necessary
+        setNewTaskName('');
+        setNewTaskDescription('');
+        setNewTaskDueDate('');
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="relative bg-white p-6 rounded-lg shadow-xl w-full max-w-lg">
+                {/* Close button */}
+                <button 
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 focus:outline-none" 
+                    onClick={onClose}
+                >
+                    <HiOutlineXCircle className="w-5 h-5" />
+                </button>
+
+                {/* Header */}
+                <div className="flex items-center mb-4">
+                    <HiOutlineExclamation className="w-8 h-8 text-blue-600 mr-2" />
+                    <h2 className="text-2xl font-bold text-gray-800">Add New Task</h2>
+                </div>
+
+                {/* Task Name Input */}
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Task Name</label>
+                    <input 
+                        type="text" 
+                        placeholder="Enter task name"
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        onChange={(e) => setNewTaskName(e.target.value)}
+                    />
+                </div>
+
+                {/* Task Description Input */}
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Task Description</label>
+                    <textarea 
+                        placeholder="Enter task description" 
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        onChange={(e) => setNewTaskDescription(e.target.value)}
+                    />
+                </div>
+
+                {/* Due Date Input */}
+                <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Due Date</label>
+                    <input 
+                        type="datetime-local" 
+                        className="w-full p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        onChange={(e) => setNewTaskDueDate(e.target.value)}
+                    />
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex justify-end">
+                    <button 
+                        onClick={onClose} 
+                        className="mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg focus:ring focus:ring-gray-200"
+                    >
+                        Close
+                    </button>
+                    <button 
+                        onClick={handleSave} 
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg focus:ring focus:ring-blue-200"
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
         </div>
     );
 };
