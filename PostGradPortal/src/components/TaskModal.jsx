@@ -1,7 +1,22 @@
-import React, { useState } from 'react';
+import React from 'react';
 
-export const TaskModal = ({ isOpen, onClose, onSave, setNewTaskName, setNewTaskDescription, setNewTaskDueDate }) => {
+export const TaskModal = ({ 
+    isOpen, 
+    onClose, 
+    onSave, 
+    setNewTaskName, 
+    setNewTaskDescription, 
+    setNewTaskDueDate 
+}) => {
     if (!isOpen) return null;
+
+    const handleSave = () => {
+        onSave(); // Call the onSave function
+        // Clear input values if necessary
+        setNewTaskName('');
+        setNewTaskDescription('');
+        setNewTaskDueDate('');
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
@@ -29,10 +44,16 @@ export const TaskModal = ({ isOpen, onClose, onSave, setNewTaskName, setNewTaskD
                 />
 
                 <div className="flex justify-end">
-                    <button onClick={onClose} className="mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    <button 
+                        onClick={onClose} 
+                        className="mr-2 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded"
+                    >
                         Close
                     </button>
-                    <button onClick={onSave} className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                    <button 
+                        onClick={handleSave} 
+                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                    >
                         Save
                     </button>
                 </div>

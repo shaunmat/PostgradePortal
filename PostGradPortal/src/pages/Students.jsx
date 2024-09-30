@@ -11,7 +11,6 @@ import { TaskModal } from "../components/TaskModal"; // Adjust the import path a
 
 export const Students = () => {
     const { UserData, Loading } = useAuth();
-    const [Assignments, setAssignments] = useState([]);
     const [StudentData, setStudentData] = useState([]);
 
     useEffect(() => {

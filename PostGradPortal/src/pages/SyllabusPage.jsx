@@ -4,8 +4,8 @@ import { Footer } from '../components/Footer';
 import { LogoLoader } from '../components/LogoLoader';
 import BannerImage from '../assets/images/banner.jpg';
 import { SubmissionModal } from '../components/SubmissionModal';
-import { CreateSubmission } from '../components/SubmissionModal';  // Import the CreateSubmission component
-import { ReviewSubmission } from '../components/SubmissionModal';
+// import { CreateSubmission } from '../components/SubmissionModal';  // Import the CreateSubmission component
+// import { ReviewSubmission } from '../components/SubmissionModal';
 
 const userRole = 'lecturer'; // Change this to 'student' or 'lecturer'
 
