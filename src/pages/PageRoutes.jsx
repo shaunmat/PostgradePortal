@@ -18,6 +18,7 @@ import { Tasks } from './Tasks';
 import { TopicContent } from './SyllabusPage';
 import { LogoLoader } from '../components/LogoLoader';
 import { Review } from './Reviews';
+import { HonoursCrs } from './HonoursCrs';
 import { motion } from 'framer-motion';
 
 // Memoize the Sidebar and RightSidebar components to prevent re-renders
@@ -40,7 +41,7 @@ export const PageRoutes = () => {
         <Route path="/research" element={<Research />} />
         <Route path="/research/:researchId" element={<ResearchCourse />} />
         <Route path="/honours" element={<Honours />} />
-        <Route path="/honours/:studentID" element={<ResearchCourse />} />
+        <Route path="/honours/:researchId" element={<HonoursCrs />} />
         <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
         <Route path="/phd" element={<PhD />} />
         <Route path="/phd/:studentID" element={<ResearchCourse />} />

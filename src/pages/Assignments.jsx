@@ -2,10 +2,9 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, storage } from '../backend/config'; // Import your Firebase configuration
 import { Footer } from '../components/Footer';
-import BannerImage from '../assets/images/research_banner.jpg';
+import BannerImg from '../assets/images/BannerImg.jpg';
 import { useParams } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // For handling file uploads
-import BannerImg from '../assets/images/BannerImg.jpg';
 import { HiChevronLeft } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 

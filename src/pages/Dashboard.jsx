@@ -11,10 +11,12 @@ import { Footer } from '../components/Footer';
 import { useAuth } from '../backend/authcontext';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from '../backend/config';
+import { Timeline } from './ResearchCrs';
 
 export const Dashboard = () => {
     const [userName, setUserName] = useState('');
     const [userSurname, setUserSurname] = useState('');
+    const [userTitle, setUserTitle] = useState('');
     const [userID, setUserID] = useState('');
     const [ProfilePicture, setProfilePicture] = useState('');
     const [UserLevel, setUserLevel] = useState('');
@@ -48,6 +50,7 @@ export const Dashboard = () => {
     const setUserData = (user) => {
         setUserName(user.Name);
         setUserSurname(user.Surname);
+        setUserTitle(user.Title);
         setUserID(user.ID);
         setCourseIDs(user.CourseID);
         setProfilePicture(user.ProfilePicture || UserLogo);
@@ -135,7 +138,7 @@ export const Dashboard = () => {
 
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Upcoming Milestones
+                                Current Milestones
                             </h2>
                             <div className="mt-6">
                                 <UpcomingMilestones />
@@ -146,7 +149,7 @@ export const Dashboard = () => {
                     <>
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Dr. {userName} {userSurname}</span>
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userTitle} {userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
                                 Here&#39;s your overview for today
@@ -172,7 +175,7 @@ export const Dashboard = () => {
 
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Upcoming Lectures
+                                Upcoming Meetings
                             </h2>
                             <div className="mt-6">
                                 <Calendar />

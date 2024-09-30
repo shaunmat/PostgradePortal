@@ -10,6 +10,7 @@ import BannerImage2 from '../assets/images/banner.jpg';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../backend/authcontext'
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
 import { HiChevronLeft, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 
 export const ResearchCourse = () => {
@@ -118,10 +119,13 @@ export const ResearchCourse = () => {
                 const url = await getDownloadURL(storageRef);
                 const response = await fetch(url);
                 const data = await response.json();
-                setTopics(data);
-
+        
+                // Filter topics based on courseId
+                const courseTopics = data.filter(topic => topic.courseId === researchId);
+                setTopics(courseTopics);
+        
                 // Check if the student has already chosen a topic
-                const chosenTopic = data.find(topic => topic.selectedBy === UserData.ID);
+                const chosenTopic = courseTopics.find(topic => topic.selectedBy === UserData.ID);
                 if (chosenTopic) {
                     setSelectedTopic(chosenTopic);
                     setIsConfirmed(true);
@@ -129,7 +133,7 @@ export const ResearchCourse = () => {
             } catch (error) {
                 console.error('Error fetching topics:', error);
             }
-        };
+        };        
 
         fetchCourseDetails();
         fetchTopics();
@@ -250,7 +254,7 @@ export const ResearchCourse = () => {
                     </button>
                 </section>
 
-                <section className="mt-6">
+                <section className="mt-6 border-2 border-[#FF8503] rounded-lg p-4">
                     <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-200">
                         Welcome to <span className="text-[#FF8503] dark:text-[#FF8503]">{courseDetails.name}</span>
                     </h2>
@@ -347,12 +351,12 @@ export const ResearchCourse = () => {
                     )}
                 </section>
 
-                <section className="mt-6">
+                <section className="mt-4 border-2 border-[#590098] rounded-lg p-4">
                     {/* Show selected topic details when available */}
                     {isConfirmed && selectedTopic ? (
-                        <div className="mt-4">
+                        <div>
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
-                                Your selected topic
+                                Chosen topic
                             </h2>
                             <input
                                 type="text"
@@ -455,41 +459,57 @@ export const ResearchCourse = () => {
 
                 {/* Timeline Section, only appears after topic is confirmed */}
                 {isConfirmed && (
-                    <section className="mt-6">
+                    <section className="border-2 mt-4 border-[#FF8503] rounded-lg p-4">
                         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
-                            Deadlines & Submissions
+                            Deadlines & Milestones
                         </h2>
-                
+
                         <div className="mt-4">
                             {assignments.length > 0 ? (
-                                <Timeline 
-                                    tasks={assignments.map((assignment) => {
-                                        const dueDateTimestamp = assignment.AssignmentDueDate?.seconds * 1000;
-                                        const dueDate = new Date(dueDateTimestamp);
-                                        const isPastDue = !isNaN(dueDate) && dueDate < new Date();
-                        
-                                        return {
-                                            title: assignment.AssignmentTitle,
-                                            dueDate, 
-                                            description: assignment.AssignmentDescription,
-                                            module: courseDetails.name,
-                                            submissionOpen: !isPastDue && !submittedAssignments[assignment.AssignmentID],
-                                            submitted: !!submittedAssignments[assignment.AssignmentID],
-                                            assignmentID: assignment.AssignmentID
-                                        };
-                                    })} 
-                                    onViewDetails={(milestone) => {
-                                        console.log("Milestone:", milestone); // Log milestone
-                                        const feedbackForMilestone = feedback[milestone.assignmentID]; 
-                                        console.log("Feedback for Milestone:", feedbackForMilestone); // Log feedback for milestone
-                                        if (!feedbackForMilestone) {
-                                            console.error(`No feedback found for assignmentID: ${milestone.assignmentID}`);
-                                        }
-                                        openModal(milestone, feedbackForMilestone);
-                                        setSelectedAssignmentID(milestone.assignmentID);
-                                    }}
-                                    handleOpenModal={handleOpenModal}
-                                />
+                                <>
+                                    {/* Check if it's the first submission */}
+                                    {Object.keys(submittedAssignments).length === 0 ? (
+                                        <p className="mt-4 mb-4 text-green-600 dark:text-green-400">
+                                            This is your first milestone. Please review the deadlines carefully and submit on time.
+                                        </p>
+                                    ) : null}
+
+                                    <Timeline 
+                                        tasks={assignments.map((assignment) => {
+                                            const dueDateTimestamp = assignment.AssignmentDueDate?.seconds * 1000;
+                                            const dueDate = new Date(dueDateTimestamp);
+                                            const isPastDue = !isNaN(dueDate) && dueDate < new Date();
+
+                                            return {
+                                                title: assignment.AssignmentTitle,
+                                                dueDate, 
+                                                description: assignment.AssignmentDescription,
+                                                module: courseDetails.name,
+                                                submissionOpen: !isPastDue && !submittedAssignments[assignment.AssignmentID],
+                                                submitted: !!submittedAssignments[assignment.AssignmentID],
+                                                assignmentID: assignment.AssignmentID
+                                            };
+                                        })} 
+                                        onViewDetails={(milestone) => {
+                                            console.log("Milestone:", milestone); // Log milestone
+                                            const feedbackForMilestone = feedback[milestone.assignmentID]; 
+                                            console.log("Feedback for Milestone:", feedbackForMilestone); // Log feedback for milestone
+                                            if (!feedbackForMilestone) {
+                                                console.error(`No feedback found for assignmentID: ${milestone.assignmentID}`);
+                                            }
+                                            openModal(milestone, feedbackForMilestone);
+                                            setSelectedAssignmentID(milestone.assignmentID);
+                                        }}
+                                        handleOpenModal={handleOpenModal}
+                                    />
+
+                                    {/* Check if all milestones are submitted */}
+                                    {assignments.every(assignment => submittedAssignments[assignment.AssignmentID]) && (
+                                        <p className="mt-4 text-blue-600 dark:text-blue-400">
+                                            More milestones coming soon.
+                                        </p>
+                                    )}
+                                </>
                             ) : (
                                 <p className="mt-4 text-gray-500 dark:text-gray-400">
                                     No deadlines or submissions available.
@@ -498,6 +518,8 @@ export const ResearchCourse = () => {
                         </div>
                     </section>
                 )}
+
+
 
                 {/* <section className="mt-6" style={{display: 'none'}} >
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Available Topics</h2>
@@ -647,13 +669,13 @@ const SubmissionModal = ({ isOpen, onClose, assignmentID, researchId, UserData, 
       });
 
       // Display success message
-      Swal.fire('Success!', 'File uploaded successfully and submission saved!', 'success');
-
+      toast.success('File uploaded successfully and submission saved!');
       // Close the modal after successful submission
       onClose();
     } catch (error) {
       console.error('Error uploading file and saving submission:', error);
-      Swal.fire('Error', 'Error uploading file or saving submission. Please try again later.', 'error');
+      // Display error message
+      toast.error('Error uploading file or saving submission. Please try again later.');
     }
   };
 
@@ -750,14 +772,15 @@ const Dropzone = ({ onDrop }) => {
 };
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { HiOutlineClipboardList, HiOutlineXCircle, HiOutlineCalendar, HiOutlineDocumentText, HiOutlineChatAlt } from 'react-icons/hi';
 
 const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
     if (!isOpen || !milestone) return null;
 
     const moduleColors = {
-        'Database Stucturing': '#00bfff',
+        'Database Structuring': '#00bfff',
         'Software Testing': '#590098',
-        'Business Analysis': '#FF8503',
+        'Game Development': '#FF8503',
         'Development Software': '#00ad43',
     };
 
@@ -778,57 +801,55 @@ const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="bg-white dark:bg-gray-800 w-11/12 md:max-w-lg mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-6"
+                        className="bg-white dark:bg-gray-800 w-11/12 md:max-w-lg mx-auto rounded-xl shadow-lg z-50 overflow-y-auto p-6"
                         style={{ border: `4px solid ${outlineColor}` }}
                     >
                         <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 mb-4">
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                                Assignment Details
+                                Milestone Details
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="text-gray-500 dark:text-gray-300"
+                                className="text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
+                                <HiOutlineXCircle className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="space-y-4">
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Assignment Title:</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineClipboardList className="h-5 w-5 text-blue-500" />
+                                    <p className="font-bold text-lg">Milestone Title:</p>
+                                </div>
                                 <p className="font-normal text-md mt-1 text-gray-800 dark:text-gray-200">
                                     {milestone.title}
                                 </p>
                             </div>
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Due Date:</p>
-                                <p className='font-normal text-md mt-1' >{new Date(milestone.dueDate).toLocaleString()}</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineCalendar className="h-5 w-5 text-green-500" />
+                                    <p className="font-bold text-lg">Due Date:</p>
+                                </div>
+                                <p className="font-normal text-md mt-1">{new Date(milestone.dueDate).toLocaleString()}</p>
                             </div>
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Description:</p>
-                                <p className='font-normal text-md mt-1'>{milestone.description}</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineDocumentText className="h-5 w-5 text-yellow-500" />
+                                    <p className="font-bold text-lg">Description:</p>
+                                </div>
+                                <p className="font-normal text-md mt-1">{milestone.description}</p>
                             </div>
 
                             {/* Feedback Section */}
                             {feedback && feedback.marks ? (
                                 <div className="mt-4 bg-green-100 p-4 rounded-lg">
-                                    <h4 className="font-extrabold text-lg mb-2">Feedback</h4>
-                                    <p className='text-sm font-medium mt-1'>
+                                    <div className="flex items-center space-x-2">
+                                        <h4 className="font-extrabold text-lg mb-2">Feedback</h4>
+                                    </div>
+                                    <p className="text-sm font-medium mt-1">
                                         <strong>Marks:</strong> {feedback.marks !== undefined ? feedback.marks : 'Not Available'}
                                     </p>
-                                    <p className='text-sm font-medium mt-1'>
+                                    <p className="text-sm font-medium mt-1">
                                         <strong>Comments:</strong> {feedback.comments || 'Not Available'}
                                     </p>
                                     {feedback.downloadURL && (
@@ -852,7 +873,10 @@ const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
     );
 };
 
-const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
+export default ViewMilestoneModal;
+
+
+export const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
     const sortedTasks = [...tasks].sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
     const latestTask = sortedTasks[0]; // First task in the sorted list is the latest
 
@@ -860,6 +884,7 @@ const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
 
     const moduleColors = {
         'Development Software': 'bg-[#00ad43]',
+        'Game Development': 'bg-[#FF8503]',
         // Add other module colors as needed
     };
 

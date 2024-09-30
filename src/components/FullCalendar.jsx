@@ -12,7 +12,7 @@ import { db, auth } from '../backend/config';
 import '../index.css';
 
 export const Calendar = () => {
-    const { CurrentUser } = useAuth();
+    const { CurrentUser, UserData, Loading, UserRole } = useAuth();
     const [SupervisorID, setSupervisorID] = useState(null);
     const [events, setEvents] = useState([]);
     const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', color: '' });
@@ -24,10 +24,11 @@ export const Calendar = () => {
             if (user) {
                 const userId = user.email.substring(0, 9);
                 setSupervisorID(userId);
-
+    
                 const userDoc = await getDoc(doc(db, 'Supervisor', userId));
                 if (userDoc.exists()) {
                     setRole('Supervisor');
+                    await fetchModules(); // Fetch modules immediately after setting SupervisorID
                 } else {
                     const studentDoc = await getDoc(doc(db, 'Student', userId));
                     if (studentDoc.exists()) {
@@ -41,41 +42,101 @@ export const Calendar = () => {
             }
         });
         return () => unsubscribe();
-    }, [role]);
+    }, []);
 
-    const fetchEvents = async (userId, role) => {
+    useEffect(() => {
+        if (!Loading && UserData) {
+            setSupervisorID(UserData.ID);
+            setRole(UserRole === 'Student' ? UserData.StudentType : UserRole);
+            setEvents([]); // Clear events when user data changes
+        }
+    }, [Loading, UserData, UserRole]);
+
+
+    const fetchMeetingEvents = async (userId) => {
+        console.log(`Fetching meetings for userId: ${userId}`); // Log the userId being fetched
         try {
             const eventDocRef = doc(db, 'Events', userId);
             const eventDocSnap = await getDoc(eventDocRef);
-
+            
             if (eventDocSnap.exists()) {
                 const data = eventDocSnap.data();
-                setEvents(data.events || []); // Set the events from the document
+                
+                // Extract meeting information from the document directly
+                const event = {
+                    title: data.subject,
+                    start: `${data.date}T${data.time}:00`, // Construct start time
+                    end: `${data.date}T${data.time}:00`,   // Adjust end time if necessary
+                    backgroundColor: data.backgroundColor,
+                    borderColor: data.borderColor,
+                };
+                
+                setEvents([event]); // Wrap the event in an array since setEvents expects an array
+                console.log('Fetched meetings:', [event]); // Log fetched events
             } else {
-                console.warn('No events found for the given userId');
+                console.warn('No meetings found for the given userId:', userId);
+                setEvents([]); // Clear events if document doesn't exist
+            }
+        } catch (error) {
+            console.error("Error fetching meeting:", error);
+        }
+    };
+
+    
+    const fetchEvents = async (userId) => {
+        try {
+            const eventDocRef = doc(db, 'Events', userId);
+            const eventDocSnap = await getDoc(eventDocRef);
+            
+            if (eventDocSnap.exists()) {
+                const data = eventDocSnap.data();
+                const formattedEvents = (data.events || []).map(event => ({
+                    title: event.title,
+                    start: event.start,
+                    end: event.end,
+                    backgroundColor: event.backgroundColor,
+                    borderColor: event.borderColor,
+                }))
+                setEvents(formattedEvents); 
+            } else {
+                console.warn('No events found for the given userId:', userId);
+                setEvents([]); // Clear events if document doesn't exist
             }
         } catch (error) {
             console.error("Error fetching events:", error);
         }
     };
-
+    
     useEffect(() => {
-        if (SupervisorID && role) {
-            fetchEvents(SupervisorID, role);
+        if (SupervisorID) {
+            fetchEvents(SupervisorID);
+            fetchMeetingEvents(SupervisorID);
         }
-    }, [SupervisorID, role]);
+    }, [SupervisorID]);
 
     const fetchModules = async () => {
         try {
-            const q = doc(db, 'Module', SupervisorID);
-            const querySnapshot = await getDoc(q);
-            const modulesArray = querySnapshot.data().ModuleTitle || [];
-            setModuleTitles(modulesArray);
+            if (!SupervisorID) {
+                console.warn('SupervisorID is undefined');
+                return;
+            }
+    
+            const moduleRef = doc(db, 'Module', SupervisorID.toString()); // Convert to string if necessary
+            const moduleSnap = await getDoc(moduleRef);
+    
+            if (moduleSnap.exists()) {
+                const moduleData = moduleSnap.data();
+                const modulesArray = moduleData.ModuleTitle || []; // Adjust based on your Firestore structure
+                setModuleTitles(modulesArray);
+                console.log('Modules fetched:', modulesArray);
+            } else {
+                console.warn(`No module document found for SupervisorID: ${SupervisorID}`);
+            }
         } catch (error) {
             console.error("Error fetching modules:", error);
         }
     };
-
+        
     useEffect(() => {
         if (SupervisorID) {
             fetchModules();
@@ -87,7 +148,10 @@ export const Calendar = () => {
     };
 
     const showEventPopup = async () => {
-        const moduleOptions = moduleTitles.map((title) => `<option value="${title}">${title}</option>`).join('');
+        const moduleOptions = moduleTitles.length > 0
+            ? moduleTitles.map((title) => `<option value="${title}">${title}</option>`).join('')
+            : `<option value="" disabled>No modules available</option>`;
+
         const { value: formValues } = await Swal.fire({
             title: 'Add Event',
             html: `
@@ -169,8 +233,8 @@ export const Calendar = () => {
                 }}
                 height={"90vh"}
                 dateClick={handleDateClick}
-                events={events}
+                events={events} 
             />
         </div>
     );
-}
+};
