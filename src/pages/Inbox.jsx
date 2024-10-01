@@ -183,6 +183,7 @@ export const Inbox = () => {
 
     const closeModal = () => {
         setIsModalOpen(false);
+        setChatId(null); // Reset chatId when closing the modal
     };
 
     const handleFilterByStudentType = (studentType) => {
