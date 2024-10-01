@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react'
 import { db, auth } from '../backend/config'
 import firebase from '../backend/config'
 import { Input, Button } from '@material-ui/core'
-//import { collection, query, orderBy, limit, onSnapshot,addDoc,serverTimestamp,updateDoc} from 'firebase/firestore';
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import "../chat.css"
 
@@ -12,19 +11,25 @@ export const SendMessage = ({ chatId,scrollRef }) => {
 
     async function sendMessage(e) {
         e.preventDefault();
+        console.log("sendMessage invoked");
 
         if (!chatId) {
             console.error("chatId is missing");
+            alert("Cannot send message: Chat session is not identified.");
             return;
         }
+        console.log("chatId is present:", chatId);
         if (!auth.currentUser) {
             console.error("No authenticated user found.");
+            alert("You must be logged in to send messages.");
             return;
         }
         const { uid, photoURL } = auth.currentUser
+        console.log("Current user:", uid, photoURL);
 
         if (msg.trim() === "") return;
         try {
+            console.log("Attempting to send message:", msg);
             const messagesRef = collection(db, 'chats', chatId, 'messages');
             await addDoc(messagesRef, {
                 text: msg,
@@ -33,10 +38,16 @@ export const SendMessage = ({ chatId,scrollRef }) => {
                 uid,
                 createdAt: serverTimestamp()
             }); 
+            console.log("Message added to Firestore");
+            console.log("Clearing input field");
             setMsg('');
-            if (scrollRef.current) {
+            console.log("Input field cleared");
+            if (scrollRef && scrollRef.current) {
                 scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+            }else {
+                console.warn("scrollRef is not defined");
             }
+
             console.log("Message to be sent:", msg);
             console.log("Message added successfully");
         } catch (error) {
@@ -44,24 +55,7 @@ export const SendMessage = ({ chatId,scrollRef }) => {
             alert('Message failed to send. Try again.');
         }
         console.log("Message to be sent:", msg);
-        // await addDoc(...);
         console.log("Message added successfully");
-
-        // await addDoc(collection(db, 'messages'), {
-        //     text: msg,
-        //     photoURL,
-        //     uid,
-        //     createdAt: serverTimestamp()
-        // });
-        // await updateDoc(chatRef, {
-        //     messages: arrayUnion({
-        //         sender: CurrentUser.uid,
-        //         content: message,
-        //         timestamp: serverTimestamp(),
-        //     })
-        // });
-        // setMsg('');
-        // scrollRef.current.scrollIntoView({ behavior: 'smooth' });
     }
     console.log("Fetched messages:", msg);
     

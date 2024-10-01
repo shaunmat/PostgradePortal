@@ -10,7 +10,7 @@ export const Modal = ({ chatId,isOpen, onClose, data, role }) => {
 
     const defaultAvatar = "/path/to/default-avatar.png"; // Default avatar path
     const [messages, setMessages] = useState([]);
-    const scrollRef = useRef(); // Reference for automatic scroll
+    const scrollRef = useRef(null); // Reference for automatic scroll
 
 
     useEffect(() => {
