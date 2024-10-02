@@ -1,5 +1,5 @@
-// ThemeContext.js
-import React, { createContext, useState, useContext, useEffect } from 'react';
+// ThemeContext.jsx
+import { createContext, useState, useContext, useEffect } from 'react';
 
 const ThemeContext = createContext({
     isDarkMode: false,

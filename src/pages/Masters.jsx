@@ -121,7 +121,7 @@ export const Masters = () => {
                     {Assignments.length > 0 ? Assignments.map((assignment, index) => (
                         // Pass both courseId and assignmentId in the Link
                         <Link 
-                            to={`/courses/${UserData.CourseID[0]}/assignments/${assignment.id}`}
+                            to={`/masters/${UserData.CourseID[0]}/assignments/${assignment.id}`}
                             key={index} 
                             className="block w-full"
                         >

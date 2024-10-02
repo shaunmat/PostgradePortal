@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
 import { db, storage } from '../backend/config'; // Import your Firebase configuration
 import { Footer } from '../components/Footer';
-import BannerImage from '../assets/images/research_banner.jpg';
+import BannerImg from '../assets/images/BannerImg.jpg';
 import { useParams } from 'react-router-dom';
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage"; // For handling file uploads
+import { HiChevronLeft } from 'react-icons/hi';
+import { useNavigate } from 'react-router-dom';
 
 export const Assignments = () => {
+    const navigate = useNavigate();
     const { courseId, assignmentId } = useParams();
     const [courseDetails, setCourseDetails] = useState(null);
     const [assignments, setAssignments] = useState([]);
@@ -118,14 +121,23 @@ export const Assignments = () => {
         return <div>Loading...</div>;
     }
 
+    console.log("Course Details:", courseDetails); 
+
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Stretch Banner Image with Course Name */}
+            <div className="p-4 border-2 min-h-screen border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Stretch Banner Image with Course Name */}
                 <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg relative">
-                    <img src={BannerImage} alt="Banner" className="w-full h-full object-cover" />
+                    <img src={BannerImg} alt="Banner" className="w-full h-full object-cover" />
                     <h1 className="absolute text-4xl font-bold tracking-wider text-white dark:text-gray-200">
-                        {courseDetails.name}
+                        {courseDetails.ModuleTitle}
                     </h1>
+                    <button
+                        className="absolute top-3 left-3 flex items-center px-4 py-2 bg-[#FF8503] text-white rounded-lg"
+                        onClick={() => navigate(-1)}
+                    >
+                        <HiChevronLeft className="mr-2" />
+                        Back
+                    </button>
                 </section>
 
                 {/* Course Details */}
@@ -136,8 +148,8 @@ export const Assignments = () => {
                 </section>
 
                 {/* Assignments */}
-                <section className="mt-6">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Assignments</h2>
+                <section className="mt-4">
+                    <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Assignments</h2>
                     <ul className="mt-4 space-y-4">
                     {assignments.length > 0 ? assignments.map((assignment, index) => {
                         const dueDate = new Date(assignment.AssignmentDueDate.seconds * 1000);

@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Select, Spinner } from 'flowbite-react';
 import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
@@ -5,11 +6,15 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../backend/config'; // Import your Firebase configuration
 import { Footer } from '../components/Footer';
 import BannerImage from '../assets/images/research_banner.jpg';
+import BannerImage2 from '../assets/images/banner.jpg';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../backend/authcontext'
 import Swal from 'sweetalert2';
+import { toast } from 'react-toastify';
+import { HiChevronLeft, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 
 export const ResearchCourse = () => {
+    const navigate = useNavigate();
     const { UserData } = useAuth();
     const { researchId } = useParams();
     const [courseDetails, setCourseDetails] = useState(null);
@@ -26,6 +31,7 @@ export const ResearchCourse = () => {
     const [isSubmitModalOpen, setSubmitModalOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [selectedAssignmentID, setSelectedAssignmentID] = useState(null);
+    const [bannerImage, setBannerImage] = useState(BannerImage); // State for banner image
 
     const handleOpenModal = () => {
         setSubmitModalOpen(true);
@@ -45,19 +51,10 @@ export const ResearchCourse = () => {
 
     useEffect(() => {
         const fetchCourseDetails = async () => {
-            const cacheKey = `courseDetails-${researchId}`;
-            const cachedData = localStorage.getItem(cacheKey);
-            const isExpired = cachedData && (Date.now() - JSON.parse(cachedData).timestamp > 24 * 60 * 60 * 1000);
-
-            if (cachedData && !isExpired) {
-                const { data } = JSON.parse(cachedData);
-                setCourseDetails(data.courseDetails);
-                setAssignments(data.assignments);
-                return; // Skip fetching from Firestore
-            }
-
             try {
-                if (!researchId) throw new Error('Course ID is undefined or null');
+                if (!researchId) {
+                    throw new Error('Course ID is undefined or null');
+                }
 
                 const moduleRef = doc(db, 'Module', researchId);
                 const moduleSnap = await getDoc(moduleRef);
@@ -70,6 +67,13 @@ export const ResearchCourse = () => {
                         instructor: 'Dr. Placeholder',
                         description: moduleData.ModuleDescription || 'Description not available',
                     });
+                    if (moduleData.bannerImageUrl) {
+                        setBannerImage(moduleData.bannerImageUrl); // Update banner image URL
+                    } else {
+                        // Randomly select an image from the images array
+                        const randomImage = images[Math.floor(Math.random() * images.length)];
+                        setBannerImage(randomImage);
+                    }
 
                     // Fetch assignments
                     const assignmentsRef = collection(db, 'Module', researchId, 'Assignments');
@@ -79,20 +83,6 @@ export const ResearchCourse = () => {
                         AssignmentID: doc.id
                     }));
                     setAssignments(assignmentsArray);
-
-                    // Cache data
-                    localStorage.setItem(cacheKey, JSON.stringify({
-                        timestamp: Date.now(),
-                        data: {
-                            courseDetails: {
-                                id: researchId,
-                                name: moduleData.ModuleTitle || 'Sample Course',
-                                instructor: 'Dr. Placeholder',
-                                description: moduleData.ModuleDescription || 'Description not available',
-                            },
-                            assignments: assignmentsArray,
-                        },
-                    }));
 
                     // Fetch feedback and submission status for each assignment
                     for (let assignment of assignmentsArray) {
@@ -111,7 +101,7 @@ export const ResearchCourse = () => {
                             // Set submission status
                             setSubmittedAssignments(prevState => ({
                                 ...prevState,
-                                [assignment.AssignmentID]: studentData.submitted || false
+                                [assignment.AssignmentID]: studentData.submitted || false // Check if the assignment was submitted
                             }));
                         }
                     }
@@ -124,30 +114,31 @@ export const ResearchCourse = () => {
         };
 
         const fetchTopics = async () => {
-            const cacheKey = 'topicsCache';
-            const cachedTopics = localStorage.getItem(cacheKey);
-            if (cachedTopics) {
-                setTopics(JSON.parse(cachedTopics));
-                return; // Skip fetching from storage
-            }
-
             try {
                 const storageRef = ref(storage, 'r_topics/topics.json');
                 const url = await getDownloadURL(storageRef);
                 const response = await fetch(url);
                 const data = await response.json();
-                setTopics(data);
-
-                // Cache topics
-                localStorage.setItem(cacheKey, JSON.stringify(data));
+        
+                // Filter topics based on courseId
+                const courseTopics = data.filter(topic => topic.courseId === researchId);
+                setTopics(courseTopics);
+        
+                // Check if the student has already chosen a topic
+                const chosenTopic = courseTopics.find(topic => topic.selectedBy === UserData.ID);
+                if (chosenTopic) {
+                    setSelectedTopic(chosenTopic);
+                    setIsConfirmed(true);
+                }
             } catch (error) {
                 console.error('Error fetching topics:', error);
             }
-        };
+        };        
 
         fetchCourseDetails();
         fetchTopics();
     }, [researchId, UserData.ID]);
+
 
     const handleFileChange = (event) => {
         setFileForUpload(event.target.files[0]);
@@ -189,57 +180,23 @@ export const ResearchCourse = () => {
          
         }
     };
-
-    // const handleSelectTopic = async (topic) => {
-    //     if (topic.isSelected) {
-    //         alert('This topic has already been selected by another student.');
-    //         return;
-    //     }
-
-    //     if (selectedTopic) {
-    //         alert('You have already selected a topic.');
-    //         return;
-    //     }
-
-    //     try {
-    //         // Mark the topic as selected
-    //         const updatedTopics = topics.map(t => 
-    //             t.topicName === topic.topicName ? { ...t, isSelected: true, selectedBy: UserData.ID } : t
-    //         );
-
-    //         // Upload the updated topics file to Firebase Storage
-    //         const topicsBlob = new Blob([JSON.stringify(updatedTopics)], { type: 'application/json' });
-    //         const topicsRef = ref(storage, 'r_topics/topics.json');
-    //         await uploadBytes(topicsRef, topicsBlob);
-
-    //         // Update local state
-    //         setTopics(updatedTopics);
-    //         setSelectedTopic(topic);
-
-    //         alert(`You have successfully selected the topic: ${topic.topicName}`);
-    //     } catch (error) {
-    //         console.error('Error selecting topic:', error);
-    //         alert('Error selecting topic. Please try again later.');
-    //     }
-    // };
-
     
     const handleConfirmSelection = async () => {
         if (!selectedTopic) {
             Swal.fire("Error!", "Please select a topic first.", "error");
             return;
         }
-
+    
         if (selectedTopic.isSelected) {
             Swal.fire("Error!", "This topic has already been selected by another student.", "error");
             return;
         }
-
+    
         if (isConfirmed) {
             Swal.fire("Error!", "You have already confirmed a topic selection.", "error");
             return;
         }
-
+    
         try {
             // Mark the topic as selected
             const updatedTopics = topics.map((t) =>
@@ -247,16 +204,16 @@ export const ResearchCourse = () => {
                     ? { ...t, isSelected: true, selectedBy: UserData.ID }
                     : t
             );
-
+    
             // Upload the updated topics file to Firebase Storage
             const topicsBlob = new Blob([JSON.stringify(updatedTopics)], { type: 'application/json' });
             const topicsRef = ref(storage, 'r_topics/topics.json');
             await uploadBytes(topicsRef, topicsBlob);
-
+    
             // Update local state
             setTopics(updatedTopics);
             setIsConfirmed(true); // Mark the topic as confirmed
-
+    
             Swal.fire("Success!", `You have successfully selected the topic: ${selectedTopic.topicName}`, "success");
         } catch (error) {
             console.error('Error selecting topic:', error);
@@ -264,6 +221,12 @@ export const ResearchCourse = () => {
         }
     };
 
+    // Banner images 
+    const images = [
+        BannerImage,
+        BannerImage2
+    ];
+    
 
     if (!courseDetails) {
         return (
@@ -277,13 +240,21 @@ export const ResearchCourse = () => {
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 border-2 border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
                 <section className="max-h-80 flex items-center justify-center w-full overflow-hidden rounded-lg relative">
-                    <img src={BannerImage} alt="Banner" className="w-full h-full object-cover" />
+                    <img src={bannerImage} alt="Banner" className="w-full h-full object-cover" />
                     <h1 className="absolute text-4xl font-bold tracking-wider text-white dark:text-gray-200">
                          {courseDetails.name}
                     </h1>
+                    {/* Add back button */}
+                    <button
+                        className="absolute top-3 left-3 flex items-center px-4 py-2 bg-[#FF8503] text-white rounded-lg"
+                        onClick={() => navigate(-1)}
+                    >
+                        <HiChevronLeft className="mr-2" />
+                        Back
+                    </button>
                 </section>
 
-                <section className="mt-6">
+                <section className="mt-6 border-2 border-[#FF8503] rounded-lg p-4">
                     <h2 className="text-3xl font-extrabold text-gray-800 dark:text-gray-200">
                         Welcome to <span className="text-[#FF8503] dark:text-[#FF8503]">{courseDetails.name}</span>
                     </h2>
@@ -380,18 +351,18 @@ export const ResearchCourse = () => {
                     )}
                 </section>
 
-                <section className="mt-6">
+                <section className="mt-4 border-2 border-[#590098] rounded-lg p-4">
                     {/* Show selected topic details when available */}
                     {isConfirmed && selectedTopic ? (
-                        <div className="mt-4">
+                        <div>
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
-                                Your selected topic
+                                Chosen topic
                             </h2>
                             <input
                                 type="text"
                                 value={selectedTopic.topicName}
                                 readOnly
-                                className="border p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
+                                className="mt-3 border p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
                             />
                             <p className={`mt-2 ${selectedTopic.isSelected ? 'text-red-600' : 'text-green-600'}`}>
                                 Status: {selectedTopic.isSelected ? 'Unavailable' : 'Available'}
@@ -484,38 +455,61 @@ export const ResearchCourse = () => {
 
                     </div>
                 </section> */}
+
+
                 {/* Timeline Section, only appears after topic is confirmed */}
                 {isConfirmed && (
-                    <section className="mt-6">
+                    <section className="border-2 mt-4 border-[#FF8503] rounded-lg p-4">
                         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
-                            Deadlines & Submissions
+                            Deadlines & Milestones
                         </h2>
 
                         <div className="mt-4">
                             {assignments.length > 0 ? (
-                                <Timeline 
-                                    tasks={assignments.map((assignment) => {
-                                        const dueDateTimestamp = assignment.AssignmentDueDate?.seconds * 1000;
-                                        const dueDate = new Date(dueDateTimestamp);
-                                        const isPastDue = !isNaN(dueDate) && dueDate < new Date();
+                                <>
+                                    {/* Check if it's the first submission */}
+                                    {Object.keys(submittedAssignments).length === 0 ? (
+                                        <p className="mt-4 mb-4 text-green-600 dark:text-green-400">
+                                            This is your first milestone. Please review the deadlines carefully and submit on time.
+                                        </p>
+                                    ) : null}
 
-                                        return {
-                                            title: assignment.AssignmentTitle,
-                                            dueDate, 
-                                            description: assignment.AssignmentDescription,
-                                            module: courseDetails.name,
-                                            submissionOpen: !isPastDue && !submittedAssignments[assignment.AssignmentID],
-                                            submitted: !!submittedAssignments[assignment.AssignmentID],
-                                            assignmentID: assignment.AssignmentID
-                                        };
-                                    })} 
-                                    onViewDetails={(milestone) => {
-                                        const feedbackForMilestone = feedback[milestone.assignmentID]; 
-                                        openModal(milestone, feedbackForMilestone);
-                                        setSelectedAssignmentID(milestone.assignmentID);
-                                    }}
-                                    handleOpenModal={handleOpenModal}
-                                />
+                                    <Timeline 
+                                        tasks={assignments.map((assignment) => {
+                                            const dueDateTimestamp = assignment.AssignmentDueDate?.seconds * 1000;
+                                            const dueDate = new Date(dueDateTimestamp);
+                                            const isPastDue = !isNaN(dueDate) && dueDate < new Date();
+
+                                            return {
+                                                title: assignment.AssignmentTitle,
+                                                dueDate, 
+                                                description: assignment.AssignmentDescription,
+                                                module: courseDetails.name,
+                                                submissionOpen: !isPastDue && !submittedAssignments[assignment.AssignmentID],
+                                                submitted: !!submittedAssignments[assignment.AssignmentID],
+                                                assignmentID: assignment.AssignmentID
+                                            };
+                                        })} 
+                                        onViewDetails={(milestone) => {
+                                            console.log("Milestone:", milestone); // Log milestone
+                                            const feedbackForMilestone = feedback[milestone.assignmentID]; 
+                                            console.log("Feedback for Milestone:", feedbackForMilestone); // Log feedback for milestone
+                                            if (!feedbackForMilestone) {
+                                                console.error(`No feedback found for assignmentID: ${milestone.assignmentID}`);
+                                            }
+                                            openModal(milestone, feedbackForMilestone);
+                                            setSelectedAssignmentID(milestone.assignmentID);
+                                        }}
+                                        handleOpenModal={handleOpenModal}
+                                    />
+
+                                    {/* Check if all milestones are submitted */}
+                                    {assignments.every(assignment => submittedAssignments[assignment.AssignmentID]) && (
+                                        <p className="mt-4 text-blue-600 dark:text-blue-400">
+                                            More milestones coming soon.
+                                        </p>
+                                    )}
+                                </>
                             ) : (
                                 <p className="mt-4 text-gray-500 dark:text-gray-400">
                                     No deadlines or submissions available.
@@ -524,6 +518,8 @@ export const ResearchCourse = () => {
                         </div>
                     </section>
                 )}
+
+
 
                 {/* <section className="mt-6" style={{display: 'none'}} >
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">Available Topics</h2>
@@ -605,12 +601,12 @@ export const ResearchCourse = () => {
                     </ul>
                 </section>
             </div>
-            {/* Modal */}
+            {/* Modals */}
             <ViewMilestoneModal 
                 isOpen={isModalOpen} 
                 onClose={closeModal} 
                 milestone={selectedMilestone} 
-                feedback={assignmentFeedback} // Pass the feedback to the modal
+                feedback={assignmentFeedback}
             />
 
             <SubmissionModal 
@@ -673,13 +669,13 @@ const SubmissionModal = ({ isOpen, onClose, assignmentID, researchId, UserData, 
       });
 
       // Display success message
-      Swal.fire('Success!', 'File uploaded successfully and submission saved!', 'success');
-
+      toast.success('File uploaded successfully and submission saved!');
       // Close the modal after successful submission
       onClose();
     } catch (error) {
       console.error('Error uploading file and saving submission:', error);
-      Swal.fire('Error', 'Error uploading file or saving submission. Please try again later.', 'error');
+      // Display error message
+      toast.error('Error uploading file or saving submission. Please try again later.');
     }
   };
 
@@ -776,14 +772,15 @@ const Dropzone = ({ onDrop }) => {
 };
 
 import { AnimatePresence, motion } from 'framer-motion';
+import { HiOutlineClipboardList, HiOutlineXCircle, HiOutlineCalendar, HiOutlineDocumentText, HiOutlineChatAlt } from 'react-icons/hi';
 
 const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
     if (!isOpen || !milestone) return null;
 
     const moduleColors = {
-        'Database Stucturing': '#00bfff',
+        'Database Structuring': '#00bfff',
         'Software Testing': '#590098',
-        'Business Analysis': '#FF8503',
+        'Game Development': '#FF8503',
         'Development Software': '#00ad43',
     };
 
@@ -804,57 +801,55 @@ const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                        className="bg-white dark:bg-gray-800 w-11/12 md:max-w-lg mx-auto rounded-lg shadow-lg z-50 overflow-y-auto p-6"
+                        className="bg-white dark:bg-gray-800 w-11/12 md:max-w-lg mx-auto rounded-xl shadow-lg z-50 overflow-y-auto p-6"
                         style={{ border: `4px solid ${outlineColor}` }}
                     >
                         <div className="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 mb-4">
                             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                                Assignment Details
+                                Milestone Details
                             </h2>
                             <button
                                 onClick={onClose}
-                                className="text-gray-500 dark:text-gray-300"
+                                className="text-gray-500 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-200"
                             >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="h-6 w-6"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        strokeWidth={2}
-                                        d="M6 18L18 6M6 6l12 12"
-                                    />
-                                </svg>
+                                <HiOutlineXCircle className="h-5 w-5" />
                             </button>
                         </div>
                         <div className="space-y-4">
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Assignment Title:</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineClipboardList className="h-5 w-5 text-blue-500" />
+                                    <p className="font-bold text-lg">Milestone Title:</p>
+                                </div>
                                 <p className="font-normal text-md mt-1 text-gray-800 dark:text-gray-200">
                                     {milestone.title}
                                 </p>
                             </div>
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Due Date:</p>
-                                <p className='font-normal text-md mt-1' >{new Date(milestone.dueDate).toLocaleString()}</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineCalendar className="h-5 w-5 text-green-500" />
+                                    <p className="font-bold text-lg">Due Date:</p>
+                                </div>
+                                <p className="font-normal text-md mt-1">{new Date(milestone.dueDate).toLocaleString()}</p>
                             </div>
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold text-lg">Description:</p>
-                                <p className='font-normal text-md mt-1'>{milestone.description}</p>
+                                <div className="flex items-center space-x-2">
+                                    <HiOutlineDocumentText className="h-5 w-5 text-yellow-500" />
+                                    <p className="font-bold text-lg">Description:</p>
+                                </div>
+                                <p className="font-normal text-md mt-1">{milestone.description}</p>
                             </div>
 
                             {/* Feedback Section */}
                             {feedback && feedback.marks ? (
                                 <div className="mt-4 bg-green-100 p-4 rounded-lg">
-                                    <h4 className="font-bold text-lg mb-2">Feedback</h4>
-                                    <p className='text-sm font-medium mt-1'>
+                                    <div className="flex items-center space-x-2">
+                                        <h4 className="font-extrabold text-lg mb-2">Feedback</h4>
+                                    </div>
+                                    <p className="text-sm font-medium mt-1">
                                         <strong>Marks:</strong> {feedback.marks !== undefined ? feedback.marks : 'Not Available'}
                                     </p>
-                                    <p className='text-sm font-medium mt-1'>
+                                    <p className="text-sm font-medium mt-1">
                                         <strong>Comments:</strong> {feedback.comments || 'Not Available'}
                                     </p>
                                     {feedback.downloadURL && (
@@ -878,7 +873,10 @@ const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => {
     );
 };
 
-const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
+export default ViewMilestoneModal;
+
+
+export const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
     const sortedTasks = [...tasks].sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
     const latestTask = sortedTasks[0]; // First task in the sorted list is the latest
 
@@ -886,6 +884,7 @@ const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
 
     const moduleColors = {
         'Development Software': 'bg-[#00ad43]',
+        'Game Development': 'bg-[#FF8503]',
         // Add other module colors as needed
     };
 
@@ -982,9 +981,17 @@ const Timeline = ({ tasks, onViewDetails, handleOpenModal }) => {
             {sortedTasks.length > 3 && (
                 <button
                     onClick={handleToggle}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded"
+                    className="mt-2 px-3 py-3 bg-blue-600 text-white rounded-full absolute bottom-0 right-0"
                 >
-                    {isExpanded ? 'Show Less' : 'Show More'}
+                    {isExpanded ? (
+                        <>
+                            <HiChevronUp />
+                        </>
+                    ) : (
+                        <>
+                            <HiChevronDown />
+                        </>
+                    )}
                 </button>
             )}
         </section>

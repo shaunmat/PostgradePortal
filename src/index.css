@@ -1,4 +1,5 @@
 @import 'flowbite';
+@import 'simple-datatables/dist/style.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -27,7 +28,6 @@ html, body, #root {
 .dark .text-gray-200 {
   color: #edf2f7;
 }
-
 .fc-toolbar-title {
   font-size: 1rem;
   font-weight: 600;
@@ -35,25 +35,16 @@ html, body, #root {
 }
 
 
+/* Custom scrollbar */
 ::-webkit-scrollbar {
-  /* Customize the scrollbar width */
   width: 10px;
 }
 
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-/* Hide scrollbar for IE, Edge and Firefox */
-.no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-::-webkit-scrollbar-track {
-  /* Customize the scrollbar track */
-
-}
-
 ::-webkit-scrollbar-thumb {
-  /* Customize the scrollbar thumb */
-  background-color: #cbd5e0;
+  background-color: #FF8503;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #f4f4f4;
 }

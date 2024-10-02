@@ -11,16 +11,19 @@ import { Footer } from '../components/Footer';
 import { useAuth } from '../backend/authcontext';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from '../backend/config';
+import { Timeline } from './ResearchCrs';
 
 export const Dashboard = () => {
     const [userName, setUserName] = useState('');
     const [userSurname, setUserSurname] = useState('');
+    const [userTitle, setUserTitle] = useState('');
     const [userID, setUserID] = useState('');
     const [ProfilePicture, setProfilePicture] = useState('');
     const [UserLevel, setUserLevel] = useState('');
     const [CourseIDs, setCourseIDs] = useState([]);
     const { UserData, UserRole, Loading } = useAuth();
     const [modules, setModules] = useState([]);
+    const [lastFetch, setLastFetch] = useState(Date.now()); // Track last fetch time
 
     useEffect(() => {
         const cachedUserData = localStorage.getItem('userData');
@@ -33,11 +36,21 @@ export const Dashboard = () => {
             setUserData(UserData);
             fetchModules(UserData.CourseID);
         }
-    }, [Loading, UserData, UserRole]);
+        
+        // Set up cache refresh every 30 minutes
+        const intervalId = setInterval(() => {
+            if (Date.now() - lastFetch > 30 * 60 * 1000 && UserData) {
+                fetchModules(UserData.CourseID);
+            }
+        }, 30 * 60 * 1000); // 30 minutes in milliseconds
+
+        return () => clearInterval(intervalId); // Clean up interval on unmount
+    }, [Loading, UserData, UserRole, lastFetch]); // Add lastFetch to dependencies
 
     const setUserData = (user) => {
         setUserName(user.Name);
         setUserSurname(user.Surname);
+        setUserTitle(user.Title);
         setUserID(user.ID);
         setCourseIDs(user.CourseID);
         setProfilePicture(user.ProfilePicture || UserLogo);
@@ -46,12 +59,6 @@ export const Dashboard = () => {
 
     const fetchModules = async (courseIDs) => {
         try {
-            const cachedModules = localStorage.getItem('modules');
-            if (cachedModules) {
-                setModules(JSON.parse(cachedModules));
-                return; // Skip fetching if we have cached data
-            }
-
             const fetchedModules = [];
             for (const courseID of courseIDs) {
                 const moduleRef = collection(db, 'Module');
@@ -66,6 +73,7 @@ export const Dashboard = () => {
             // Update state with the fetched modules and cache them
             setModules(fetchedModules);
             localStorage.setItem('modules', JSON.stringify(fetchedModules));
+            setLastFetch(Date.now()); // Update last fetch time
         } catch (error) {
             console.error('Error fetching modules:', error);
         }
@@ -90,14 +98,15 @@ export const Dashboard = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {UserRole === 'Student' ? (
+            <div className="p-4 min-h-screen border-2 border-gray-200 rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                {UserRole === 'Student' ? (
                     <>
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                                 Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here’s what’s happening with your studies today
+                                Here&#39;s what&#39;s happening with your studies today
                             </p>
                         </section>
 
@@ -129,7 +138,7 @@ export const Dashboard = () => {
 
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Upcoming Milestones
+                                Current Milestones
                             </h2>
                             <div className="mt-6">
                                 <UpcomingMilestones />
@@ -140,10 +149,10 @@ export const Dashboard = () => {
                     <>
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Dr. {userName} {userSurname}</span>
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userTitle} {userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here’s your overview for today
+                                Here&#39;s your overview for today
                             </p>
                         </section>
 
@@ -166,7 +175,7 @@ export const Dashboard = () => {
 
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Upcoming Lectures
+                                Upcoming Meetings
                             </h2>
                             <div className="mt-6">
                                 <Calendar />
@@ -186,29 +195,30 @@ export const Dashboard = () => {
 
                         <section className="mt-8">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Pending Review Submissions
+                                Pending Reviews
                             </h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mt-4">
-                                {pendingReviews.map((review) => (
-                                    <div key={review.id} className="p-4 bg-white shadow-md rounded-lg dark:bg-gray-800 dark:text-gray-200">
+                            <ul className="mt-4">
+                                {pendingReviews.map(review => (
+                                    <li key={review.id} className="border-b py-2">
                                         <h3 className="text-lg font-semibold">{review.title}</h3>
-                                        <p className="mt-2 text-gray-600 dark:text-gray-400">{review.description}</p>
-                                    </div>
+                                        <p className="text-gray-600">{review.description}</p>
+                                    </li>
                                 ))}
-                            </div>
+                            </ul>
                         </section>
 
                         <section className="mt-10">
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
                                 Upcoming Deadlines
                             </h2>
-                            <div className="mt-6">
-                                <ul className="list-disc list-inside">
-                                    {upcomingDeadlines.map(deadline => (
-                                        <li key={deadline.id} className="mt-2 text-gray-600 dark:text-gray-400">{deadline.title} - {deadline.date}</li>
-                                    ))}
-                                </ul>
-                            </div>
+                            <ul className="mt-4">
+                                {upcomingDeadlines.map(deadline => (
+                                    <li key={deadline.id} className="border-b py-2">
+                                        <h3 className="text-lg font-semibold">{deadline.title}</h3>
+                                        <p className="text-gray-600">Due by: {deadline.date}</p>
+                                    </li>
+                                ))}
+                            </ul>
                         </section>
                     </>
                 ) : null}
