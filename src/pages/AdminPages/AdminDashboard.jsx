@@ -5,7 +5,7 @@ import { HiAcademicCap, HiDocument } from "react-icons/hi"
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DataTable } from "simple-datatables";
-import {auth,db} from "../backend/config"
+import {auth,db} from "../../backend/config"
 import {SupervisorCount} from "../../components/AdminComponents/SupervisorsCount"
 import { getDocs, query, collection, where } from "firebase/firestore";
 import { Totals } from "../../components/AdminComponents/Totals";

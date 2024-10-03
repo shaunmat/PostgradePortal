@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { Footer } from "../components/Footer"
 import { useTheme } from "../context/ThemeContext";
-export const Settings = () => {
+export const AdminSettings = () => {
     const { isDarkMode, toggleTheme } = useTheme();
 
     // State to control modal visibility

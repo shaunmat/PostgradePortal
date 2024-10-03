@@ -28,7 +28,11 @@ export const Login = () => {
 
             if (CurrentUser) {
                 const userEmail = CurrentUser.email;
-                const userType = userEmail.startsWith('7')
+                const userType = 
+                 userEmail=="220143805@uj.ac.za"
+                    ?'Admin'
+                     :
+                userEmail.startsWith('7')
                     ? 'Supervisor'
                     : userEmail.startsWith('2')
                     ? 'Student'
