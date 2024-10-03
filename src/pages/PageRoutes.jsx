@@ -15,6 +15,8 @@ import { Inbox } from './Inbox';
 import { Milestones } from './Milestones';
 import { Settings } from './Settings';
 import { Tasks } from './Tasks';
+import { Students } from './Students';
+import { StudentsData } from './StudentData';
 import { TopicContent } from './SyllabusPage';
 import { LogoLoader } from '../components/LogoLoader';
 import { Review } from './Reviews';
@@ -49,6 +51,8 @@ export const PageRoutes = () => {
         <Route path="/masters" element={<Masters />} />
         <Route path="/masters/:studentID" element={<ResearchCourse />} />
         <Route path="/masters/:courseId/assignments/:assignmentId" element={<Assignments />} />
+        <Route path="/Students" element={<Students />} />
+        <Route path="/Students/:StudentID" element={<StudentsData />} />
         <Route path="/tasks" element={<Tasks />} />
         <Route path="/inbox" element={<Inbox />} />
         <Route path="/milestones" element={<Milestones />} />
