@@ -11,6 +11,7 @@ import { Select } from "flowbite-react";
 import { toast } from "react-toastify";
 import { doc, setDoc } from 'firebase/firestore';
 import { color } from "framer-motion";
+import { useNavigate } from 'react-router-dom';
 import { query, where } from "firebase/firestore";
 
 
@@ -28,6 +29,9 @@ export const RightSidebar = () => {
     const [meetingDate, setMeetingDate] = useState('');
     const [meetingTime, setMeetingTime] = useState('');
     const [emailStatus, setEmailStatus] = useState('');
+    const [CourseParser, setCourseParser] = useState('');
+    const navigate = useNavigate();
+
     // UserRole === 'supervisor' ? 'Supervisor' : 'Student'
     const [quote, setQuote] = useState({ text: '', author: '' });
 
@@ -70,7 +74,7 @@ export const RightSidebar = () => {
                                 id: doc.id,
                                 ...studentData,
                             });
-
+                            setCourseParser(courseId)
                             console.log('Filtered Students:', studentList); // Log filtered student list
                         }
                     });
@@ -427,20 +431,39 @@ export const RightSidebar = () => {
                         <div className="students-list mt-4">
                             <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h4>
                             <ul className="space-y-2 mt-4">
-                                {students.length > 0 ? students.map((student, index) => (
+                            {students.length > 0 ? students.map((student, index) => {
+                                // Combine StudentData.ID and CourseHolder[0] to form PassedData
+                                const PassedData = student.ID + "," + CourseParser; // Assuming CourseHolder is available here
+
+                                return (
                                     <li key={index} className="flex items-center space-x-2">
-                                        <button className="p-2 mr-2 bg-gray-200 rounded-full dark:bg-gray-600">
-                                            <HiAcademicCap className="w-6 h-6" />
+                                        <button
+                                            className="p-2 mr-2 bg-gray-200 rounded-full dark:bg-gray-600"
+                                            onClick={() => navigate(`/Students/${PassedData}`)} // Navigate on click with PassedData
+                                        >
+                                            {student.Profilepicture ? (
+                                                <img
+                                                    src={student.Profilepicture}
+                                                    alt={`${student.Name}'s profile`}
+                                                    className="w-6 h-6 rounded-full object-cover"
+                                                />
+                                            ) : (
+                                                <HiAcademicCap className="w-6 h-6" />
+                                            )}
                                         </button>
                                         <div>
-                                            <h5 className="text-sm font-medium text-gray-800 dark:text-gray-300">{student.Name} {student.Surname} </h5>
+                                            <h5 className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                                                {student.Name} {student.Surname}
+                                            </h5>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
                                             <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
                                         </div>
                                     </li>
-                                )) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">No students assigned</p>
-                                )}
+                                );
+                            }) : (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">No students assigned</p>
+                            )}
+
                             </ul>
                         </div>
 
