@@ -419,7 +419,7 @@ export const ResearchCourse = () => {
                     {isConfirmed && selectedTopic ? (
                         <div>
                             <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
-                                Chosen topic
+                                Your topic
                             </h2>
                             <input
                                 type="text"
@@ -427,7 +427,7 @@ export const ResearchCourse = () => {
                                 readOnly
                                 className="mt-3 border p-2 rounded w-full bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-400"
                             />
-                            <p className={`mt-2 ${selectedTopic.isSelected ? 'text-red-600' : 'text-green-600'}`}>
+                            <p className={`mt-2 font-bold text-sm ${selectedTopic.isSelected ? 'text-red-600' : 'text-green-600'}`}>
                                 Status: {selectedTopic.isSelected ? 'Unavailable' : 'Available'}
                             </p>
                         </div>

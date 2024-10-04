@@ -30,9 +30,7 @@ export const Review = () => {
           </p>
         </section>
 
-        {/* PhD Thesis List */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* PhD Thesis Section */}
           <Card>
             <h2 className="font-bold mb-4 text-lg text-gray-800">PhD Thesis List</h2>
             <div className="mb-4 p-2 border rounded-lg flex justify-between items-center">
@@ -54,7 +52,6 @@ export const Review = () => {
                 <Button gradientDuoTone="orangeToPink">Download</Button>
               </div>
             </div>
-            {/* Additional thesis items */}
             <div className="p-2 border rounded-lg flex justify-between items-center">
               <div>
                 <p className="font-semibold text-gray-800">Student: Jane Smith</p>
@@ -81,7 +78,6 @@ export const Review = () => {
             </div>
           </Card>
 
-          {/* Masters Thesis Section */}
           <Card>
             <h2 className="font-bold mb-4 text-lg text-gray-800">Masters Thesis List</h2>
             <div className="mb-4 p-2 border rounded-lg flex justify-between items-center">
@@ -96,7 +92,6 @@ export const Review = () => {
                 <Button gradientDuoTone="orangeToPink">Download</Button>
               </div>
             </div>
-            {/* Additional thesis items */}
             <div className="p-2 border rounded-lg flex justify-between items-center">
               <div>
                 <p className="font-semibold text-gray-800">Student: Michael Brown</p>
