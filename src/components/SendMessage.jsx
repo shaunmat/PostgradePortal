@@ -62,29 +62,28 @@ export const SendMessage = ({ chatId,scrollRef }) => {
     return (
         <div>
             <form onSubmit={sendMessage}>
-                <div className="sendMsg">
-                    <Input style={{
-                        width: '80%',
-                        fontSize: '15px',
-                        fontWeight: '550',
-                        marginLeft: '5px',
-                    }}
-                        placeholder='Message...'
+            <div className="flex items-center p-4 md:p-5 space-x-3 rtl:space-x-reverse border-t border-gray-200 rounded-b dark:border-gray-600">
+                    <input
                         type="text"
                         value={msg}
-                        onChange={e => setMsg(e.target.value)} />
-                    <Button style={{
-                        width: '20%',
-                        fontSize: '15px',
-                        fontWeight: '550',
-                        marginLeft: '10px',
-                        maxWidth: '200px'
-                    }}
+                        onChange={(e) => setMsg(e.target.value)}
+                        className="flex-grow p-2 border rounded-lg dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                        placeholder="Type a message"
+                        onKeyPress={(e) => {
+                            if (e.key === 'Enter') sendMessage(e);
+                        }}
+                    />
+                    <button
                         type="submit"
-                        disabled={msg.trim() === ""} // Disable button if input is empty
-                        >Send</Button>
+                        className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800"
+                        disabled={msg.trim() === ""}
+                    >
+                        Send
+                    </button>
                 </div>
             </form>
         </div>
     )
 }
+
+

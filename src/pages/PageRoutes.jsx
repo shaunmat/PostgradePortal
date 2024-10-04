@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, memo } from 'react';
+import { useState, useEffect, useMemo, memo, useCallback } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { RightSidebar } from '../components/Shared/RightSidebar';
 import { SidebarComponent } from '../components/Shared/Sidebar';
@@ -59,7 +59,9 @@ export const PageRoutes = () => {
     [] // Empty dependencies as routes don't change
   );
 
-  // Effect to manage loading based on location change
+  const handleStart = useCallback(() => setLoading(true), []);
+  const handleComplete = useCallback(() => setLoading(false), []);
+
   useEffect(() => {
     const handleStart = () => setLoading(true);
     const handleComplete = () => setLoading(false);
@@ -68,10 +70,10 @@ export const PageRoutes = () => {
 
     const timer = setTimeout(() => {
       handleComplete(); // Stop loading after a short delay
-    }, 3000); // Adjust the duration to match your actual loading times
+    }, 1000); // Adjust the duration to match your actual loading times
 
     return () => clearTimeout(timer); // Cleanup timer
-  }, [location]); // Re-run effect only when location changes
+  }, [location, handleStart, handleComplete]); // Re-run effect only when location changes
 
   return (
     <div className="flex">

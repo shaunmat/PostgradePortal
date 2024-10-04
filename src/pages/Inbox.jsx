@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Footer } from "../components/Footer";
 import { Modal } from "../components/Modal";
 import { motion } from "framer-motion";
-import avatar from "../assets/images/avatar.png";
+import avatar from "../assets/images/Avatar.png";
 import { auth, db } from "../backend/config"; // Import your firebase config
 import { getDocs, query, collection, where } from "firebase/firestore";
 import { useAuth } from "../backend/authcontext";
@@ -82,7 +82,7 @@ export const Inbox = () => {
                         querySnapshot.forEach((doc) => {
                             const data = doc.data();
                             studentdetsArray.push({
-                                ProfilePicture: data.ProfilePicture,
+                                ProfilePicture: data.ProfilePicture || avatar,
                                 StudentID: data.ID,
                                 StudentName: data.Name,
                                 StudentSurname: data.Surname,
@@ -90,7 +90,8 @@ export const Inbox = () => {
                                 StudentType: data.StudentType
                             });
                             courseIdArray.push({
-                                CourseID: data.StudentType
+                                CourseID: data.StudentType,
+                                CourseName: data.CourseName
                             });
                         });
                     } catch (error) {
@@ -112,7 +113,8 @@ export const Inbox = () => {
                                     SupervisorID: data.ID,
                                     SupervisorName: data.Name,
                                     SupervisorSurname: data.Surname,
-                                    ProfilePicture: data.ProfilePicture,
+                                    SupervisorCourseName: data.CourseName,
+                                    ProfilePicture: data.ProfilePicture || avatar,
                                     Title: data.Title
                                 });
                             });
@@ -200,12 +202,12 @@ export const Inbox = () => {
 
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-            <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
-                <section className="mb-6">
+            <div className="p-4 border min-h-screen border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
+                <section className="mb-2">
                     <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
                         {role === 'Student' ? 'Your Inbox' : 'Supervisor Inbox'}
                     </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-300 mt-6">
+                    <p className="text-lg text-gray-600 dark:text-gray-300 mt-2 mb-6">
                         {role === 'Student'
                             ? 'Here you can view all your messages and supervisors.'
                             : 'Here you can view all your messages and students.'}
@@ -235,7 +237,7 @@ export const Inbox = () => {
                                             {lecturer.Title} {lecturer.SupervisorName} {lecturer.SupervisorSurname}
                                         </h2>
                                         <p className="text-gray-600 dark:text-gray-400">
-                                            Office Hours: 24hr
+                                            Office Hours: 8:00 - 16:00
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
                                             Supervisor ID: {lecturer.SupervisorID}
@@ -246,11 +248,11 @@ export const Inbox = () => {
                     </div>
                 ) : role === 'Supervisor' ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
-                        <DropdownButton id="dropdown-basic-button" title="Student Courses" style={{ backgroundColor: 'orange', borderColor: 'orange' }}>
+                        {/* <DropdownButton id="dropdown-basic-button" title="Student Courses" style={{ backgroundColor: 'orange', borderColor: 'orange' }}>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('Honours')}>Honours</Dropdown.Item>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('Masters')}>Masters</Dropdown.Item>
                             <Dropdown.Item onClick={() => handleFilterByStudentType('PhD')}>PhD</Dropdown.Item>
-                        </DropdownButton>
+                        </DropdownButton> */}
 
                         {/* </div> */}
                         {filteredStudents.map((student, index) => (

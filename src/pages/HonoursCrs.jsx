@@ -200,13 +200,13 @@ export const HonoursCrs = () => {
     
             await fetchTopics();
     
-            Swal.fire('Success', 'Topic added successfully!', 'success');
+            toast.success('Topic added successfully!');
             // Close the modal
             setIsTopicModalOpen(false);
     
         } catch (error) {
             console.error("Error adding topic:", error);
-            Swal.fire('Error', 'Error adding topic, please try again.', 'error');
+            toast.error('Error adding topic. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -443,6 +443,7 @@ export const HonoursCrs = () => {
                                 <th className="border px-4 py-2">Topic Name</th>
                                 <th className="border px-4 py-2">Description</th>
                                 <th className="border px-4 py-2">Status</th>
+                                <th className="border px-4 py-2">Student Number</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -458,6 +459,7 @@ export const HonoursCrs = () => {
                                     <td className="border px-4 py-2">{topic.topicName}</td>
                                     <td className="border px-4 py-2">{topic.description}</td>
                                     <td className="border px-4 py-2">{topic.isSelected ? "Selected" : "Available"}</td>
+                                    <td className="border px-4 py-2">{topic.selectedBy || "None"}</td>
                                 </tr>
                             ))
                         )}

@@ -36,6 +36,7 @@ export const SidebarComponent = () => {
     phd: false,
   });
 
+  console.log('UserData:', UserData);
   // Fetch user data on component mount
   useEffect(() => {
     if (!Loading && UserData) {
