@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { HiEye, HiEyeOff } from 'react-icons/hi';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../backend/config';
@@ -12,11 +12,20 @@ export const Login = () => {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [loading, setLoading] = useState(false); // Spinner state
+    const [rememberMe, setRememberMe] = useState(false); // Remember Me state
     const navigate = useNavigate();
 
     const handleShowPassword = () => {
         setShowPassword(!showPassword);
     };
+
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('rememberedEmail');
+        if (savedEmail) {
+            setEmail(savedEmail);
+            setRememberMe(true);
+        }
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -43,8 +52,13 @@ export const Login = () => {
                 if (userType) {
                     localStorage.setItem('userRole', userType.toLowerCase());
                     localStorage.setItem('email', userEmail);
+                    if (rememberMe) {
+                        localStorage.setItem('rememberedEmail', email);
+                    } else {
+                        localStorage.removeItem('rememberedEmail');
+                    }
                     if(userType=="Admin"){
-                        navigate('/admin/dash')
+                        navigate('/admin/dash');
                     }
                     else{
                         navigate('/dashboard'); // Redirect to the dashboard
@@ -125,6 +139,22 @@ export const Login = () => {
                         </div>
                     </div>
 
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                            <input
+                                type="checkbox"
+                                id="remember"
+                                className="rounded text-[#FF8503] border-[#FF8503] focus:ring-0"
+                                checked={rememberMe}
+                                onChange={(e) => setRememberMe(e.target.checked)}
+                            />
+                            <label htmlFor="remember" className="text-sm font-medium text-gray-500 dark:text-gray-400 ml-2">Remember me</label>
+                        </div>
+                        <Link to="/forgot-password" className="text-sm font-medium text-[#FF8503] dark:text-blue-500">
+                            Forgot password?
+                        </Link>
+                    </div>
+
                     <div className="flex justify-center">
                         <button
                             type="submit"
@@ -139,7 +169,7 @@ export const Login = () => {
 
             <footer className="absolute bottom-0 w-full p-4 text-center text-gray-700 dark:text-gray-400">
                 <p className="text-sm font-normal text-center text-white dark:text-gray-400">
-                    &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal</span> is a product of University Of Johannesburg.
+                    &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal</span> is a product of the <span className="text-blue-500">University of Johannesburg</span>
                 </p>
             </footer>
         </div>

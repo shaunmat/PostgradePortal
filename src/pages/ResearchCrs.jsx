@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Select, Spinner } from 'flowbite-react';
-import { collection, getDocs, doc, getDoc, setDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db, storage } from '../backend/config'; // Import your Firebase configuration
 import { Footer } from '../components/Footer';
@@ -11,7 +11,8 @@ import { useParams } from 'react-router-dom';
 import { useAuth } from '../backend/authcontext'
 import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
-import FinalSubmissionModal from '../components/FinalSubmissionModal';
+import { Badge } from 'flowbite-react';
+import { FinalSubmissionModal } from '../components/FinalSubmissionModal';
 import { HiChevronLeft, HiChevronDown, HiChevronUp } from 'react-icons/hi';
 
 export const ResearchCourse = () => {
@@ -28,8 +29,11 @@ export const ResearchCourse = () => {
     const [isConfirmed, setIsConfirmed] = useState(false); // Track whether a topic selection has been confirmed
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedMilestone, setSelectedMilestone] = useState(null);
-    const [FinalSubmission, setFinalSubmission] = useState([]);
-    const [assignmentFeedback, setAssignmentFeedback] = useState({}); // Store feedback for the modal
+    const [FinalSubmission, setFinalSubmission] = useState({
+        SubmissionPermission: false,
+        SubmissionStatus: false,
+        files: []
+    });    const [assignmentFeedback, setAssignmentFeedback] = useState({}); // Store feedback for the modal
     const [isSubmitModalOpen, setSubmitModalOpen] = useState(false);
     const [selectedAssignment, setSelectedAssignment] = useState(null);
     const [selectedAssignmentID, setSelectedAssignmentID] = useState(null);
@@ -62,8 +66,8 @@ export const ResearchCourse = () => {
                 const moduleRef = doc(db, 'Module', researchId);
                 const moduleSnap = await getDoc(moduleRef);
 
-                const FinalSubmissionRef = doc(db, `Module/${researchId}/Final Submission/${UserData.ID}`);
-                const FinalSubmissionSnap = await getDoc(FinalSubmissionRef);
+                const finalSubmissionRef = doc(db, `Module/${researchId}/Final Submission/${UserData.ID}`);
+                const finalSubmissionSnap = await getDoc(finalSubmissionRef);
 
                 if (moduleSnap.exists()) {
                     const moduleData = moduleSnap.data();
@@ -73,20 +77,21 @@ export const ResearchCourse = () => {
                         instructor: 'Dr. Placeholder',
                         description: moduleData.ModuleDescription || 'Description not available',
                     });
-                    if (moduleData.bannerImageUrl) {
-                        setBannerImage(moduleData.bannerImageUrl); // Update banner image URL
-                    } else {
-                        // Randomly select an image from the images array
-                        const randomImage = images[Math.floor(Math.random() * images.length)];
-                        setBannerImage(randomImage);
-                    }
+                    setBannerImage(moduleData.bannerImageUrl || images[Math.floor(Math.random() * images.length)]);
 
-                    if(FinalSubmissionSnap.exists()){
-                        setFinalSubmission(FinalSubmissionSnap.data())
+                    if (finalSubmissionSnap.exists()) {
+                        const finalSubmissionData = finalSubmissionSnap.data();
+                        setFinalSubmission({
+                            SubmissionPermission: finalSubmissionData.SubmissionPermission ?? false,
+                            SubmissionStatus: finalSubmissionData.submitted ?? false,
+                            files: finalSubmissionData.files ?? []
+                        });
                     } else {
                         setFinalSubmission({
-                            SubmissionPermission: false
-                        })
+                            SubmissionPermission: false,
+                            SubmissionStatus: false,
+                            files: []
+                        });
                     }
 
                     // Fetch assignments
@@ -105,17 +110,13 @@ export const ResearchCourse = () => {
 
                         if (studentSnap.exists()) {
                             const studentData = studentSnap.data();
-
-                            // Set feedback if available
                             setFeedback(prevFeedback => ({
                                 ...prevFeedback,
                                 [assignment.AssignmentID]: studentData
                             }));
-
-                            // Set submission status
                             setSubmittedAssignments(prevState => ({
                                 ...prevState,
-                                [assignment.AssignmentID]: studentData.submitted || false // Check if the assignment was submitted
+                                [assignment.AssignmentID]: studentData.submitted || false
                             }));
                         }
                     }
@@ -133,12 +134,10 @@ export const ResearchCourse = () => {
                 const url = await getDownloadURL(storageRef);
                 const response = await fetch(url);
                 const data = await response.json();
-        
-                // Filter topics based on courseId
+
                 const courseTopics = data.filter(topic => topic.courseId === researchId);
                 setTopics(courseTopics);
-        
-                // Check if the student has already chosen a topic
+
                 const chosenTopic = courseTopics.find(topic => topic.selectedBy === UserData.ID);
                 if (chosenTopic) {
                     setSelectedTopic(chosenTopic);
@@ -147,62 +146,55 @@ export const ResearchCourse = () => {
             } catch (error) {
                 console.error('Error fetching topics:', error);
             }
-        };        
+        };
 
         fetchCourseDetails();
         fetchTopics();
     }, [researchId, UserData.ID]);
 
-
     const handleFinalSubmission = async (files) => {
         const submittedFiles = [];
-        let AllFilesUploaded = false; 
+        let allFilesUploaded = true;
+
         for (const file of files) {
             try {
                 const assignmentID = 'your_assignment_id'; // Update to get the correct assignment ID
                 const storageRef = ref(storage, `Submissions/${researchId}/Assignments/${assignmentID}/StudentID/${UserData.ID}/${file.name}`);
                 const uploadTask = await uploadBytes(storageRef, file);
                 const downloadURL = await getDownloadURL(uploadTask.ref);
-    
-                // Add the file metadata to the array
+
                 submittedFiles.push({
                     downloadURL: downloadURL,
                     submittedAt: new Date(),
                     fileName: file.name,
-                    submitted: true // Add the submitted flag
+                    submitted: true
                 });
-    
-                // Mark assignment as submitted in local state
+
                 setSubmittedAssignments(prevState => ({
                     ...prevState,
-                    [assignmentID]: true // Set this assignment as submitted
+                    [assignmentID]: true
                 }));
-    
-                alert(`File ${file.name} uploaded successfully!`);
+
+                toast.success(`File ${file.name} uploaded successfully!`);
             } catch (error) {
                 console.error(`Error uploading file ${file.name}:`, error);
-                alert(`Error uploading file ${file.name}. Please try again later.`);
+                toast.error(`Error uploading file ${file.name}. Please try again later.`);
+                allFilesUploaded = false; // Set to false if any file fails to upload
             }
         }
-    
-        // After all files are uploaded, save the array of submitted files in Firestore
-        const submissionDocRef = doc(db, `Module/${researchId}/Final Submission/${UserData.ID}`);
-        await setDoc(submissionDocRef, {
-            files: submittedFiles, // Save the array of files
-            submittedAt: new Date(),
-            submitted: true
-        });
-        AllFilesUploaded = true;
-        if (AllFilesUploaded) {
+
+        if (allFilesUploaded) {
             const submissionDocRef = doc(db, `Module/${researchId}/Final Submission/${UserData.ID}`);
-            await updateDoc(submissionDocRef, {
-                SubmissionPermission: false // Add a flag to disable further submissions
+            await setDoc(submissionDocRef, {
+                files: submittedFiles,
+                submittedAt: new Date(),
+                submitted: true,
+                SubmissionPermission: false // Disable further submissions
             });
 
-            alert('All files uploaded. Submission locked.');
+            toast.success('All files uploaded. Submission locked.');
         }
-    }; 
-
+    };
     const handleFileChange = (event) => {
         setFileForUpload(event.target.files[0]);
     };
@@ -233,30 +225,28 @@ export const ResearchCourse = () => {
             }));
 
             // alert('File uploaded successfully and submission saved!');
-            Swal.fire("Success!", 'File uploaded successfully and submission saved!', "success");
-
-            Swal.fire
+            toast.success("Success!", 'File uploaded successfully and submission saved!', "success");
         } catch (error) {
             console.error('Error uploading file and saving submission:', error);
             // alert('Error uploading file or saving submission. Please try again later.');
-            Swal.fire("Error!", "Error uploading file or saving submission. Please try again later.", "error");
+            toast.error("Error!", "Error uploading file or saving submission. Please try again later.", "error");
          
         }
     };
     
     const handleConfirmSelection = async () => {
         if (!selectedTopic) {
-            Swal.fire("Error!", "Please select a topic first.", "error");
+            toast.error("Error!", "Please select a topic first.", "error");
             return;
         }
     
         if (selectedTopic.isSelected) {
-            Swal.fire("Error!", "This topic has already been selected by another student.", "error");
+            toast.error("Error!", "This topic has already been selected by another student.", "error");
             return;
         }
     
         if (isConfirmed) {
-            Swal.fire("Error!", "You have already confirmed a topic selection.", "error");
+            toast.error("Error!", "You have already confirmed a topic selection.", "error");
             return;
         }
     
@@ -277,10 +267,10 @@ export const ResearchCourse = () => {
             setTopics(updatedTopics);
             setIsConfirmed(true); // Mark the topic as confirmed
     
-            Swal.fire("Success!", `You have successfully selected the topic: ${selectedTopic.topicName}`, "success");
+            toast.success("Success!", `You have successfully selected the topic: ${selectedTopic.topicName}`, "success");
         } catch (error) {
             console.error('Error selecting topic:', error);
-            Swal.fire("Error!", "Error selecting topic. Please try again later.", "error");
+            toast.error("Error!", "Error selecting topic. Please try again later.", "error");
         }
     };
 
@@ -330,7 +320,7 @@ export const ResearchCourse = () => {
                     <div className="mt-6">
                         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">Course Overview</h2>
                         <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                            This honours research course aims to equip students with the necessary skills to conduct independent research.
+                            This research course aims to equip students with the necessary skills to conduct independent research.
                             The course covers various methodologies, research ethics, and techniques for effective data analysis. 
                             Students will be required to select a relevant topic, engage with their supervisors, and submit regular drafts for feedback.
                         </p>
@@ -526,27 +516,6 @@ export const ResearchCourse = () => {
                         <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">
                             Deadlines & Milestones
                         </h2>
-                        <br/>
-                        <div className="border p-4 rounded-lg shadow dark:bg-gray-900 dark:border-gray-700">
-                            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-200">Final Submission</h3>
-                            <p>After a long year of research and drafts, this is where you submit your final work for external moderation. Please keep in mind that the following will be needed from you:</p>
-                            <p>- A copy of your Affidavit (Stamped by a Commissioner of Oaths)</p>
-                            <p>- Your Declaration</p>
-                            <p>- Your Final Turnitin Report</p>
-                            <p>- Signed Letter as Proof of Language Editing by a Language Editor</p>
-                            <p>- A soft Copy of the Research Project/Minor Dissertation/Dissertation/Thesis (Word/PDF only)</p>
-                            <br/>
-                            {FinalSubmission.SubmissionPermission ? (
-                                <button
-                                    className="mt-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
-                                    onClick={() => setFinalSubmissionIsModalOpen(true)}
-                                >
-                                    Begin Submission Process
-                                </button>
-                            ) : (
-                                <p><strong>It seems you are not allowed to make your final submission, please contact your supervisor.</strong></p>
-                            )}
-                        </div>
                         <div className="mt-4">
                             {assignments.length > 0 ? (
                                 <>
@@ -585,6 +554,43 @@ export const ResearchCourse = () => {
                                         }}
                                         handleOpenModal={handleOpenModal}
                                     />
+
+                                    <div className="p-6 mx-auto border rounded-lg shadow-md dark:bg-gray-900 dark:border-gray-700">
+                                        <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">
+                                            Final Submission
+                                        </h3>
+                                        
+                                        {/* Submission Status Badge */}
+                                        <Badge color={FinalSubmission.SubmissionStatus ? 'green' : 'yellow'} className="mb-4 text-md">
+                                            Status: {FinalSubmission.SubmissionStatus ? 'Submitted' : 'Not Submitted'}
+                                        </Badge>
+
+                                        <p className="text-gray-700 dark:text-gray-400 mb-2">
+                                            After a long year of research and drafts, this is where you submit your final work for external moderation. Please keep in mind that the following will be needed from you:
+                                        </p>
+                                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-400 space-y-1 mb-4">
+                                            <li>A copy of your Affidavit (Stamped by a Commissioner of Oaths)</li>
+                                            <li>Your Declaration</li>
+                                            <li>Your Final Turnitin Report</li>
+                                            <li>Signed Letter as Proof of Language Editing by a Language Editor</li>
+                                            <li>A soft Copy of the Research Project/Minor Dissertation/Dissertation/Thesis (Word/PDF only)</li>
+                                        </ul>
+                                        {FinalSubmission.SubmissionPermission && !FinalSubmission.SubmissionStatus ? (
+                                            <button
+                                                className="w-full text-center py-3 px-4 text-sm font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503]"
+                                                onClick={() => setFinalSubmissionIsModalOpen(true)}
+                                            >
+                                                Begin Submission Process
+                                            </button>
+                                        ) : (
+                                            <p className="font-medium text-gray-500 dark:text-gray-400">
+                                                {FinalSubmission.SubmissionStatus 
+                                                    ? 'Your submission has been completed. You cannot submit again.'
+                                                    : 'It seems you are not allowed to make your final submission, please contact your supervisor.'}
+                                            </p>
+                                        )}
+                                    </div>
+
 
                                     {/* Check if all milestones are submitted */}
                                     {assignments.every(assignment => submittedAssignments[assignment.AssignmentID]) && (
@@ -732,7 +738,7 @@ const SubmissionModal = ({ isOpen, onClose, assignmentID, researchId, UserData, 
   // Handle file upload and document submission
   const UploadDocument = async () => {
     if (files.length === 0) {
-      Swal.fire('Error', 'Please select a file to upload', 'error');
+      toast.error('Error', 'Please select a file to upload', 'error');
       return;
     }
 

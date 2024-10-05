@@ -14,6 +14,7 @@ import '../index.css';
 export const Calendar = () => {
     const { CurrentUser, UserData, Loading, UserRole } = useAuth();
     const [SupervisorID, setSupervisorID] = useState(null);
+    const [StudentID, setStudentID] = useState(null);
     const [events, setEvents] = useState([]);
     const [newEvent, setNewEvent] = useState({ title: '', start: '', end: '', color: '' });
     const [moduleTitles, setModuleTitles] = useState([]);

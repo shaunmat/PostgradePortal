@@ -57,7 +57,7 @@ export const ViewMilestoneModal = ({ isOpen, onClose, milestone, feedback }) => 
                         </div>
                         <div className="space-y-4">
                             <div className="text-gray-800 dark:text-gray-200">
-                                <p className="font-bold">Assignment Title:</p>
+                                <p className="font-bold">Milestone Title:</p>
                                 <p className="font-semibold text-gray-800 dark:text-gray-200">
                                     {milestone.title}
                                 </p>

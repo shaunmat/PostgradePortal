@@ -12,6 +12,8 @@ import { useAuth } from '../backend/authcontext';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from '../backend/config';
 import { Timeline } from './ResearchCrs';
+import { motion } from 'framer-motion';
+
 import { AdminDashboard } from './AdminPages/AdminDashboard';
 export const Dashboard = () => {
     const [userName, setUserName] = useState('');
@@ -118,14 +120,20 @@ export const Dashboard = () => {
                                 Your Courses
                             </h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                                {modules.map((module, index) => (
+                            {modules.map((module, index) => (
+                                <motion.div
+                                    key={index}
+                                    initial={{ opacity: 0, x: 30 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: index * 0.1 }}
+                                >
                                     <CourseCard
-                                        key={index}
-                                        name={module.ModuleTitle}
-                                        image={images[index % images.length]}
-                                        description={module.ModuleDescription}
-                                        borderColor={borderColors[index % borderColors.length]}
+                                    name={module.ModuleTitle}
+                                    image={images[index % images.length]}
+                                    description={module.ModuleDescription}
+                                    borderColor={borderColors[index % borderColors.length]}
                                     />
+                                </motion.div>
                                 ))}
                             </div>
                         </section>

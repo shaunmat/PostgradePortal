@@ -109,7 +109,7 @@ export const Masters = () => {
                         onClick={() => setIsModalOpen(true)}
                     >
                         <HiPlus className="mr-2" />
-                        Add New Assignment
+                        Add New Milestone
                     </button>
                 </section>
 
