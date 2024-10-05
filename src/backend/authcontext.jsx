@@ -31,8 +31,10 @@ export function AuthProvider({ children }) {
     }
 
     try {
+
       const userRef = doc(db, UserRole, UserID);
       const docSnap = await getDoc(userRef);
+        console.log(UserRole,"This is the user role in the beginning of the try and catch")
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setUserData(userData);
@@ -53,9 +55,12 @@ export function AuthProvider({ children }) {
       if (user) {
         const email = user.email;
         const UserID = email.substring(0, 9);
+        console.log("If statement for the role here is the ID number",UserID)
         let Role = "";
-
-        if (UserID.startsWith('7')) {
+        if(UserID=="220143805@uj.ac.za"){
+          Role="Admin";
+        }
+        else if (UserID.startsWith('7')) {
           Role = "Supervisor";
         } else if (UserID.startsWith('2')) {
           Role = "Student";

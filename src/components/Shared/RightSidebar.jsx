@@ -32,20 +32,20 @@ export const RightSidebar = () => {
     const [quote, setQuote] = useState({ text: '', author: '' });
 
     // Function to fetch a random quote
-    const fetchQuote = async () => {
-        try {
-            const response = await fetch('http://localhost:3000/api/quote');
-            const data = await response.json();
-            setQuote({ text: data[0].q, author: data[0].a });
-        } catch (error) {
-            console.error('Error fetching quote:', error);
-        }
-    };
+    // const fetchQuote = async () => {
+    //     try {
+    //         const response = await fetch('http://localhost:3000/api/quote');
+    //         const data = await response.json();
+    //         setQuote({ text: data[0].q, author: data[0].a });
+    //     } catch (error) {
+    //         console.error('Error fetching quote:', error);
+    //     }
+    // };
 
     // Fetch quote on component mount
-    useEffect(() => {
-        fetchQuote();
-    }, []);
+    // useEffect(() => {
+    //     fetchQuote();
+    // }, []);
 
     useEffect(() => {
         if (!Loading && UserData) {
