@@ -12,6 +12,7 @@ import {
   HiBookOpen,
   HiViewBoards,
   HiCollection,
+  HiCog,
 } from 'react-icons/hi';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '../../backend/authcontext';
@@ -91,13 +92,7 @@ export const SidebarComponent = () => {
 
   const handleLogout = async () => {
     try {
-        // Clear all cached data for the user
-        localStorage.clear(); // This clears all data in localStorage
-
-        // Alternatively, if you want to clear specific items only, you can do:
-        // localStorage.removeItem(`userData_${userID}`);
-        // localStorage.removeItem('modules');
-
+        localStorage.clear(); 
         await signOut(auth);
         navigate('/login');
     } catch (error) {
@@ -105,15 +100,13 @@ export const SidebarComponent = () => {
     }
   };
 
-
   const sidebarLinks = {
     Student: [
       { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       { path: '/research', label: 'Research', icon: <HiAcademicCap className="w-6 h-6" /> },
       { path: '/tasks', label: 'Tasks', icon: <HiViewBoards className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
-      // { path: '/milestones', label: 'Milestones', icon: <HiFlag className="w-6 h-6" /> },
-      { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/settings', label: 'Settings', icon: <HiCog className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ],
     Supervisor: [
@@ -121,24 +114,22 @@ export const SidebarComponent = () => {
       supervisedCourses.honours && { path: '/honours', label: 'Honours', icon: <HiAcademicCap className="w-6 h-6" /> },
       supervisedCourses.masters && { path: '/masters', label: 'Masters', icon: <HiBookOpen className="w-6 h-6" /> },
       supervisedCourses.phd && { path: '/phd', label: 'PhD', icon: <HiCollection className="w-6 h-6" /> },
+      { path: '/students', label: 'Students', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/tasks', label: 'Tasks', icon: <HiViewBoards className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
-      // { path: '/milestones', label: 'Milestones', icon: <HiFlag className="w-6 h-6" /> },
-      { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/settings', label: 'Settings', icon: <HiCog className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ].filter(Boolean), // Filter out any false values
     Examiner: [
       { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       { path: '/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
-      // { path: '/submissions', label: 'Submissions', icon: <HiViewBoards className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
-      { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/settings', label: 'Settings', icon: <HiCog className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ],
     Admin:[
       { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       { path: '/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
-      // { path: '/submissions', label: 'Submissions', icon: <HiViewBoards className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },

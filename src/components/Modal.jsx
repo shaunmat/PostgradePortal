@@ -1,38 +1,24 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendMessage } from '../components/SendMessage';
-import { db, auth } from '../backend/config'
-import { doc, collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
-import { Input, Button } from '@material-ui/core'
-import "../../src/chat.css"
+import { HiOutlineXCircle } from "react-icons/hi";
+import { ChatBubble } from '../components/ChatBubble';
+import avatar from "../assets/images/Avatar.png";
+import { db, auth } from '../backend/config';
+import { doc, collection, query, orderBy, onSnapshot } from 'firebase/firestore';
+import { Badge } from 'flowbite-react';
+import "../../src/chat.css";
+
 export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
     if (!isOpen) return null;
 
-    const defaultAvatar = "/path/to/default-avatar.png"; // Default avatar path
+    const defaultAvatar = avatar;
     const [messages, setMessages] = useState([]);
     const scrollRef = useRef(null); // Reference for automatic scroll
-
 
     useEffect(() => {
         if (chatId && isOpen) {
             const chatRef = doc(db, 'chats', chatId);
-            //     if (docSnap.exists()) {
-            //         const chatData=docSnap.data();
-            //         const messagesQuery=query(
-            //             collection(chatRef,'messages'),
-            //             orderBy('createdAt','asc')
-            //         );
-            //         const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
-            //             const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            //             setMessages(msgs);
-            //         });
-            //         return () => unsubscribeMessages();
-            //     }else{
-            //         setMessages([]);
-            //     }
-            // });
-
-            // return () => unsubscribe();
             const messagesQuery = query(
                 collection(chatRef, 'messages'),
                 orderBy('createdAt', 'asc')
@@ -43,71 +29,93 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                 console.log("Fetched messages:", msgs);
             });
             return () => unsubscribeMessages();
-
-
         }
     }, [chatId, isOpen]);
+
+    // Scroll to bottom when messages change
+    useEffect(() => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollIntoView({ behavior: 'smooth' });
+        }
+    }, [messages]);
 
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
                     {/* Background overlay */}
-                    <motion.div key="overlay" className="fixed inset-0 bg-black bg-opacity-50 z-40" />
-
-                    {/* Modal window */}
                     <motion.div
-                        key="modal-window"
-                        className="fixed inset-0 z-50 flex items-center justify-center"
+                        className="fixed inset-0 bg-black bg-opacity-50 z-40"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
+                        transition={{ duration: 0.5 }}
+                    />
+                    
+                    {/* Modal window */}
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                        transition={{ duration: 0.3 }}
                     >
-                        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 w-full max-w-4xl h-[90vh]">
+                        <div className="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 w-full max-w-3xl h-[80vh] flex flex-col">
                             {/* Header */}
                             <div className="flex justify-between items-center mb-4">
                                 <div className="flex items-center">
                                     <img src={data?.ProfilePicture || defaultAvatar} alt="Profile" className="w-10 h-10 rounded-full mr-4" />
                                     <div>
                                         <h3 className="text-lg font-bold">
-                                            {role === 'Student' ? data?.SupervisorName
-                                                : role === 'Supervisor' ? data?.StudentName
-                                                    : role === 'Admin' ? data?.ExaminerName
-                                                        : role === 'Examiner' ? data?.AdminName
-                                                            : null}
+                                            {role === 'Student' ? `${data?.Title} ${data?.SupervisorSurname}` : `${data?.StudentName} ${data?.StudentSurname}`}
                                         </h3>
-                                        <p className="text-sm">
-                                            {role === 'Admin' && data?.ExaminerID ? `ID: ${data.ExaminerID}`
-                                                : role === 'Student' && data?.SupervisorID ? `ID: ${data.SupervisorID}`
-                                                    : role === 'Examiner' && data?.AdminID ? `ID: ${data.AdminID}`
-                                                        : role === 'Supervisor' && data?.StudentID ? `ID: ${data.StudentID}`
-                                                            : 'ID not available'}
-                                        </p>
-
+                                        {/* Display Course Name instead of ID */}
+                                        <p className="text-sm">{role === 'Student' ? data?.courseName : data?.StudentType}</p>
+                                        <p className="text-sm">{role === 'Student' ? data?.courseName : data?.courseName}</p>
                                     </div>
                                 </div>
-                                <Button onClick={onClose} className="text-gray-600 hover:text-gray-900">X</Button> {/* Use Material UI's Button */}
+                                <button onClick={onClose} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
+                                    <HiOutlineXCircle className="w-6 h-6" />
+                                </button>
                             </div>
 
-                            <div className="msgs overflow-y-auto h-5/6">
-                                {messages.map((message, index) => (
-                                    <div
-                                        key={message.id} // Use message ID for uniqueness
-                                        className={`msg ${message.sender === auth.currentUser.uid ? 'sent' : 'received'}`}
-                                    >
-                                        <img
-                                            className="w-8 h-8 rounded-full"
-                                            src={message.photoURL || defaultAvatar}
-                                            alt="Avatar"
+
+                            <div className="msgs overflow-y-auto flex-grow scrollbar-hide">
+                                {/* Disclaimer with Badge */}
+                                {role === 'Student' ? (
+                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
+                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
+                                            <strong>Disclaimer</strong>
+                                            <p>Please be aware that this chat is for educational purposes only. Any topics discussed outside of this context are not permitted.</p>
+                                        </Badge>
+                                    </div>
+                                ) : (
+                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
+                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
+                                            <strong>Notice</strong>
+                                            <p>You have started a chat with a {role === 'Supervisor' ? 'student' : 'supervisor'}. Please keep the conversation professional and relevant to the course.</p>
+                                        </Badge>
+                                    </div>
+                                )}
+                                {messages.map((message) => (
+                                    <div key={message.id} className="mb-4">
+                                        <ChatBubble
+                                            message={{
+                                                avatar: message.photoURL || defaultAvatar,
+                                                sender: message.sender,
+                                                time: new Date(message.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                                                content: message.text,
+                                                status: message.status
+                                            }}
+                                            isSent={message.sender === auth.currentUser.uid}
                                         />
-                                        <p>{message.text}</p>
-                                        <span className="message-time">{new Date(message.createdAt?.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     </div>
                                 ))}
+                                <div ref={scrollRef} /> {/* This div acts as the scroll target */}
                             </div>
-
-                            <SendMessage chatId={chatId} scroll={scrollRef} />
-                            <div ref={scrollRef}></div>
+                            
+                            {/* SendMessage component fixed to the bottom */}
+                            <SendMessage chatId={chatId} scrollRef={scrollRef} />
                         </div>
                     </motion.div>
                 </>
@@ -115,5 +123,3 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
         </AnimatePresence>
     );
 };
-
-

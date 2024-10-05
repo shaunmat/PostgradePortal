@@ -36,7 +36,7 @@ export const TopicContent = () => {
                 instructor: 'Dr. John Doe',
                 description: 'This course covers various aspects of software engineering...',
                 syllabus: [
-                    { routeId: 'chapter-1', topic: "Introduction to Software Engineering", content: "This is the content for Introduction to Software Engineering", subtopics: ["Software Development Life Cycle", "Agile Methodology", "Waterfall Model"], subdate: ["10/10/2021", "10/20/2021", "10/30/2021"], assignmentDesc: "This is the assignment description for Introduction to Software Engineering" },
+                    { routeId: 'chapter-1', topic: "Introduction to Software Engineering", content: "This is the content for Introduction to Software Engineering", subtopics: ["Software Development Life Cycle", "Agile Methodology", "Waterfall Model"], subdate: ["10/10/2021", "10/20/2021", "10/30/2021"], assignmentDesc: "This is the Milestone Description for Introduction to Software Engineering" },
                     { routeId: 'chapter-2', topic: "Software Requirements", content: "This is the content for Software Requirements", subtopics: ["Requirements Elicitation", "Requirements Analysis", "Requirements Specification"], subdate: ["11/01/2021", "11/15/2021", "11/30/2021"] },
                     { routeId: 'chapter-3', topic: "Software Design", content: "This is the content for Software Design", subtopics: ["Design Principles", "Design Patterns", "UML Diagrams"], subdate: ["12/01/2021", "12/10/2021", "12/20/2021"] }
                 ]

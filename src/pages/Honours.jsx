@@ -70,6 +70,8 @@ export const Honours = () => {
         }
     };
 
+    console.log('Modules', modules);
+
     return (
         <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
             <div className="p-4 h-screen border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">                {/* Welcome Header */}
@@ -84,7 +86,9 @@ export const Honours = () => {
 
                 {/* Courses */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-                    {modules.map((module, index) => (
+                    {modules
+                    .filter(module => module.ModuleType === 'Honours')
+                    .map((module, index) => (
                         <Link to={`/honours/${module.id}`} key={module.id} className="block">
                             <motion.div
                                 className={`border-2 rounded-lg overflow-hidden shadow-md ${borderColors[index % borderColors.length]}`}
