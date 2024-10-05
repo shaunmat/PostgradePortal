@@ -196,8 +196,6 @@ export const Inbox = () => {
                 } else {
                     console.log('No admin found for this examiner.');
                 }
-
-
                     // Fetch admin details for the examiner
 
                     // if (ExaminerID) {
@@ -236,12 +234,6 @@ export const Inbox = () => {
         };
         fetchDetails();
     }, [StudentID, SupervisorID, ExaminerID, AdminID, role, filterCourseID]);
-    
-    
-
-
-
-
     const createOrGetChat = async (user1, user2) => {
         // Create a consistent chat ID by ordering user IDs
         const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
@@ -288,6 +280,7 @@ export const Inbox = () => {
         setIsModalOpen(true);
     };
     const handleAdminClick = async (admin) => {
+        setSelectedAdmin(admin)
         setAdminDetails(admin);
         const currentUserId = role === 'Admin' ? AdminID : ExaminerID;
         const newchatId = await createOrGetChat(currentUserId, admin.AdminID);
@@ -296,6 +289,7 @@ export const Inbox = () => {
     }
 
     const handleExaminerClick = async (examiner) => {
+        setSelectedExaminer(examiner)
         setAdminDetails(examiner);
         const currentUserId = role === 'Examiner' ? ExaminerID : AdminID;
         const newchatId = await createOrGetChat(currentUserId, examiner.ExaminerID);
@@ -407,7 +401,7 @@ export const Inbox = () => {
                             </motion.div>
                         ))}
                     </div>
-                ) : role === 'Examiner'  && adminDetails?.length > 0 ? (
+                ) : role === 'Examiner'  &&  adminDetails?.length > 0 ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
                         {adminDetails.map((admin, index) => (
                                 <motion.div
