@@ -12,7 +12,7 @@ import { useAuth } from '../backend/authcontext';
 import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from '../backend/config';
 import { Timeline } from './ResearchCrs';
-
+import { AdminDashboard } from './AdminPages/AdminDashboard';
 export const Dashboard = () => {
     const [userName, setUserName] = useState('');
     const [userSurname, setUserSurname] = useState('');
@@ -31,10 +31,13 @@ export const Dashboard = () => {
             const user = JSON.parse(cachedUserData);
             setUserData(user);
             fetchModules(user.CourseID);
+            console.log('cache data is working ')
         } else if (!Loading && UserData) {
             localStorage.setItem('userData', JSON.stringify(UserData)); // Cache user data
             setUserData(UserData);
             fetchModules(UserData.CourseID);
+            console.log('cache data is not working ')
+
         }
         
         // Set up cache refresh every 30 minutes
@@ -152,7 +155,7 @@ export const Dashboard = () => {
                                 Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userTitle} {userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here&#39;s your overview for today
+                                Here&#39;s your overview for today 
                             </p>
                         </section>
 
@@ -221,7 +224,9 @@ export const Dashboard = () => {
                             </ul>
                         </section>
                     </>
-                ) : null}
+                ) : UserRole === 'Admin'?(
+                    <AdminDashboard/>
+                ):<h1>Something is wrong </h1>}
 
                 {/* Footer */}
                 <Footer />

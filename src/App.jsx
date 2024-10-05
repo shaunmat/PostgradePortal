@@ -2,28 +2,32 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './components/Shared/Login';
 import { PageRoutes } from './pages/PageRoutes';
 import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
-import { memo, useCallback } from 'react';
+import { AdminDashboard } from './pages/AdminPages/AdminDashboard';
+import { AdminSettings } from './pages/AdminPages/AdminSettings';
+import {AdminPageRoutes} from './pages/AdminPages/AdminPageRoutes'
 
-// Memoize the ToastContainer to prevent unnecessary re-renders
-const MemoizedToastContainer = memo(ToastContainer);
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
-  // Memoize the routes to prevent unnecessary re-renders
-  const renderRoutes = useCallback(() => (
-    <Routes>
-      <Route path="/" element={<Navigate to="/login" />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/*" element={<PageRoutes />} />
-    </Routes>
-  ), []);
+  const userRole = localStorage.getItem('userRole');
+  console.log("this is the user role in the app js",userRole)
 
   return (
     <>
-      {renderRoutes()}
-      <MemoizedToastContainer />
+   
+   <Routes>
+        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/login" element={<Login />} />
+        {userRole === 'Admin' ? (
+          <Route path="*/" element={<AdminPageRoutes />} />
+        ) : (
+          <Route path="/*" element={<PageRoutes />} />
+        )}
+      </Routes>
+      <ToastContainer />
+      <ToastContainer />
     </>
   );
 }
 
-export default memo(App);
+export default App;

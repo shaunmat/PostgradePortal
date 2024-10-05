@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo, memo, useCallback } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { useState, useEffect, useMemo, memo } from 'react';
+import { Routes, Route, useLocation ,Navigate} from 'react-router-dom';
 import { RightSidebar } from '../components/Shared/RightSidebar';
 import { SidebarComponent } from '../components/Shared/Sidebar';
 import { Dashboard } from '../pages/Dashboard';
@@ -15,57 +15,74 @@ import { Inbox } from './Inbox';
 import { Milestones } from './Milestones';
 import { Settings } from './Settings';
 import { Tasks } from './Tasks';
-import { Students } from './Students';
-import { StudentsData } from './StudentData';
 import { TopicContent } from './SyllabusPage';
 import { LogoLoader } from '../components/LogoLoader';
 import { Review } from './Reviews';
 import { HonoursCrs } from './HonoursCrs';
 import { motion } from 'framer-motion';
-
+import {AdminDashboard} from '../pages/AdminPages/AdminDashboard'
+import {AdminSettings} from '../pages/AdminPages/AdminSettings'
 // Memoize the Sidebar and RightSidebar components to prevent re-renders
 const MemoizedSidebarComponent = memo(SidebarComponent);
 const MemoizedRightSidebar = memo(RightSidebar);
 
 export const PageRoutes = () => {
   const [loading, setLoading] = useState(false);
+  const [userRole,setUserRole]=useState(false);
   const location = useLocation();
-
+  // Example: Fetch user role (could be from localStorage, API, etc.)
+  useEffect(() => {
+    const fetchUserRole = () => {
+      // Assuming you store user role in localStorage or get it from an API
+      const role = localStorage.getItem('userRole') || 'Student'; // Default to 'student'
+      setUserRole(role);
+      console.log("This the current role right now:",role)
+    };
+    
+    fetchUserRole();
+  }, []);
   // Memoize the routes only once since these don't change
-  const routes = useMemo(
-    () => (
-      <Routes>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/courses" element={<Courses />} />
-        <Route path="/courses/course/:courseId" element={<Course />} />
-        <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
-        <Route path="/courses/course/:courseId/topic/:topicId" element={<TopicContent />} />
-        <Route path="/research" element={<Research />} />
-        <Route path="/research/:researchId" element={<ResearchCourse />} />
-        <Route path="/honours" element={<Honours />} />
-        <Route path="/honours/:researchId" element={<HonoursCrs />} />
-        <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
-        <Route path="/phd" element={<PhD />} />
-        <Route path="/phd/:studentID" element={<ResearchCourse />} />
-        <Route path="/phd/:courseId/assignments/:assignmentId" element={<Assignments />} />
-        <Route path="/masters" element={<Masters />} />
-        <Route path="/masters/:studentID" element={<ResearchCourse />} />
-        <Route path="/masters/:courseId/assignments/:assignmentId" element={<Assignments />} />
-        <Route path="/Students" element={<Students />} />
-        <Route path="/Students/:StudentID" element={<StudentsData />} />
-        <Route path="/tasks" element={<Tasks />} />
-        <Route path="/inbox" element={<Inbox />} />
-        <Route path="/milestones" element={<Milestones />} />
-        <Route path="/settings" element={<Settings />} />
-        <Route path="/review-submissions" element={<Review />} />
-      </Routes>
-    ),
-    [] // Empty dependencies as routes don't change
-  );
+  const routes = useMemo(() => {
+    if (userRole === 'Admin') {
+      return (
+        <Routes>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+          <Route path="/admin/reports" element={<AdminReports />} />
+          <Route path="*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
+        </Routes>
+      );
+    } else {
+      return (
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/courses" element={<Courses />} />
+          <Route path="/courses/course/:courseId" element={<Course />} />
+          <Route path="/honours/:courseId/assignments/:assignmentId" element={<Assignments />} />
+          <Route path="/courses/course/:courseId/topic/:topicId" element={<TopicContent />} />
+          <Route path="/research" element={<Research />} />
+          <Route path="/research/:researchId" element={<ResearchCourse />} />
+          <Route path="/honours" element={<Honours />} />
+          <Route path="/honours/:researchId" element={<HonoursCrs />} />
+          <Route path="/phd" element={<PhD />} />
+          <Route path="/phd/:studentID" element={<ResearchCourse />} />
+          <Route path="/phd/:courseId/assignments/:assignmentId" element={<Assignments />} />
+          <Route path="/masters" element={<Masters />} />
+          <Route path="/masters/:studentID" element={<ResearchCourse />} />
+          <Route path="/masters/:courseId/assignments/:assignmentId" element={<Assignments />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/milestones" element={<Milestones />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/review-submissions" element={<Review />} />
+          <Route path="*" element={<Navigate to="/dashboard" />} /> {/* Redirect all undefined routes to Dashboard */}
+        </Routes>
+      );
+    }
+  }, [userRole]);
+// Empty dependencies as routes don't change
 
-  const handleStart = useCallback(() => setLoading(true), []);
-  const handleComplete = useCallback(() => setLoading(false), []);
-
+  // Effect to manage loading based on location change
   useEffect(() => {
     const handleStart = () => setLoading(true);
     const handleComplete = () => setLoading(false);
@@ -74,10 +91,10 @@ export const PageRoutes = () => {
 
     const timer = setTimeout(() => {
       handleComplete(); // Stop loading after a short delay
-    }, 1000); // Adjust the duration to match your actual loading times
+    }, 3000); // Adjust the duration to match your actual loading times
 
     return () => clearTimeout(timer); // Cleanup timer
-  }, [location, handleStart, handleComplete]); // Re-run effect only when location changes
+  }, [location]); // Re-run effect only when location changes
 
   return (
     <div className="flex">

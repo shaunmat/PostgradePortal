@@ -28,7 +28,11 @@ export const Login = () => {
 
             if (CurrentUser) {
                 const userEmail = CurrentUser.email;
-                const userType = userEmail.startsWith('7')
+                const userType = 
+                 userEmail=="220143805@uj.ac.za"
+                    ?'Admin'
+                     :
+                userEmail.startsWith('7')
                     ? 'Supervisor'
                     : userEmail.startsWith('2')
                     ? 'Student'
@@ -39,7 +43,12 @@ export const Login = () => {
                 if (userType) {
                     localStorage.setItem('userRole', userType.toLowerCase());
                     localStorage.setItem('email', userEmail);
-                    navigate('/dashboard'); // Redirect to the dashboard
+                    if(userType=="Admin"){
+                        navigate('/admin/dash')
+                    }
+                    else{
+                        navigate('/dashboard'); // Redirect to the dashboard
+                    }
                 } else {
                     setErrorMessage('Invalid user type.');
                 }
