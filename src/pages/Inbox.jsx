@@ -29,6 +29,7 @@ export const Inbox = () => {
     const [filterCourseID, setFilterCourseID] = useState(null);
     const [selectedStudentType, setSelectedStudentType] = useState(null);
     const [chatId, setChatId] = useState(null);
+    //setting role
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged(async (user) => {
             if (user) {
@@ -57,6 +58,7 @@ export const Inbox = () => {
                             console.log("Student found and role set.");
                         } else if (userId === '220143805') {
                             // Admin Query
+                            console.log('Its true',userId)
                             const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', Math.floor(userId)));
                             const adminSnapshot = await getDocs(adminQuery);
                             console.log("Admin query executed, document snapshot:", adminSnapshot);
@@ -65,7 +67,8 @@ export const Inbox = () => {
                                 setRole('Admin');
                                 setAdminDetails(userId);
                                 setAdminID(userId);
-                                console.log("Admin found and role set.");
+                                console.log('adminSnapshot not empty',role,'user id',userId)
+                                console.log("Admin found and role set.",role);
                             }
                         } else if (user.email === "anelemabuza@externalexaminer.co.za") {
                             // Examiner Query
@@ -108,260 +111,8 @@ export const Inbox = () => {
     }, [examinerDetails]);
     useEffect(() => {
         console.log('Updated admin  Details:', adminDetails);
-    }, [adminDetails]);
-    // useEffect(() => {
-    //     const fetchDetails = async () => {
-    //         const studentdetsArray = [];
-    //         const supervisorsArray = [];
-    //         const adminArray = [];
-    //         const examinerArray = [];
-    //         const courseIdArray = [];
-    //         try {
-    //             let q;
-    //             if (role === 'Supervisor') {
-    //                 q = query(collection(db, 'Student'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
-    //                 try {
-    //                     const querySnapshot = await getDocs(q);
-    //                     querySnapshot.forEach((doc) => {
-    //                         const data = doc.data();
-    //                         studentdetsArray.push({
-    //                             ProfilePicture: data.ProfilePicture,
-    //                             StudentID: data.ID,
-    //                             StudentName: data.Name,
-    //                             StudentSurname: data.Surname,
-    //                             lastInteraction: "Just now",
-    //                             StudentType: data.StudentType
-    //                         });
-    //                         courseIdArray.push({
-    //                             CourseID: data.StudentType
-    //                         });
-    //                     });
-    //                 } catch (error) {
-    //                     console.error("Error fetching students:", error);
-    //                 }
+    }, [adminDetails]);1
 
-    //             } else if (role === 'Student' && StudentID) {
-    //                 try {
-    //                     const studentDocs = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(StudentID))));
-    //                     if (!studentDocs.empty) {
-    //                         const studentData = studentDocs.docs[0].data();
-    //                         const supervisorIDs = studentData.SupervisorID;  // Retrieve SupervisorID array from student doc
-
-    //                         // Query supervisor collection based on SupervisorIDs
-    //                         const supervisorDocs = await getDocs(query(collection(db, 'Supervisor'), where('ID', 'in', supervisorIDs)));
-    //                         supervisorDocs.forEach((doc) => {
-    //                             const data = doc.data();
-    //                             supervisorsArray.push({
-    //                                 SupervisorID: data.ID,
-    //                                 SupervisorName: data.Name,
-    //                                 SupervisorSurname: data.Surname,
-    //                                 ProfilePicture: data.ProfilePicture,
-    //                                 Title: data.Title
-    //                             });
-    //                         });
-    //                     }
-    //                 } catch (error) {
-    //                     console.error("Error fetching supervisors:", error);
-    //                 }
-    //             } else if (role === 'Admin') {
-    //                 try { 
-    //                     console.log('In the admin part about execute the examiners doc here is the AdminID',AdminID);
-    //                     const examinerQuery = query(collection(db, 'Examiner'), where('AdminID', '==', AdminID));
-    //                     const examinerSnapshot = await getDocs(examinerQuery);
-    //                     console.log('Examiner doc :',examinerSnapshot )
-    //                     examinerSnapshot.forEach((doc) => {
-    //                         const data = doc.data();
-    //                         examinerArray.push({
-    //                             ExaminerID: data.ExaminerID,
-    //                             Title: data.Title,
-    //                             ExaninerName: data.ExaninerName,
-    //                             ExaminerSurname: data.ExaminerSurname
-    //                         })
-    //                     })
-    //                     setExaminerDetails(examinerArray); 
-    //                     console.log('Examiner Details:', examinerDetails);
-    //                 } catch (error) {
-    //                     console.log('But here is the adminId',AdminID,'There is an error here in fetch the details of fetch the exaimer','Here is the role',role,error)
-    //                 }
-    //             } else if (role === 'Examiner') {
-    //                 try {
-    //                     if(ExaminerID){
-    //                      const examinerDocs = await getDocs(query(collection(db, 'Examiner'), where('ExaminerID', '==', ExaminerID)));
-    //                      console.log('examerdocs',examinerDocs,'examersID:',ExaminerID)
-    //                      if (!examinerDocs.empty) {
-    //                         const examinerData = examinerDocs.docs[0].data();
-    //                         const adminID = examinerData.AdminID; // Fetch the associated AdminID from the examiner data
-    //                         if(adminID){
-    //                         console.log('adminid in the examerdoc if statement',adminID)
-    //                         // Now, fetch the admin details based on the fetched AdminID
-    //                         const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', adminID));
-    //                         const adminSnapshot = await getDocs(adminQuery);
-    //                         adminSnapshot.forEach(doc => {
-    //                             const data = doc.data();
-    //                             adminArray.push({
-    //                                 AdminID: data.AdminID,
-    //                                 Department: data.Department,
-    //                                 ProfilePicture: data.ProfilePicture || 'default-profile.jpg' // Handle missing profile picture
-    //                             });
-    //                         });
-    //                         setAdminDetails(adminArray);
-    //                         console.log('Admin Details array:', adminArray); 
-    //                         } else{
-    //                             console.log('No admin documents found for AdminID:', adminID);
-    //                         }
-    //                     } else{
-    //                         console.error('AdminID not found for this Examiner.');
-    //                     }
-    //                 }
-    //                 else{
-    //                     console.error('No Examiner found for ExaminerID:', ExaminerID);
-    //                 }
-    //                 else {
-    //                     console.error('ExaminerID is not set:', ExaminerID);
-    //                 }                         
-    //                 } catch (error) {
-    //                     console.error('Error fetching admin details:', error);
-
-    //                 }
-    //             }
-    //             setStudentDetails(studentdetsArray);
-    //             setSupervisorDetails(supervisorsArray);
-    //             setCourseOptions(courseIdArray);
-    //             setExaminerDetails(examinerArray);
-    //             console.log('Examiner Details:', examinerArray);
-    //         } catch (error) {
-    //             console.error("Error fetching details:", error);
-                
-    //         }
-    //     };
-
-    //     fetchDetails();
-    // }, [StudentID, SupervisorID, ExaminerID, AdminID, role, filterCourseID]);
-
-    // Function to create or get the chat document
-   
-    // useEffect(() => {
-    //     const fetchDetails = async () => {
-    //         const studentdetsArray = [];
-    //         const supervisorsArray = [];
-    //         const adminArray = [];
-    //         const examinerArray = [];
-    //         const courseIdArray = [];
-    //         try {
-    //             let q;
-    //             if (role === 'Supervisor') {
-    //                 q = query(collection(db, 'Student'), where('SupervisorID', 'array-contains', Math.floor(SupervisorID)));
-    //                 try {
-    //                     const querySnapshot = await getDocs(q);
-    //                     querySnapshot.forEach((doc) => {
-    //                         const data = doc.data();
-    //                         studentdetsArray.push({
-    //                             ProfilePicture: data.ProfilePicture,
-    //                             StudentID: data.ID,
-    //                             StudentName: data.Name,
-    //                             StudentSurname: data.Surname,
-    //                             lastInteraction: "Just now",
-    //                             StudentType: data.StudentType
-    //                         });
-    //                         courseIdArray.push({
-    //                             CourseID: data.StudentType
-    //                         });
-    //                     });
-    //                 } catch (error) {
-    //                     console.error("Error fetching students:", error);
-    //                 }
-    
-    //             } else if (role === 'Student' && StudentID) {
-    //                 try {
-    //                     const studentDocs = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(StudentID))));
-    //                     if (!studentDocs.empty) {
-    //                         const studentData = studentDocs.docs[0].data();
-    //                         const supervisorIDs = studentData.SupervisorID;  // Retrieve SupervisorID array from student doc
-    
-    //                         // Query supervisor collection based on SupervisorIDs
-    //                         const supervisorDocs = await getDocs(query(collection(db, 'Supervisor'), where('ID', 'in', supervisorIDs)));
-    //                         supervisorDocs.forEach((doc) => {
-    //                             const data = doc.data();
-    //                             supervisorsArray.push({
-    //                                 SupervisorID: data.ID,
-    //                                 SupervisorName: data.Name,
-    //                                 SupervisorSurname: data.Surname,
-    //                                 ProfilePicture: data.ProfilePicture,
-    //                                 Title: data.Title
-    //                             });
-    //                         });
-    //                     }
-    //                 } catch (error) {
-    //                     console.error("Error fetching supervisors:", error);
-    //                 }
-    //             } else if (role === 'Admin') {
-    //                 try { 
-    //                     console.log('In the admin part about execute the examiners doc here is the AdminID', AdminID);
-    //                     const examinerQuery = query(collection(db, 'Examiner'), where('AdminID', '==', AdminID));
-    //                     const examinerSnapshot = await getDocs(examinerQuery);
-    //                     console.log('Examiner doc :', examinerSnapshot)
-    //                     examinerSnapshot.forEach((doc) => {
-    //                         const data = doc.data();
-    //                         examinerArray.push({
-    //                             ExaminerID: data.ExaminerID,
-    //                             Title: data.Title,
-    //                             ExaninerName: data.ExaninerName,
-    //                             ExaminerSurname: data.ExaminerSurname
-    //                         });
-    //                     });
-    //                     setExaminerDetails(examinerArray);
-    //                     console.log('Examiner Details:', examinerDetails);
-    //                 } catch (error) {
-    //                     console.log('But here is the adminId', AdminID, 'There is an error here in fetching the details of the examiner', 'Here is the role', role, error);
-    //                 }
-    //             } else if (role === 'Examiner') {
-    //                 try {
-    //                     if (ExaminerID) {
-    //                         const examinerDocs = await getDocs(query(collection(db, 'Examiner'), where('ExaminerID', '==', ExaminerID)));
-    //                         console.log('examerdocs', examinerDocs, 'examersID:', ExaminerID)
-    //                         if (!examinerDocs.empty) {
-    //                             const examinerData = examinerDocs.docs[0].data();
-    //                             const adminID = examinerData.AdminID; // Fetch the associated AdminID from the examiner data
-    //                             if (adminID) {
-    //                                 console.log('adminid in the examerdoc if statement', adminID);
-    //                                 // Now, fetch the admin details based on the fetched AdminID
-    //                                 const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', adminID));
-    //                                 const adminSnapshot = await getDocs(adminQuery);
-    //                                 adminSnapshot.forEach(doc => {
-    //                                     const data = doc.data();
-    //                                     adminArray.push({
-    //                                         AdminID: data.AdminID,
-    //                                         Department: data.Department,
-    //                                         ProfilePicture: data.ProfilePicture || 'default-profile.jpg' // Handle missing profile picture
-    //                                     });
-    //                                 });
-    //                                 setAdminDetails(adminArray);
-    //                                 console.log('Admin Details array:', adminArray);
-    //                             } else {
-    //                                 console.log('No admin documents found for AdminID:', adminID);
-    //                             }
-    //                         } else {
-    //                             console.error('No Examiner found for ExaminerID:', ExaminerID);
-    //                         }
-    //                     } else {
-    //                         console.error('ExaminerID is not set:', ExaminerID);
-    //                     }
-    //                 } catch (error) {
-    //                     console.error('Error fetching admin details:', error);
-    //                 }
-    //             }
-    //             setStudentDetails(studentdetsArray);
-    //             setSupervisorDetails(supervisorsArray);
-    //             setCourseOptions(courseIdArray);
-    //             setExaminerDetails(examinerArray);
-    //             console.log('Examiner Details:', examinerArray);
-    //         } catch (error) {
-    //             console.error("Error fetching details:", error);
-    //         }
-    //     };
-    
-    //     fetchDetails();
-    // }, [StudentID, SupervisorID, ExaminerID, AdminID, role, filterCourseID]);
     useEffect(() => {
         const fetchDetails = async () => {
             const studentdetsArray = [];
@@ -405,48 +156,80 @@ export const Inbox = () => {
                             });
                         });
                     }
-                } else if (role === 'Admin'&& AdminID) {
+                } else if (role === 'Admin' && AdminID) {
                     // Fetch examiners for the admin
-                    const examinerQuery = query(collection(db, 'Examiner'), where('AdminID', '==', AdminID));
+                    console.log('this the admin id under the role checking', role,'admin:',AdminID);
+                    const examinerQuery = query(collection(db, 'Examiner'), where('AdminID', '==', Math.floor(AdminID)));
                     const examinerSnapshot = await getDocs(examinerQuery);
-                    console.log('this is examinerSnapshot',examinerSnapshot )
-                    console.log('here is the admin id after examinerShot',AdminID)
+                    console.log('this is examinerSnapshot', examinerSnapshot);
+                    console.log('here is the admin id after examinerShot', AdminID);
                     examinerSnapshot.forEach((doc) => {
                         const data = doc.data();
                         examinerArray.push({
                             ExaminerID: data.ExaminerID,
                             Title: data.Title,
-                            ExaninerName: data.ExaninerName,
+                            ExaminerName: data.ExaminerName,
                             ExaminerSurname: data.ExaminerSurname
                         });
                     });
                     setExaminerDetails(examinerArray);
-                } else if (role === 'Examiner') {
+                    console.log('examinersArray',examinerDetails)
+
+                } else if (role === 'Examiner' && ExaminerID) {
+                // Fetch admin details for the examiner
+                    const examinerDocs = await getDocs(query(collection(db, 'Examiner'), where('ExaminerID', '==', ExaminerID)));
+                if (!examinerDocs.empty) {
+                    const examinerData = examinerDocs.docs[0].data();
+                    const adminID = examinerData.AdminID;  // Ensure AdminID is fetched
+                    const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', adminID));
+                    const adminSnapshot = await getDocs(adminQuery);
+                    adminSnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        adminArray.push({
+                            AdminID: data.AdminID,
+                            Department: data.Department,
+                            ProfilePicture: data.ProfilePicture || 'default-profile.jpg'
+                        });
+                    });
+                    setAdminDetails(adminArray);  // Ensure admin details are set correctly
+                    console.log('Admin details set:', adminArray);  // Logging to check data
+                } else {
+                    console.log('No admin found for this examiner.');
+                }
+
+
                     // Fetch admin details for the examiner
-                    if (ExaminerID) {
-                        const examinerDocs = await getDocs(query(collection(db, 'Examiner'), where('ExaminerID', '==', ExaminerID)));
-                        if (!examinerDocs.empty) {
-                            const examinerData = examinerDocs.docs[0].data();
-                            const adminID = examinerData.AdminID;
-                            const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', adminID));
-                            const adminSnapshot = await getDocs(adminQuery);
-                            adminSnapshot.forEach(doc => {
-                                const data = doc.data();
-                                adminArray.push({
-                                    AdminID: data.AdminID,
-                                    Department: data.Department,
-                                    ProfilePicture: data.ProfilePicture || 'default-profile.jpg'
-                                });
-                            });
-                            setAdminDetails(adminArray);
-                        }
-                    }
+
+                    // if (ExaminerID) {
+                    //     const examinerDocs = await getDocs(query(collection(db, 'Examiner'), where('ExaminerID', '==', ExaminerID)));
+                    //     if (!examinerDocs.empty) {
+                    //         const examinerData = examinerDocs.docs[0].data();
+                    //         const adminID = examinerData.AdminID;
+                    //         const adminQuery = query(collection(db, 'Admin'), where('AdminID', '==', adminID));
+                    //         const adminSnapshot = await getDocs(adminQuery);
+                    //         adminSnapshot.forEach(doc => {
+                    //             const data = doc.data();
+                    //             adminArray.push({
+                    //                 AdminID: data.AdminID,
+                    //                 Department: data.Department,
+                    //                 ProfilePicture: data.ProfilePicture || 'default-profile.jpg'
+                    //             });
+                    //         });
+                    //         setAdminDetails(adminArray);
+                    //         console.log('Admin details set:', adminArray);  // Logging to check data
+                    //     }
+                    //     else{
+                    //         console.log('No admin found for this examiner.');
+
+                    //     }
+                    // }
                 }
                 // Update the state with fetched details
                 setStudentDetails(studentdetsArray);
                 setSupervisorDetails(supervisorsArray);
                 setCourseOptions(courseIdArray);
                 setExaminerDetails(examinerArray);
+                setAdminDetails(adminArray);       // Set admin details
             } catch (error) {
                 console.error("Error fetching details:", error);
             }
@@ -454,6 +237,11 @@ export const Inbox = () => {
         fetchDetails();
     }, [StudentID, SupervisorID, ExaminerID, AdminID, role, filterCourseID]);
     
+    
+
+
+
+
     const createOrGetChat = async (user1, user2) => {
         // Create a consistent chat ID by ordering user IDs
         const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
@@ -536,10 +324,16 @@ export const Inbox = () => {
             <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-700 dark:bg-gray-800">
                 <section className="mb-6">
                     <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                        {role === 'Student' ? 'Your Inbox' : role === 'Supervisor' ? 'Supervisor Inbox' : role === 'Examiner' ? 'Examiner Inbox' : role==='Admin' ? 'Admin Inbox':null}
+                        {role === 'Student' ? 'Your Inbox' : 
+                        role === 'Supervisor' ? 'Supervisor Inbox' : 
+                        role === 'Examiner' ? 'Examiner Inbox' : 
+                        role==='Admin' ? 'Admin Inbox':null}
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300 mt-6">
-                        {role === 'Student' ? 'Here is your messages from supervisors' : role === 'Supervisor' ? 'Here is your messages from Students' : role === 'Examiner' ? 'Here is your messages from admins' : role ==='Admin'? 'Here is your messages from examiners':'Cant read'}
+                        {role === 'Student' ? 'Here is your messages from supervisors' :
+                         role === 'Supervisor' ? 'Here is your messages from Students' : 
+                         role === 'Examiner' ? 'Here is your messages from admins' :
+                          role ==='Admin'? 'Here is your messages from examiners':'Cant read'}
                     </p>
                 </section>
                 {/* Display lecturers */}
@@ -615,8 +409,7 @@ export const Inbox = () => {
                     </div>
                 ) : role === 'Examiner'  && adminDetails?.length > 0 ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
-                        {adminDetails &&
-                            adminDetails.map((admin, index) => (
+                        {adminDetails.map((admin, index) => (
                                 <motion.div
                                     key={admin.AdminID}
                                     className={`flex items-center p-4 mb-4 bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 w-full rounded-lg shadow-md ${borderColors[index % borderColors.length]} border-2`}
@@ -628,7 +421,7 @@ export const Inbox = () => {
                                 >
                                     <img
                                         src={admin.ProfilePicture}
-                                        alt={admin.adminID}
+                                        alt={admin.AdminID}
                                         className="w-12 h-12 mr-4 rounded-full"
                                     />
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
@@ -645,14 +438,13 @@ export const Inbox = () => {
                                 </motion.div>
                             ))}
                     </div>
-                ) : role === 'Admin' && examinerDetails ? (
+                ) : role === 'Admin' && examinerDetails ?.length > 0 ? (
                     <div className="flex flex-wrap gap-2 max-w-full">
-                        {examinerDetails &&
-                            examinerDetails.map((examiner, index) => (
+                        {examinerDetails.map((examiner, index) => (
                                 <motion.div
                                     key={examiner.ExaminerID}
                                     className={`flex items-center p-4 mb-4 bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 w-full rounded-lg shadow-md ${borderColors[index % borderColors.length]} border-2`}
-                                    onClick={() => handleAdminClick(examiner)}
+                                    onClick={() => handleExaminerClick(examiner)}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     transition={{ duration: 0.5 }}
@@ -665,7 +457,7 @@ export const Inbox = () => {
                                     />
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                            Title : {examiner.Title}        Name: {examiner.ExaninerName}   Surname : {examiner.ExaminerSurname}
+                                            {examiner.Title}  {examiner.ExaminerName} {examiner.ExaminerSurname}
                                         </h2>
                                         <p className="text-gray-600 dark:text-gray-400">
                                             Office Hours: 24hr

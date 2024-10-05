@@ -134,6 +134,14 @@ export const SidebarComponent = () => {
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ],
+    Admin:[
+      { path: '/dashboard', label: 'Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
+      { path: '/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
+      // { path: '/submissions', label: 'Submissions', icon: <HiViewBoards className="w-6 h-6" /> },
+      { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
+      { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
+    ]
   };
 
   return (

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { SendMessage } from '../components/SendMessage';
-//import { SendMessage } from './SendMessage';
 import { db, auth } from '../backend/config'
 import { doc, collection, query, orderBy, limit, onSnapshot, where } from 'firebase/firestore';
 import { Input, Button } from '@material-ui/core'
