@@ -5,7 +5,7 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../../backend/config';
 import { Spinner } from 'flowbite-react'; // Importing Spinner component
 import Logo from '../../assets/images/University_of_Johannesburg_Logo.png';
-
+import LoginImage from '../../assets/images/uj-campus-apk.jpg';
 export const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState('');
@@ -75,7 +75,9 @@ export const Login = () => {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-[linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url('../../src/assets/images/uj-campus-apk.jpg')] bg-cover bg-center bg-no-repeat">
+        <div className="flex items-center justify-center min-h-screen bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1)),url(${LoginImage})` }}
+        >
             <div className="absolute top-7 left-7 flex items-center space-x-4">
                 <img src={Logo} alt="University of Johannesburg Logo" className="w-24 h-w-24 rounded-xl" />
                 <div>

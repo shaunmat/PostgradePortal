@@ -20,6 +20,7 @@ import { auth } from '../../backend/config';
 import { useTheme } from '../../context/ThemeContext';
 import { collection, getDocs, query, where } from 'firebase/firestore'; 
 import { db } from '../../backend/config'; 
+import sidebarImg from '../../assets/images/student_side_dash.jpg';
 
 export const SidebarComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -142,7 +143,9 @@ export const SidebarComponent = () => {
       className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar bg-[url('../../src/assets/images/student_side_dash.jpg')]"
       aria-label="Sidebar"
     >
-      <div className="h-full px-4 py-4 overflow-y-auto bg-[linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('../../src/assets/images/student_side_dash_img.jpg')] bg-cover bg-center bg-no-repeat dark:bg-gray-800">
+      <div className="h-full px-4 py-4 overflow-y-auto bg-cover bg-center bg-no-repeat dark:bg-gray-800"
+        style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(${sidebarImg})` }}
+      >
         {/* Logo */}
         <div className="flex items-center justify-center mb-3">
           <Link to="/dashboard" className="flex items-center p-2 group">
