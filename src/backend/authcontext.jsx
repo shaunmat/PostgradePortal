@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState, useCallback } from "react";
 import { auth, db } from "./config";
 import { doc, getDoc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signInWithEmailAndPassword } from "firebase/auth";
 
 const AuthContext = React.createContext();
 
@@ -31,40 +31,67 @@ export function AuthProvider({ children }) {
     }
 
     try {
-
       const userRef = doc(db, UserRole, UserID);
       const docSnap = await getDoc(userRef);
-        console.log(UserRole,"This is the user role in the beginning of the try and catch")
+      
       if (docSnap.exists()) {
         const userData = docSnap.data();
         setUserData(userData);
-        
-        // Cache the fetched data with a timestamp
         localStorage.setItem(cacheKey, JSON.stringify({ data: userData, timestamp: Date.now() }));
       } else {
         console.log('No such document!');
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
-      // Optional: Add user feedback here
     }
   }, []);
 
-  useEffect(() => {
-    const ClearStates = onAuthStateChanged(auth, async (user) => {
+  const login = async (email, password) => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
       if (user) {
-        const email = user.email;
-        const UserID = email.substring(0, 9);
-        console.log("If statement for the role here is the ID number",UserID)
+        const UserID = user.email.substring(0, 9);
         let Role = "";
-        if(UserID=="220143805"){
-          Role="Admin";
-        }
-        else if (UserID.startsWith('7')) {
+
+        if (UserID === "220143805") {
+          Role = "Admin";
+        } else if (UserID.startsWith('7')) {
           Role = "Supervisor";
         } else if (UserID.startsWith('2')) {
           Role = "Student";
-        } else if (email.endsWith('@externalexaminer.co.za')) {
+        } else if (user.email.endsWith('@externalexaminer.co.za')) {
+          Role = "Examiner";
+        } else {
+          throw new Error("Invalid user type");
+        }
+
+        setUserRole(Role);
+        setCurrentUser(user);
+        setLoggedInUser(true);
+        await fetchUserData(UserID, Role);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error; // Handle error appropriately in the component
+    }
+  };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const email = user.email;
+        const UserID = email.substring(0, 9);
+        let Role = "";
+
+        if (UserID === "220143805") {
+          Role = "Admin";
+        } else if (UserID.startsWith('7')) {
+          Role = "Supervisor";
+        } else if (UserID.startsWith('2')) {
+          Role = "Student";
+        } else if (email.startsWith('3')) {
           Role = "Examiner";
         } else {
           alert("Invalid user type");
@@ -74,7 +101,6 @@ export function AuthProvider({ children }) {
         setUserRole(Role);
         setCurrentUser(user);
         setLoggedInUser(true);
-
         await fetchUserData(UserID, Role);
       } else {
         setCurrentUser(null);
@@ -85,7 +111,7 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
 
-    return ClearStates;
+    return unsubscribe;
   }, [fetchUserData]);
 
   const Value = {
@@ -94,6 +120,7 @@ export function AuthProvider({ children }) {
     Loading,
     UserRole,
     UserData,
+    login, // Provide login function to the context
   };
 
   return (

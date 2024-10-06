@@ -26,7 +26,7 @@ import { MastersCrs } from './MastersCrs';
 import { Students } from './Students';
 import { StudentsData } from './StudentData';
 import { PhDCrs } from './PhDCrs';
-import { ForgotPassword } from './ForgotPassword';
+
 // Memoize the Sidebar and RightSidebar components to prevent re-renders
 const MemoizedSidebarComponent = memo(SidebarComponent);
 const MemoizedRightSidebar = memo(RightSidebar);
@@ -45,6 +45,7 @@ export const PageRoutes = () => {
     };
 
     fetchUserRole();
+    console.log("This is the current role right now:", userRole);
   }, []);
 
   // Memoize the routes based on userRole
@@ -53,9 +54,9 @@ export const PageRoutes = () => {
       return (
         <Routes>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          <Route path="/admin/reports" element={<AdminReports />} />
-          <Route path="*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
+          {/* <Route path="/admin/settings" element={<AdminSettings />} /> */}
+          {/* <Route path="/admin/reports" element={<AdminReports />} /> */}
+          <Route path="/admin/*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
         </Routes>
       );
     } else {
@@ -83,8 +84,7 @@ export const PageRoutes = () => {
           <Route path="/milestones" element={<Milestones />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/review-submissions" element={<Review />} />
-          <Route path='/forgot-password' element={<ForgotPassword />} />
-          <Route path="*" element={<Navigate to="/dashboard" />} /> Redirect all undefined routes to Dashboard
+          {/* <Route path="*" element={<Navigate to="/dashboard" />} /> Redirect all undefined routes to Dashboard */}
         </Routes>
       );
     }
