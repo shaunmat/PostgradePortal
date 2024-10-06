@@ -329,11 +329,18 @@ export const Inbox = () => {
                                     transition={{ duration: 0.5 }}
                                     whileHover={{ scale: 1.05 }}
                                 >
-                                    <img
-                                        src={lecturer.ProfilePicture}
-                                        alt={lecturer.SupervisorName}
-                                        className="w-12 h-12 mr-4 rounded-full"
-                                    />
+                                    {lecturer.ProfilePicture ? (
+                                          <img
+                                          src={lecturer.ProfilePicture}
+                                          alt={lecturer.SupervisorName}
+                                          className="w-12 h-12 mr-4 rounded-full"
+                                      />
+                                    ):(
+                                        <div className="w-12 h-12 mr-4 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold">
+                                        {lecturer.SupervisorName.charAt(0)}{lecturer.SupervisorSurname.charAt(0)}
+                                      </div>  
+                                    )}
+                                  
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
                                             {lecturer.Title} {lecturer.SupervisorName} {lecturer.SupervisorSurname}
@@ -372,7 +379,7 @@ export const Inbox = () => {
                                         Student Type: {student.StudentType}
                                     </p>
                                     <p className="text-gray-600 dark:text-gray-400">
-                                        {student.StudentID}
+                                      Student ID: {student.StudentID}
                                     </p>
                                 </div>
                             </motion.div>
