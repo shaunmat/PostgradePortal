@@ -2,9 +2,9 @@
 import { Card, Button, Badge } from "flowbite-react";
 import { Footer } from "../components/Footer";
 import { Modal } from "flowbite-react";
-import { Worker, Viewer } from "@react-pdf-viewer/core"; // PDF rendering engine
-import "@react-pdf-viewer/core/lib/styles/index.css";
-import "@react-pdf-viewer/default-layout/lib/styles/index.css";
+// import { Worker, Viewer } from "@react-pdf-viewer/core"; // PDF rendering engine
+// import "@react-pdf-viewer/core/lib/styles/index.css";
+// import "@react-pdf-viewer/default-layout/lib/styles/index.css";
 import { useState } from "react";
 
 
@@ -131,40 +131,40 @@ export const Review = () => {
         <Footer />
 
         {/* PDF Review Modal */}
-        <ViewPopupModal
+        {/* <ViewPopupModal
           isOpen={isModalOpen}
           onClose={() => setModalOpen(false)}
           pdfUrl={selectedPdf}
-        />
+        /> */}
       </div>
     </div>
   );
 };
 
-const ViewPopupModal = ({ isOpen, onClose, pdfUrl }) => {
-    return (
-      <Modal show={isOpen} onClose={onClose} size="7xl">
-        <Modal.Header>View Thesis Submission</Modal.Header>
-        <Modal.Body>
-          <div className="h-[75vh] overflow-y-auto">
-            {/* Worker component for rendering PDFs */}
-            <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.7.107/build/pdf.worker.min.js">
-              <Viewer
-                fileUrl={pdfUrl}
-                renderError={() => (
-                  <div className="text-center text-red-500">
-                    Unable to load the document. Please check the URL or try again later.
-                  </div>
-                )}
-              />
-            </Worker>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button onClick={onClose} gradientDuoTone="purpleToBlue">
-            Close
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  };
+// const ViewPopupModal = ({ isOpen, onClose, pdfUrl }) => {
+//     return (
+//       <Modal show={isOpen} onClose={onClose} size="7xl">
+//         <Modal.Header>View Thesis Submission</Modal.Header>
+//         <Modal.Body>
+//           <div className="h-[75vh] overflow-y-auto">
+//             {/* Worker component for rendering PDFs */}
+//             <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.7.107/build/pdf.worker.min.js">
+//               <Viewer
+//                 fileUrl={pdfUrl}
+//                 renderError={() => (
+//                   <div className="text-center text-red-500">
+//                     Unable to load the document. Please check the URL or try again later.
+//                   </div>
+//                 )}
+//               />
+//             </Worker>
+//           </div>
+//         </Modal.Body>
+//         <Modal.Footer>
+//           <Button onClick={onClose} gradientDuoTone="purpleToBlue">
+//             Close
+//           </Button>
+//         </Modal.Footer>
+//       </Modal>
+//     );
+//   };

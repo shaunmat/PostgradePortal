@@ -41,8 +41,8 @@ export const SupervisorCount = () => {
             });
           }
         });
- // Update the headings dynamically based on the selected degree
- const newHeadings = ["Supervisors Name", "Overall Students", "Degree Types", `Number of students in ${selectedDegree}`];
+        // Update the headings dynamically based on the selected degree
+        const newHeadings = ["Supervisors Name", "Overall Students", "Degree Types", `Number of students in ${selectedDegree}`];
         // Prepare the data by swapping the "Overall Students" and "Number of students in selectedDegree"
         const filteredData = Object.entries(supervisors).map(([id, name]) => [
           name,
@@ -70,18 +70,24 @@ export const SupervisorCount = () => {
         dataTableInstance.current.destroy();
       }
       dataTableInstance.current = new DataTable("#supervisor-table", {
-        data: data
+        data: data,
+        searchable: false,
+        sortable: false,
+        perPageSelect: false,
+        perPage: 5,
+
+        
       });
     }
   }, [data]);
 
   return (
-    <div className="p-6">
-      <div className="mb-4">
-        <label htmlFor="degreeFilter" className="block text-gray-700 dark:text-gray-200">Select Degree Type:</label>
+    <div className='p-4'>
+      <div className="mb-2">
+        <label htmlFor="degreeFilter" className="block font-medium text-gray-700 dark:text-gray-200">Select Degree Type:</label>
         <select
           id="degreeFilter"
-          className="border border-gray-300 rounded-md p-2 dark:bg-gray-700 dark:text-gray-200"
+          className="border border-gray-300 rounded-md mt-3 w-36 p-2 dark:bg-gray-700 dark:text-gray-200"
           value={selectedDegree}
           onChange={(e) => setSelectedDegree(e.target.value)}
         >

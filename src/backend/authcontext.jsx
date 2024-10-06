@@ -85,7 +85,7 @@ export function AuthProvider({ children }) {
         const UserID = email.substring(0, 9);
         let Role = "";
 
-        if (UserID === "220143805") {
+        if (email.startsWith('4')) {
           Role = "Admin";
         } else if (UserID.startsWith('7')) {
           Role = "Supervisor";

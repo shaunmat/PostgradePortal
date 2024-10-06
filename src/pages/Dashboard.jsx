@@ -10,11 +10,18 @@ import { UpcomingMilestones } from '../components/Milestones';
 import { Footer } from '../components/Footer';
 import { useAuth } from '../backend/authcontext';
 import { collection, getDocs, query, where } from "firebase/firestore";
-import { db } from '../backend/config';
 import { Timeline } from './ResearchCrs';
-import { motion } from 'framer-motion';
 
-import { AdminDashboard } from './AdminPages/AdminDashboard';
+import { HiAcademicCap, HiDocument } from "react-icons/hi"
+import { motion, AnimatePresence } from "framer-motion";
+import { DataTable } from "simple-datatables";
+import { auth , db } from "../backend/config"
+import { SupervisorCount } from "../components/AdminComponents/SupervisorsCount"
+import { Totals } from "../components/AdminComponents/Totals";
+import { LineChart } from "../components/AdminComponents/LineChart";
+import { BarChart } from "../components/AdminComponents/BarChart";
+import Chart from "react-apexcharts";
+
 export const Dashboard = () => {
     const [userName, setUserName] = useState('');
     const [userSurname, setUserSurname] = useState('');
@@ -26,6 +33,14 @@ export const Dashboard = () => {
     const { UserData, UserRole, Loading } = useAuth();
     const [modules, setModules] = useState([]);
     const [lastFetch, setLastFetch] = useState(Date.now()); // Track last fetch time
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [StudentID, setStudentID] = useState(null);
+    const [role, setRole] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [departmentName, setDepartmentName] = useState('');
+    const toggleDropdown = () => {
+        setShowDropdown(!showDropdown);
+    }
 
     useEffect(() => {
         const cachedUserData = localStorage.getItem('userData');
@@ -83,6 +98,30 @@ export const Dashboard = () => {
             console.error('Error fetching modules:', error);
         }
     };
+
+    useEffect(() => {
+        const fetchDepartmentName = async () => {
+            try {
+                const querySnapshot = await getDocs(collection(db, "Admin"));
+                querySnapshot.forEach((doc) => {
+                    const admin = doc.data();
+                    if (admin.Department) {
+                        setDepartmentName(admin.Department); // Setting department name
+                        console.log('Running')
+                    }
+                    else {
+                        console.log('not running ')
+                        console.log(admin);
+                    }
+                });
+            } catch (error) {
+                console.error("Error fetching data from Firebase:", error);
+            }
+        };
+
+        fetchDepartmentName();
+    }, []);
+
 
     const pendingReviews = [
         { id: '1', title: 'Review of Thesis Proposal', description: 'Detailed review of the thesis proposal submitted by student A.' },
@@ -233,8 +272,102 @@ export const Dashboard = () => {
                         </section>
                     </>
                 ) : UserRole === 'Admin'?(
-                    <AdminDashboard/>
-                ):<h1>Something is wrong </h1>}
+                    <>
+                        <section className="mb-6">
+                            <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
+                            </h1>
+                            <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
+                                Here's what's happening with your deparments projects this year.
+                            </p>
+                        </section>
+
+                        <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-800 p-4">
+                            <div className="flex items-center justify-between w-full">
+                              <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Total Students:</h2>
+                            </div>
+                            <div className="flex justify-center items-center rounded-xl h-14 p-5 bg-[#00ad43] dark:bg-[#00ad43] mt-4">
+                              <span className="text-2xl font-bold font-thick text-white"><Totals Type="Student" /></span>
+                            </div>
+                          </div>
+                        
+                          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-800 p-4">
+                            <div className="flex items-center justify-between w-full">
+                              <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Total Supervisors:</h2>
+                            </div>
+                            <div className="flex justify-center items-center rounded-xl h-14 p-5 bg-[#590098] dark:bg-[#590098] mt-4">
+                              <span className="text-2xl font-bold font-thick text-white"><Totals Type="Supervisor" /></span>
+                            </div>
+                          </div>
+                        
+                          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-800 p-4">
+                            <div className="flex items-center justify-between w-full">
+                              <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Total Projects:</h2>
+                            </div>
+                            <div className="flex justify-center items-center rounded-xl h-14 p-5 bg-[#FF8503] dark:bg-[#FF8503] mt-4">
+                              <span className="text-2xl font-bold font-thick text-white"><Totals Type="Student" /></span>
+                            </div>
+                          </div>
+                        </section>
+
+                        <section className="flex flex-col rounded-xl bg-white dark:bg-gray-800 p-4">
+                          <div className="flex items-center justify-between w-full">
+                            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-200">
+                              Students and Supervisors <span className="text-[#FF8503] dark:text-[#FF8503]">2024</span>
+                            </h1><br />
+                            {/* <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Students and Supervisors 2024 representations </h2> */}
+                            {/* <div className="relative inline-block text-left">
+                              <button type="button" className="inline-flex justify-center w-full rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-[#FF8503]">
+                                Last 30 days
+                                <svg className="w-5 h-5 ml-2 -mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                  <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                </svg>
+                              </button>
+                            </div> */}
+                          </div>
+                        </section>
+                        
+                        <section className="grid grid-cols-1 gap-4 mb-4">
+                          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-800 border-2 p-2 border-[#FF8503]">
+                            <div className="flex items-center justify-between w-full px-4 py-2">
+                              <h1 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200">Students Vs. Supervisors overall 2024</h1>
+                              {/* Dropdown */}
+                            </div>
+                        
+                            <div className="p-2">
+                              <LineChart width={500} height={400} />
+                            </div>
+                          </div>
+                        
+                          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-800 border-2 p-2 border-[#FF8503]">
+                            <div className="flex items-center justify-between w-full px-4 py-2">
+                              <h1 className="text-2xl mt-2 font-extrabold text-gray-800 dark:text-gray-200">Students Vs. Supervisors with Degrees 2024</h1>
+                            </div>
+                        
+                            <div className="p-2">
+                              <BarChart width={500} height={400} />
+                            </div>
+                          </div>
+                        </section>
+                        
+                        <section className="mb-6 border-2 border-[#FF8503] rounded-lg p-4">
+                        {/* Header */}
+                          <div className="flex items-center justify-between w-full px-6 py-4">
+                            <h1 className="text-3xl font-extrabold text-gray-900 dark:text-gray-200">
+                              Supervisors Data <span className="text-[#FF8503] dark:text-[#FF8503]">2024</span>
+                            </h1><br />
+                            {/* <h2 className="text-xl font-extrabold text-gray-800 dark:text-gray-200">Students and Supervisors 2024 representations </h2> */}
+
+
+                            {/* <a href="#" className="text-[#FF8503] dark:text-blue-500">View All</a> */}
+                          </div>
+                        
+                          {/* Table */}
+                          <SupervisorCount />
+                        </section>
+                    </>
+                ):null}
 
                 {/* Footer */}
                 <Footer />

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { db, auth } from '../backend/config'
 import firebase from '../backend/config'
-import { Input, Button } from '@material-ui/core'
+// import { Input, Button } from '@material-ui/core'
 import { collection, query, orderBy, limit, onSnapshot, addDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import "../chat.css"
 

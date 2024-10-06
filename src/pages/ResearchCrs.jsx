@@ -555,41 +555,43 @@ export const ResearchCourse = () => {
                                         handleOpenModal={handleOpenModal}
                                     />
 
-                                    <div className="p-6 mx-auto border rounded-lg shadow-md dark:bg-gray-900 dark:border-gray-700">
-                                        <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">
-                                            Final Submission
-                                        </h3>
-                                        
-                                        {/* Submission Status Badge */}
-                                        <Badge color={FinalSubmission.SubmissionStatus ? 'green' : 'yellow'} className="mb-4 text-md">
-                                            Status: {FinalSubmission.SubmissionStatus ? 'Submitted' : 'Not Submitted'}
-                                        </Badge>
-
-                                        <p className="text-gray-700 dark:text-gray-400 mb-2">
-                                            After a long year of research and drafts, this is where you submit your final work for external moderation. Please keep in mind that the following will be needed from you:
-                                        </p>
-                                        <ul className="list-disc list-inside text-gray-700 dark:text-gray-400 space-y-1 mb-4">
-                                            <li>A copy of your Affidavit (Stamped by a Commissioner of Oaths)</li>
-                                            <li>Your Declaration</li>
-                                            <li>Your Final Turnitin Report</li>
-                                            <li>Signed Letter as Proof of Language Editing by a Language Editor</li>
-                                            <li>A soft Copy of the Research Project/Minor Dissertation/Dissertation/Thesis (Word/PDF only)</li>
-                                        </ul>
-                                        {FinalSubmission.SubmissionPermission && !FinalSubmission.SubmissionStatus ? (
-                                            <button
-                                                className="w-full text-center py-3 px-4 text-sm font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503]"
-                                                onClick={() => setFinalSubmissionIsModalOpen(true)}
-                                            >
-                                                Begin Submission Process
-                                            </button>
-                                        ) : (
-                                            <p className="font-medium text-gray-500 dark:text-gray-400">
-                                                {FinalSubmission.SubmissionStatus 
-                                                    ? 'Your submission has been completed. You cannot submit again.'
-                                                    : 'It seems you are not allowed to make your final submission, please contact your supervisor.'}
+                                    {FinalSubmission.SubmissionPermission && (
+                                        <div className="p-6 mx-auto border rounded-lg shadow-md dark:bg-gray-900 dark:border-gray-700">
+                                            <h3 className="text-2xl font-extrabold text-gray-900 dark:text-white mb-4">
+                                                Final Submission
+                                            </h3>
+                                            
+                                            {/* Submission Status Badge */}
+                                            <Badge color={FinalSubmission.SubmissionStatus ? 'green' : 'yellow'} className="mb-4 text-md">
+                                                Status: {FinalSubmission.SubmissionStatus ? 'Submitted' : 'Not Submitted'}
+                                            </Badge>
+                                    
+                                            <p className="text-gray-700 dark:text-gray-400 mb-2">
+                                                After a long year of research and drafts, this is where you submit your final work for external moderation. Please keep in mind that the following will be needed from you:
                                             </p>
-                                        )}
-                                    </div>
+                                            <ul className="list-disc list-inside text-gray-700 dark:text-gray-400 space-y-1 mb-4">
+                                                <li>A copy of your Affidavit (Stamped by a Commissioner of Oaths)</li>
+                                                <li>Your Declaration</li>
+                                                <li>Your Final Turnitin Report</li>
+                                                <li>Signed Letter as Proof of Language Editing by a Language Editor</li>
+                                                <li>A soft Copy of the Research Project/Minor Dissertation/Dissertation/Thesis (Word/PDF only)</li>
+                                            </ul>
+                                            {FinalSubmission.SubmissionPermission && !FinalSubmission.SubmissionStatus ? (
+                                                <button
+                                                    className="w-full text-center py-3 px-4 text-sm font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503]"
+                                                    onClick={() => setFinalSubmissionIsModalOpen(true)}
+                                                >
+                                                    Begin Submission Process
+                                                </button>
+                                            ) : (
+                                                <p className="font-medium text-gray-500 dark:text-gray-400">
+                                                    {FinalSubmission.SubmissionStatus 
+                                                        ? 'Your submission has been completed. You cannot submit again.'
+                                                        : 'It seems you are not allowed to make your final submission, please contact your supervisor.'}
+                                                </p>
+                                            )}
+                                        </div>
+                                    )}
 
 
                                     {/* Check if all milestones are submitted */}
