@@ -152,11 +152,11 @@ export const SidebarComponent = () => {
     <>
       <aside
         id="sidebar-multi-level-sidebar"
-        className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar bg-[url('../../src/assets/images/student_side_dash.jpg')]"  /* Fallback color and overlay */
+        className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar"  /* Fallback color and overlay */
         aria-label="Sidebar"      
       >
         <div
-          className="h-full px-4 py-4 overflow-y-auto bg-[linear-gradient(rgba(0,0,0,0.5),rgba(0,0,0,0.5)),url('../../src/assets/images/student_side_dash_img.jpg')] bg-cover bg-center bg-no-repeat dark:bg-gray-800"
+          className="h-full px-4 py-4 overflow-y-auto bg-cover bg-center bg-no-repeat dark:bg-gray-800"
         >
           {/* Logo */}
           <div className="flex items-center justify-center mb-3">

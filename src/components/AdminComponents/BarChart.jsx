@@ -135,9 +135,9 @@ export const BarChart = () => {
     ];
 
     return (
-        <div className="bg-white dark:bg-gray-1000 p-6 rounded-lg shadow">
+        <div className="bg-white dark:bg-gray-1000 p-6 rounded-lg">
             {studentCounts.some(count => count > 0) || supervisorCounts.some(count => count > 0) ? (
-            <Chart options={options} series={series} type="bar" height="500" width={1000} />
+            <Chart options={options} series={series} type="bar" height="500" width={800} />
         ) : (
             <p>Loading data...</p>
         )}

@@ -358,7 +358,7 @@ const KanbanCard = ({ id, name, description, dueDate, status, onTaskCompletion }
     // console.log(`Module Name: ${name}, Border Color: ${borderColor}`); // Debugging line
 
     return (
-        <div className={`max-w-sm h-72 mb-4 p-6 bg-white ${borderColor} dark:${borderColor} border-2 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-600  dark:hover:bg-gray-700 flex flex-col justify-between`}>
+        <div className={`max-w-md h-80 mb-4 p-6 bg-white ${borderColor} dark:${borderColor} border-2 rounded-lg shadow hover:bg-gray-100 dark:bg-gray-600  dark:hover:bg-gray-700 flex flex-col justify-between`}>
             <div>
                 <h4 className="mb-2 text-lg font-bold tracking-tight text-gray-900 dark:text-white">{name}</h4>
                 <p className="font-normal text-sm mt-2 text-gray-700 dark:text-gray-400">{description}</p>

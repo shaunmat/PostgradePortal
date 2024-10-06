@@ -78,7 +78,7 @@ export const Sidebar = () => {
         </button>
 
         <aside id="logo-sidebar" className="fixed top-0 left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-        <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 bg-[linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url('../../src/assets/images/sidebar-bg-6.jpg')] bg-cover bg-center bg-no-repeat">
+        <div className="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800 bg-cover bg-center bg-no-repeat">
           {/* Logo */}
           <div className="flex items-center justify-center mb-3">
             <a href="#" className="flex items-center p-2 group">

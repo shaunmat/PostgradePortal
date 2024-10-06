@@ -54,7 +54,7 @@ export const PageRoutes = () => {
       return (
         <Routes>
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          {/* <Route path="/admin/settings" element={<AdminSettings />} /> */}
+          <Route path="/admin/settings" element={<AdminSettings />} />
           {/* <Route path="/admin/reports" element={<AdminReports />} /> */}
           <Route path="/admin/*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
         </Routes>
@@ -85,6 +85,7 @@ export const PageRoutes = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/review-submissions" element={<Review />} />
           {/* <Route path="*" element={<Navigate to="/dashboard" />} /> Redirect all undefined routes to Dashboard */}
+
         </Routes>
       );
     }
@@ -107,7 +108,7 @@ export const PageRoutes = () => {
   return (
     <div className="flex">
       <MemoizedSidebarComponent />
-      <main className="flex-1 relative">
+      <main className="flex-1">
         {loading ? (
           <LogoLoader />
         ) : (

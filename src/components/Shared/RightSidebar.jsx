@@ -138,12 +138,9 @@ export const RightSidebar = () => {
         return timeDifference > 0 && timeDifference <= 3 * 24 * 60 * 60 * 1000; // Due in 3 days or less
     };
 
-    const NOTIFICATION_TIMEOUT = 50000; // 5 seconds
-
     useEffect(() => {
         const fetchNotifications = async () => {
             if (!UserData || !UserData.CourseID || UserData.CourseID.length === 0) return;
-
 
             const fetchPromises = UserData.CourseID.map(async (courseId) => {
                 const assignmentsRef = collection(db, 'Module', courseId, 'Assignments');
@@ -157,7 +154,6 @@ export const RightSidebar = () => {
                             const assignmentData = change.doc.data();
                             const assignmentID = change.doc.id;
 
-
                             if (change.type === "added") {
                                 newNotifications.push({
                                     id: assignmentID, // Store ID for tracking
@@ -167,7 +163,6 @@ export const RightSidebar = () => {
                                 });
                                 newIDs.push(assignmentID); // Add ID to new IDs
                             }
-
 
                             if (assignmentData.AssignmentDueDate && checkIfDueSoon(assignmentData.AssignmentDueDate.toDate())) {
                                 newNotifications.push({
@@ -181,7 +176,6 @@ export const RightSidebar = () => {
 
                         resolve({ newNotifications, newIDs });
                     });
-
 
                     return () => unsubscribe();
                 });
@@ -218,26 +212,18 @@ export const RightSidebar = () => {
             const allNewNotifications = notificationsResults.flatMap(result => result.newNotifications).concat(eventNotifications);
             const allNewIDs = notificationsResults.flatMap(result => result.newIDs);
 
-
             setNotifications((prevNotifications) => {
                 const combinedNotifications = [...prevNotifications, ...allNewNotifications];
                 const uniqueNotifications = Array.from(new Map(combinedNotifications.map(item => [item.id, item])).values());
                 const updatedNotifications = uniqueNotifications.sort((a, b) => b.timestamp - a.timestamp).slice(0, 3);
                 setNewNotificationIDs(allNewIDs);
-                    
+
                 // Trigger sound playback if there are new notifications
                 if (allNewNotifications.length > 0) {
                     audioRef.current.audioEl.current.pause(); // Pause current sound
                     audioRef.current.audioEl.current.currentTime = 0; // Reset to start
-                    audioRef.current.audioEl.current.play(); // Pause current sound
-
-                    allNewNotifications.forEach(notification => {
-                        setTimeout(() => {
-                            setNotifications((prevNotifications) => prevNotifications.filter(n => n.id !== notification.id));
-                        }, NOTIFICATION_TIMEOUT);
-                    });
+                    audioRef.current.audioEl.current.play();
                 }
-
 
                 return updatedNotifications;
             });
@@ -245,7 +231,11 @@ export const RightSidebar = () => {
 
         fetchNotifications();
     }, [UserData, db]);
-        
+
+    // // Clear all notifications
+    // const clearAllNotifications = () => {
+    //     setNotifications([]);
+    // };  
     
     const handleSendEmail = async (e) => {
         e.preventDefault();
@@ -344,6 +334,11 @@ export const RightSidebar = () => {
             
             toast.success('Meeting request sent successfully');
             setEmailStatus("Meeting request sent successfully!");
+
+            // Clear form fields
+            setSupervisorId('');
+            setMeetingDate('');
+            setMeetingTime('');
             
         } catch (error) {
             console.error("Error requesting meeting:", error);
@@ -454,6 +449,12 @@ export const RightSidebar = () => {
                 setEmailStatus('');
                 toast.success('Email sent successfully');
             }, 5000);
+
+            // Clear form fields
+            setSelectedStudentId('');
+            setMeetingDate('');
+            setMeetingTime('');
+
         } catch (error) {
             console.error('Error sending email:', error.message);
         }
@@ -513,7 +514,7 @@ export const RightSidebar = () => {
     };
         
     return (
-        <aside id="right-sidebar" className={`fixed top-0 right-0 w-16 md:w-48 lg:w-72 h-screen transition-transform translate-x-full md:translate-x-0 right-sidebar ${isDarkMode ? 'dark' : ''}`}>
+        <aside id="right-sidebar" className={`fixed z-40 top-0 right-0 w-16 md:w-48 lg:w-72 h-screen transition-transform translate-x-full md:translate-x-0 right-sidebar ${isDarkMode ? 'dark' : ''}`}>
             <div className="h-full px-3 py-4 overflow-y-auto bg-transparent dark:bg-gray-800">
                 {UserRole === 'Student' && (
                     <div className="mb-4">
@@ -829,7 +830,7 @@ export const RightSidebar = () => {
                     </div>
                 )}
 
-                            {
+                {
                 UserRole === 'Examiner' && (
                     <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
                         <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Examiner Panel</h3>
@@ -995,6 +996,173 @@ export const RightSidebar = () => {
                     </div>
                 )
             }
+
+            {/* Admin User Role */}
+            {UserRole === 'Admin' && (
+              <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Admin Panel</h3>
+                
+                <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
+                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                    <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
+                    <button
+                      className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                      onClick={() => {
+                        setNotifications([]);
+                        setNewNotificationIDs([]);
+                        setPlaySound(false); // Reset sound playback state
+                      }}
+                    >
+                      Clear All
+                    </button>
+                  </div>
+            
+                  <div className="p-3 space-y-1">
+                    <ReactAudioPlayer
+                      ref={audioRef}
+                      src={notificationSound}
+                      controls={false}
+                      volume={1}
+                    />
+                    {notifications.length > 0 ? (
+                      notifications.map((notification, index) => {
+                        const borderColor = notification.type === 'new'
+                          ? 'border-[#FF8503]'
+                          : notification.type === 'due'
+                            ? 'border-[#590098]'
+                            : 'border-[#007BFF]';
+            
+                        const iconBgColor = notification.type === 'new'
+                          ? 'bg-[#FF8503]'
+                          : notification.type === 'due'
+                            ? 'bg-[#590098]'
+                            : 'bg-[#007BFF]';
+            
+                        return (
+                          <motion.div
+                            key={`${notification.id}-${notification.timestamp.getTime()}-${index}`}
+                            initial={{ opacity: 0, x: 100 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 100 }}
+                            transition={{ duration: 0, ease: 'easeInOut' }}
+                            className={`relative flex items-start p-4 border-l-4 ${borderColor} bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm`}
+                          >
+                            <div className={`flex-shrink-0 w-10 h-10 ${iconBgColor} rounded-full flex items-center justify-center`}>
+                              {notification.type === 'new' && <i className="fas fa-bell text-white"></i>}
+                              {notification.type === 'due' && <i className="fas fa-exclamation-circle text-white"></i>}
+                              {notification.type === 'meeting' && <i className="fas fa-calendar-alt text-white"></i>}
+                            </div>
+                            <div className="ml-4">
+                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notification.message}</p>
+                              <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                            </div>
+                          </motion.div>
+                        );
+                      })
+                    ) : (
+                      <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available.</p>
+                    )}
+                  </div>
+                </div>
+            
+                <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                    <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
+                  </div>
+            
+                  <ul className="space-y-2 p-4">
+                    {students.length > 0 ? (
+                      students.map((student, index) => (
+                        <li key={index} className="flex items-center space-x-4">
+                          <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
+                            <HiAcademicCap className="w-6 h-6" />
+                          </button>
+                          <div>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                              {student.Name} {student.Surname}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
+                          </div>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
+                    )}
+                  </ul>
+                </div>
+            
+                <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                  <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
+                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
+                </div>
+            
+                <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                    <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
+                  </div>
+            
+                  <div className="p-4">
+                    <form onSubmit={handleSendEmail}>
+                      <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
+                      <select
+                        id="studentSelect"
+                        className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                        required
+                        onChange={(e) => setSelectedStudentId(e.target.value)}
+                        value={selectedStudentId}
+                      >
+                        <option value="">Select a Student</option>
+                        {students.map(student => (
+                          <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
+                        ))}
+                      </select>
+            
+                      <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
+                      <input
+                        type="date"
+                        id="meetingDate"
+                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                        value={meetingDate}
+                        onChange={(e) => setMeetingDate(e.target.value)}
+                        required
+                      />
+            
+                      <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
+                      <input 
+                        type="time"
+                        id="meetingTime"
+                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                        value={meetingTime}
+                        onChange={(e) => setMeetingTime(e.target.value)}
+                        required 
+                      />
+            
+                      <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
+                      <textarea
+                        id="reason"
+                        className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                        rows="2"
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        required
+                      ></textarea>
+            
+                      <button
+                        type="submit"
+                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                      >
+                        Schedule Meeting
+                      </button>
+                    </form>
+            
+                    {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
+                  </div>
+                </div>
+              </div>
+            )}
+
             </div>
         </aside>
     );

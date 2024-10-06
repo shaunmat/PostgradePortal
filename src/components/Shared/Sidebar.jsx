@@ -20,7 +20,10 @@ import { auth } from '../../backend/config';
 import { useTheme } from '../../context/ThemeContext';
 import { collection, getDocs, query, where } from 'firebase/firestore'; 
 import { db } from '../../backend/config'; 
-import sidebarImg from '../../assets/images/student_side_dash.jpg';
+import studentSidebarImg from '../../assets/images/SupImage.jpg';
+import supervisorSidebarImg from '../../assets/images/student_side.jpg';
+import examinerSidebarImg from '../../assets/images/student_side_dash.jpg';
+import adminSidebarImg from '../../assets/images/SupBG.jpg';
 
 export const SidebarComponent = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -129,22 +132,31 @@ export const SidebarComponent = () => {
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ],
     Admin:[
-      { path: '/admin/dashboard', label: 'Admin Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
+      { path: '/dashboard', label: 'Admin Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       // { path: '/admin/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
-      { path: '/admin/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
-      { path: '/admin/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
+      { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ]
   };
 
+  // Determine the background image based on the user role
+  const backgroundImage = {
+    Student: studentSidebarImg,
+    Supervisor: supervisorSidebarImg,
+    Examiner: examinerSidebarImg,
+    Admin: adminSidebarImg,
+  }[UserRole] || studentSidebarImg; // Default to studentSidebarImg if UserRole is undefined
+
   return (
     <aside
       id="sidebar-multi-level-sidebar"
-      className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar bg-[url('../../src/assets/images/student_side_dash.jpg')]"
+      className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar"
       aria-label="Sidebar"
     >
       <div className="h-full px-4 py-4 overflow-y-auto bg-cover bg-center bg-no-repeat dark:bg-gray-800"
-        style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(${sidebarImg})` }}
+        style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(${backgroundImage})`
+       }}
       >
         {/* Logo */}
         <div className="flex items-center justify-center mb-3">

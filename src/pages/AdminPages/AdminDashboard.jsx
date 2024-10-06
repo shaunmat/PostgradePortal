@@ -12,6 +12,7 @@ import { Totals } from "../../components/AdminComponents/Totals";
 import { LineChart } from "../../components/AdminComponents/LineChart";
 import { BarChart } from "../../components/AdminComponents/BarChart";
 import Chart from "react-apexcharts";
+
 export const AdminDashboard = () => {
     const [showDropdown, setShowDropdown] = useState(false);
     const [StudentID, setStudentID] = useState(null);

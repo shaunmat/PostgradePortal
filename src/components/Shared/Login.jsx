@@ -39,14 +39,15 @@ export const Login = () => {
                 const userEmail = CurrentUser.email;
                 const userType = 
                  userEmail=="220143805@uj.ac.za"
-                    ?'Admin'
-                     :
-                userEmail.startsWith('7')
+                    ? 'Admin'
+                    : userEmail.startsWith('7')
                     ? 'Supervisor'
                     : userEmail.startsWith('2')
                     ? 'Student'
                     : userEmail.startsWith('3')
                     ? 'Examiner'
+                    : userEmail.startsWith('4')
+                    ? 'Admin'
                     : '';
 
                 if (userType) {
@@ -60,12 +61,15 @@ export const Login = () => {
                         localStorage.removeItem('username');
                         localStorage.removeItem('password');
                     }
-                    if(userType=="Admin"){
-                        navigate('/admin/dashboard');
-                    }
-                    else{
-                        navigate('/dashboard'); // Redirect to the dashboard
-                    }
+
+                    // Redirect based on user type
+                    navigate('/dashboard');
+                    // if(userType=="Admin"){
+                    //     navigate('/admin/dashboard');
+                    // }
+                    // else{
+                    //     navigate('/dashboard'); // Redirect to the dashboard
+                    // }
                 } else {
                     setErrorMessage('Invalid user type.');
                 }

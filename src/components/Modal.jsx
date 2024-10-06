@@ -10,51 +10,51 @@ import { Badge } from 'flowbite-react';
 import "../../src/chat.css";
 
 export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
-    if (!isOpen) return null;
-
     const defaultAvatar = avatar;
     const [messages, setMessages] = useState([]);
     const scrollRef = useRef(null); // Reference for automatic scroll
 
     useEffect(() => {
-        if (chatId && isOpen) {
-            const chatRef = doc(db, 'chats', chatId);
-            const messagesQuery = query(
-                collection(chatRef, 'messages'),
-                orderBy('createdAt', 'asc')
-            );
-            const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
-                const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                setMessages(msgs);
-                console.log("Fetched messages:", msgs);
-            });
-            return () => unsubscribeMessages();
-        }
+        if (!chatId || !isOpen) return;
+
+        const chatRef = doc(db, 'chats', chatId);
+        const messagesQuery = query(
+            collection(chatRef, 'messages'),
+            orderBy('createdAt', 'asc')
+        );
+        const unsubscribeMessages = onSnapshot(messagesQuery, (snapshot) => {
+            const msgs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            setMessages(msgs);
+            console.log("Fetched messages:", msgs);
+        });
+        return () => unsubscribeMessages();
     }, [chatId, isOpen]);
 
-    // Scroll to bottom when messages change
     useEffect(() => {
+        if (!isOpen) return;
+
         if (scrollRef.current) {
             scrollRef.current.scrollIntoView({ behavior: 'smooth' });
         }
-    }, [messages]);
+    }, [messages, isOpen]);
 
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
-                    {/* Background overlay */}
+                    {/* Overlay */}
                     <motion.div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                        className="fixed inset-0 z-40 bg-black bg-opacity-50"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 0.5 }}
+                        transition={{ duration: 0.3 }}
+                        onClick={onClose} // Close modal on clicking the overlay
                     />
-                    
+
                     {/* Modal window */}
                     <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center w-full p-4 overflow-x-hidden overflow-y-auto"
+                        className="fixed z-50 inset-0 flex items-center justify-center p-4"
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.8 }}
@@ -71,14 +71,12 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                         </h3>
                                         {/* Display Course Name instead of ID */}
                                         <p className="text-sm">{role === 'Student' ? data?.courseName : data?.StudentType}</p>
-                                        <p className="text-sm">{role === 'Student' ? data?.courseName : data?.courseName}</p>
                                     </div>
                                 </div>
                                 <button onClick={onClose} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
                                     <HiOutlineXCircle className="w-6 h-6" />
                                 </button>
                             </div>
-
 
                             <div className="msgs overflow-y-auto flex-grow scrollbar-hide">
                                 {/* Disclaimer with Badge */}
