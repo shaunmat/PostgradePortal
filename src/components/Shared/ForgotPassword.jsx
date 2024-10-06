@@ -1,39 +1,47 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../backend/config';
-import { Spinner } from 'flowbite-react'; // Importing Spinner component
-import Logo from '../assets/images/University_of_Johannesburg_Logo.png';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { sendPasswordResetEmail } from 'firebase/auth'; // Import the function to send reset email
+import { auth } from '../../backend/config';
+import { Spinner } from 'flowbite-react';
+import Logo from '../../assets/images/University_of_Johannesburg_Logo.png';
+import LoginImage from '../../assets/images/uj-campus-apk.jpg';
 
 export const ForgotPassword = () => {
     const [email, setEmail] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
-    const [successMessage, setSuccessMessage] = useState(''); // Success message state
-    const [loading, setLoading] = useState(false); // Spinner state
+    const [successMessage, setSuccessMessage] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleForgotPassword = async (e) => {
+    useEffect(() => {
+        const savedEmail = localStorage.getItem('rememberedEmail');
+        if (savedEmail) {
+            setEmail(savedEmail);
+        }
+    }, []);
+
+    const handlePasswordReset = async (e) => {
         e.preventDefault();
-        setLoading(true); // Show loading spinner
-        setErrorMessage(''); // Clear previous error messages
-        setSuccessMessage(''); // Clear previous success messages
+        setLoading(true);
+        setErrorMessage('');
+        setSuccessMessage('');
 
         try {
             await sendPasswordResetEmail(auth, email);
-            setSuccessMessage('Password reset email sent. Please check your inbox.'); // Set success message
-            // Optionally, navigate to the login page after a delay
-            setTimeout(() => {
-                navigate('/login'); // Redirect to login page after a delay
-            }, 3000);
+            setSuccessMessage('Password reset email sent! Check your inbox.');
+            // Optionally redirect after some time or keep the user on the page
+            setTimeout(() => navigate('/login'), 3000);
         } catch (error) {
-            setErrorMessage('Failed to send password reset email. Please try again.'); // Set error message
+            setErrorMessage('Error sending password reset email. Please try again.');
         } finally {
-            setLoading(false); // Hide loading spinner
+            setLoading(false);
         }
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen bg-[linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url('../../src/assets/images/uj-campus-apk.jpg')] bg-cover bg-center bg-no-repeat">
+        <div className="flex items-center justify-center min-h-screen bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.1),rgba(0,0,0,0.1)),url(${LoginImage})` }}
+        >
             <div className="absolute top-7 left-7 flex items-center space-x-4">
                 <img src={Logo} alt="University of Johannesburg Logo" className="w-24 h-w-24 rounded-xl" />
                 <div>
@@ -47,9 +55,9 @@ export const ForgotPassword = () => {
                     <h1 className="text-3xl font-extrabold text-white text-center">Forgot Password</h1>
                 </div>
 
-                <form className="space-y-6" onSubmit={handleForgotPassword}>
+                <form className="space-y-6" onSubmit={handlePasswordReset}>
                     <header className="text-center mb-4 dark:text-gray-200">
-                        <p className="text-gray-500 dark:text-gray-400">Enter your email to reset your password</p>
+                        <p className="text-gray-500 dark:text-gray-400">Enter your email to receive a password reset link</p>
                     </header>
 
                     {errorMessage && (
@@ -57,6 +65,7 @@ export const ForgotPassword = () => {
                             {errorMessage}
                         </div>
                     )}
+
                     {successMessage && (
                         <div className="text-green-500 text-center">
                             {successMessage}
@@ -82,22 +91,26 @@ export const ForgotPassword = () => {
                     </div>
 
                     <div className="flex justify-center">
+                        <Link to="/login" className="text-sm text-blue-500 dark:text-blue-400 hover:no-underline">Back to login</Link>
+                    </div>
+
+                    <div className="flex justify-center">
                         <button
                             type="submit"
                             className="w-full mt-10 px-4 py-2 text-base font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503] dark:bg-gray-700 dark:hover:bg-gray-600"
-                            disabled={loading} // Disable button while loading
+                            disabled={loading}
                         >
-                            {loading ? <Spinner className='fill-white' size="md" /> : 'Send Reset Link'} {/* Show spinner while loading */}
+                            {loading ? <Spinner className='fill-white' size="md" /> : 'Send Reset Link'}
                         </button>
                     </div>
                 </form>
             </div>
 
-            {/* <footer className="absolute bottom-0 w-full p-4 text-center text-gray-700 dark:text-gray-400">
+            <footer className="absolute bottom-0 w-full p-4 text-center text-gray-700 dark:text-gray-400">
                 <p className="text-sm font-normal text-center text-white dark:text-gray-400">
                     &copy; 2024 All Rights Reserved. <br /> <span className="text-blue-500">PostGrade Portal</span> is a product of the <span className="text-blue-500">University of Johannesburg</span>
                 </p>
-            </footer> */}
+            </footer>
         </div>
     );
 };

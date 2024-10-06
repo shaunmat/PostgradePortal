@@ -197,7 +197,7 @@ export const Dashboard = () => {
                     <>
                         <section className="mb-6">
                             <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">Examiner {userName} {userSurname}</span>
+                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
                             </h1>
                             <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
                                 Here’s your overview for today

@@ -45,7 +45,7 @@ export const Login = () => {
                     ? 'Supervisor'
                     : userEmail.startsWith('2')
                     ? 'Student'
-                    : userEmail.endsWith('@externalexaminer.co.za')
+                    : userEmail.startsWith('3')
                     ? 'Examiner'
                     : '';
 
@@ -53,12 +53,15 @@ export const Login = () => {
                     localStorage.setItem('userRole', userType.toLowerCase());
                     localStorage.setItem('email', userEmail);
                     if (rememberMe) {
-                        localStorage.setItem('rememberedEmail', email);
+                        localStorage.setItem('username', email);
+                        localStorage.setItem('password', password);
                     } else {
-                        localStorage.removeItem('rememberedEmail');
+                        // localStorage.removeItem('rememberedEmail');
+                        localStorage.removeItem('username');
+                        localStorage.removeItem('password');
                     }
                     if(userType=="Admin"){
-                        navigate('/admin/dash');
+                        navigate('/admin/dashboard');
                     }
                     else{
                         navigate('/dashboard'); // Redirect to the dashboard
