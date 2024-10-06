@@ -67,7 +67,11 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                     <img src={data?.ProfilePicture || defaultAvatar} alt="Profile" className="w-10 h-10 rounded-full mr-4" />
                                     <div>
                                         <h3 className="text-lg font-bold">
-                                            {role === 'Student' ? `${data?.Title} ${data?.SupervisorSurname}` : `${data?.StudentName} ${data?.StudentSurname}`}
+                                            {role === 'Student' ? `${data?.Title} ${data?.SupervisorSurname}` 
+                                            : role === 'Supervisor'? ` ${data?.StudentName} ${data?.StudentSurname}`
+                                            : role === 'Admin'? `${data?.Title} ${data?.Name} ${data?.Surname}`
+                                            : role === 'Examiner'? `${data?.Title} ${data?.Name} ${data?.Surname}`
+                                            : 'something is wrong'}
                                         </h3>
                                         {/* Display Course Name instead of ID */}
                                         <p className="text-sm">{role === 'Student' ? data?.courseName : data?.StudentType}</p>
@@ -91,7 +95,11 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                     <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
                                         <Badge color="info" className="text-center font-xs"> {/* Center the text */}
                                             <strong>Notice</strong>
-                                            <p>You have started a chat with a {role === 'Supervisor' ? 'student' : 'supervisor'}. Please keep the conversation professional and relevant to the course.</p>
+                                            <p>You have started a chat with a {role === 'Supervisor' ? 'student' 
+                                                                                : role === 'Student' ? 'supervisor' 
+                                                                                : role === 'Examiner' ?'admin'
+                                                                                :role === 'Admin' ? 'examiner'
+                                                                                : null}. Please keep the conversation professional and relevant to the course.</p>
                                         </Badge>
                                     </div>
                                 )}
