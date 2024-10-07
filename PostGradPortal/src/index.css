@@ -1,0 +1,59 @@
+@import 'flowbite';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+
+html {
+  scrollbar-width: none;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+.dark {
+  background-color: #1a202c; /* Dark background */
+  color: #cbd5e0; /* Light text color */
+}
+
+/* Override Tailwind dark mode styles */
+.dark .bg-gray-900 {
+  background-color: #1a202c;
+}
+
+.dark .text-gray-200 {
+  color: #edf2f7;
+}
+
+.fc-toolbar-title {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: 'Inter', sans-serif;
+}
+
+
+::-webkit-scrollbar {
+  /* Customize the scrollbar width */
+  width: 10px;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+::-webkit-scrollbar-track {
+  /* Customize the scrollbar track */
+
+}
+
+::-webkit-scrollbar-thumb {
+  /* Customize the scrollbar thumb */
+  background-color: #cbd5e0;
+}

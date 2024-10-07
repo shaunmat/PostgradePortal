@@ -103,7 +103,7 @@ export const Research = () => {
                     ))}
                 </div>
 
-                
+                <Footer />
             </div>
         </div>
     );

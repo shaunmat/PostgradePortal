@@ -510,7 +510,7 @@ export const PhDCrs = () => {
                 </ul> */}
 
 
-                
+                <Footer />
             </div>
         </div>
     );

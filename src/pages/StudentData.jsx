@@ -240,7 +240,7 @@ export const StudentsData = () => {
 </section>
 
             </div>
-            
+            <Footer />
         </div>
     );    
 };

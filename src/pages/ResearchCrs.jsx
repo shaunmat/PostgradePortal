@@ -184,7 +184,7 @@ export const ResearchCourse = () => {
         }
 
         if (allFilesUploaded) {
-            const submissionDocRef = doc(db, `Module/${researchId}/FinalSubmission/${UserData.ID}`);
+            const submissionDocRef = doc(db, `Module/${researchId}/Final Submission/${UserData.ID}`);
             await setDoc(submissionDocRef, {
                 files: submittedFiles,
                 submittedAt: new Date(),
@@ -718,7 +718,7 @@ export const ResearchCourse = () => {
                 UserID={UserData.ID}
             />
 
-            
+            <Footer />
         </div>
     );
 };

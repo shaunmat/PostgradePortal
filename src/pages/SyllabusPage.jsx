@@ -223,7 +223,7 @@ export const TopicContent = () => {
                     </Link>
                 </div>
 
-                
+                <Footer />
             </div>
 
             {/* Submission Modal */}

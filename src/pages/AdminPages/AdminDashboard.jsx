@@ -135,7 +135,7 @@ export const AdminDashboard = () => {
                     <SupervisorCount />
                 </div>
 
-                
+                <Footer />
             </div>
         </div>
 

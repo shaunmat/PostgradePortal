@@ -17,17 +17,11 @@ export const Inbox = () => {
     const [supervisorDetails, setSupervisorDetails] = useState([]);
     const [examinerDetails,setExaminerDetails]=useState([]);
     const [adminDetails,setAdminDetails]=useState([]);
-    const [examinerDetails,setExaminerDetails]=useState([]);
-    const [adminDetails,setAdminDetails]=useState([]);
     const [SupervisorID, setSupervisorID] = useState(null);
     const [StudentID, setStudentID] = useState(null);
     const [AdminID,setAdminID]=useState(null);
     const [ExaminerID,setExaminerID]=useState(null);
-    const [AdminID,setAdminID]=useState(null);
-    const [ExaminerID,setExaminerID]=useState(null);
     const [selectedStudent, setSelectedStudent] = useState(null);
-    const [selectedAdmin,setSelectedAdmin]=useState(null);
-    const [selectedExaminer,setSelectedExaminer]=useState(null);
     const [selectedAdmin,setSelectedAdmin]=useState(null);
     const [selectedExaminer,setSelectedExaminer]=useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -36,8 +30,6 @@ export const Inbox = () => {
     const [filterCourseID, setFilterCourseID] = useState(null);
     const [selectedStudentType, setSelectedStudentType] = useState(null);
     const [chatId, setChatId] = useState(null);
-    
-    
     
     
     useEffect(() => {
@@ -63,29 +55,13 @@ export const Inbox = () => {
                             console.log("The student inbox is not empty")
                             console.log("Role This is the role in the if statement ", role);
                             
-                            console.log("Role This is the role in the if statement ", role);
-                            
                         } else {
                             const adminDoc = await getDocs(query(collection(db, 'Admin'), where('ID', '==', Math.floor(userId))));
                             console.log("Admin query executed, document snapshot:", adminDoc);
                             if (!adminDoc.empty) {
                                 setRole('Admin');
                                 setAdminID(userId);
-                                setAdminID(userId);
                                 console.log("The admin inbox is not empty")
-                                console.log("Role This is the role in the if statement ", role);
-                                
-                            }else {
-                            const examinerDoc = await getDocs(query(collection(db, 'Examiner'), where('ID', '==', Math.floor(userId))));
-                            console.log("Admin query executed, document snapshot:", examinerDoc);
-                            if(!examinerDoc.empty){
-                                setRole('Examiner');
-                                setExaminerID(userId);
-                                console.log("The examiner inbox is not empty")
-                                console.log("Role This is the role in the if statement ", role);
-                                
-                            }
-                                //console.log("No matching records found in Supervisor, Student, or Admin collections");
                                 console.log("Role This is the role in the if statement ", role);
                                 
                             }else {
@@ -105,10 +81,6 @@ export const Inbox = () => {
                     }
                     
                     
-                        console.log("Role set to", role);
-                    }
-                    
-                    
                 }
                 catch (error) {
                     console.error("Error querying Firestore:", error);
@@ -118,26 +90,19 @@ export const Inbox = () => {
                 setStudentID(null);
                 setAdminID(null);
                 setExaminerID(null)
-                setAdminID(null);
-                setExaminerID(null)
                 setRole(null);
                 console.log("No user is logged in");
                 
-                
             }
-            
             
         });
         return () => unsubscribe();
     }, []);
     
-    
     useEffect(() => {
         const fetchDetails = async () => {
             const studentdetsArray = [];
             const supervisorsArray = [];
-            const examinerArray= [];
-            const adminArray=[];
             const examinerArray= [];
             const adminArray=[];
             const courseIdArray = [];
@@ -166,14 +131,12 @@ export const Inbox = () => {
                         console.error("Error fetching students information:", error);
                     }
                     
-                    
                 } else if (role === 'Student' && StudentID) {
                     try {
                         const studentDocs = await getDocs(query(collection(db, 'Student'), where('ID', '==', Math.floor(StudentID))));
                         if (!studentDocs.empty) {
                             const studentData = studentDocs.docs[0].data();
                             const supervisorIDs = studentData.SupervisorID;  // Retrieve SupervisorID array from student doc
-                            
                             
                             // Query supervisor collection based on SupervisorIDs
                             const supervisorDocs = await getDocs(query(collection(db, 'Supervisor'), where('ID', 'in', supervisorIDs)));
@@ -193,7 +156,6 @@ export const Inbox = () => {
                         console.error("Error fetching supervisors:", error);
                     }
                 } else if (role === 'Admin' && AdminID) {
-                } else if (role === 'Admin' && AdminID) {
                     try {
                         console.log('this the admin id under the role checking', role,'admin:',AdminID)
                         const examinerDoc=await getDocs(collection(db,'Examiner'),where('AdminID','==',Math.floor(AdminID)));
@@ -224,38 +186,7 @@ export const Inbox = () => {
                                 Department:data.Department
                             })
                         })
-                        console.log('this the admin id under the role checking', role,'admin:',AdminID)
-                        const examinerDoc=await getDocs(collection(db,'Examiner'),where('AdminID','==',Math.floor(AdminID)));
-                        examinerDoc.forEach((doc)=>{
-                            const data=doc.data();
-                            examinerArray.push({
-                                ExaminerID:data.ID,
-                                Name:data.Name,
-                                Surname:data.Surname,
-                                Title:data.Title ,
-                                Department:data.Department
-                            })
-                        })
                     } catch (error) {
-                        console.error("Error fetching examiners details:", error);
-                    } 
-                }else if(role === 'Examiner'){
-                    try {
-                        console.log('this the admin id under the role checking', role,'admin:',AdminID)
-                        const adminDoc=await getDocs(collection(db,'Admin'),where('ExaminerID','==',Math.floor(ExaminerID)));
-                        adminDoc.forEach((doc)=>{
-                            const data=doc.data();
-                            adminArray.push({
-                                AdminID:data.ID,
-                                Name:data.Name,
-                                Surname:data.Surname,
-                                Title:data.Title,
-                                Department:data.Department
-                            })
-                        })
-                    } catch (error) {
-                        console.error("Error fetching admins details:", error);
-                        
                         console.error("Error fetching admins details:", error);
                         
                     }
@@ -265,17 +196,12 @@ export const Inbox = () => {
                 setCourseOptions(courseIdArray);
                 setAdminDetails(adminArray);
                 setExaminerDetails(examinerArray);
-                setAdminDetails(adminArray);
-                setExaminerDetails(examinerArray);
             } catch (error) {
                 console.error("Error fetching details:", error);
             }
         };
         
-        
         fetchDetails();
-    }, [StudentID, SupervisorID, role, filterCourseID,SupervisorID,ExaminerID,AdminID]);
-    
     }, [StudentID, SupervisorID, role, filterCourseID,SupervisorID,ExaminerID,AdminID]);
     
     // Function to create or get the chat document
@@ -283,7 +209,6 @@ export const Inbox = () => {
         // Create a consistent chat ID by ordering user IDs
         const chatId = user1 < user2 ? `${user1}_${user2}` : `${user2}_${user1}`;
         const chatRef = doc(db, 'chats', chatId);
-        
         
         const chatDoc = await getDoc(chatRef);
         if (!chatDoc.exists()) {
@@ -297,66 +222,32 @@ export const Inbox = () => {
             console.log("Chat document already exists with ID:", chatId);
         }
         
-        
         return chatId;
     };
-    
     
     const handleLecturerClick = async (lecturer) => {
         setSelectedLecturer(lecturer);
         
-        
         const currentUserId = role === 'Supervisor' ? SupervisorID : StudentID;
-        
         
         // Create or get chat between the current user and the selected lecturer
         const newchatId = await createOrGetChat(currentUserId, lecturer.SupervisorID);
-        
         
         // You can now use this chatId to load or send messages
         setChatId(newchatId);
         setIsModalOpen(true);
     };
-    
-    
     
     
     const handleStudentClick = async (student) => {
         setSelectedStudent(student);
         const currentUserId = role === 'Supervisor' ? SupervisorID : StudentID;
         
-        
         // Create or get chat between the current user and the selected student
         const newChatId = await createOrGetChat(currentUserId, student.StudentID);
         
-        
         setChatId(newChatId);
         // You can now use this chatId to load or send messages
-        setIsModalOpen(true);
-    };
-    const handleExaminerClick = async (examiner) => {
-        setSelectedExaminer(examiner);
-
-        const currentUserId = role === 'Admin' ? AdminID : ExaminerID;
-        
-        // Create or get chat between the current user and the selected lecturer
-        const newchatId = await createOrGetChat(currentUserId, examiner.ExaminerID);
-        
-        // You can now use this chatId to load or send messages
-        setChatId(newchatId);
-        setIsModalOpen(true);
-    };
-    
-    const handlerAdminClick = async (admin) => {
-        setSelectedAdmin(admin);
-        //setAdminDetails(admin);
-        const currentUserId = role === 'Examiner' ? ExaminerID : AdminID;
-        
-        // Create or get chat between the current user and the selected lecturer
-        const newchatId = await createOrGetChat(currentUserId, admin.AdminID);
-        
-        // You can now use this chatId to load or send messages
-        setChatId(newchatId);
         setIsModalOpen(true);
     };
     const handleExaminerClick = async (examiner) => {
@@ -389,7 +280,6 @@ export const Inbox = () => {
         setChatId(null); // Reset chatId when closing the modal
     };
     
-    
 
     const handleFilterByStudentType = (studentType) => {
         setSelectedStudentType(studentType); // Set the selected student type
@@ -412,21 +302,12 @@ export const Inbox = () => {
                         : role === 'Supervisor' ? 'Supervisor Inbox'
                         : role === 'Admin' ? 'Admin Inbox'
                         : role === 'Examiner' ? 'Examiner Inbox': null}
-                        {role === 'Student' ? 'Your Inbox' 
-                        : role === 'Supervisor' ? 'Supervisor Inbox'
-                        : role === 'Admin' ? 'Admin Inbox'
-                        : role === 'Examiner' ? 'Examiner Inbox': null}
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300 mt-2 mb-6">
                         {role === 'Student'
                             ? 'Here you can view all your messages and supervisors.'
                             : role === 'Supervisor'
                                 ? 'Here you can view all your messages and students.'
-                            : role === 'Admin'
-                                ? 'Here you can view all your messages,  external examiners.'
-                            : role === 'Examiner'
-                                ? 'Here you can view all your messages, with admins.'
-                            :'Something is wrong rn '}
                             : role === 'Admin'
                                 ? 'Here you can view all your messages,  external examiners.'
                             : role === 'Examiner'
@@ -448,18 +329,6 @@ export const Inbox = () => {
                                     transition={{ duration: 0.5 }}
                                     whileHover={{ scale: 1.05 }}
                                 >
-                                    {lecturer.ProfilePicture ? (
-                                          <img
-                                          src={lecturer.ProfilePicture}
-                                          alt={lecturer.SupervisorName}
-                                          className="w-12 h-12 mr-4 rounded-full"
-                                      />
-                                    ):(
-                                        <div className="w-12 h-12 mr-4 rounded-full bg-gray-500 flex items-center justify-center text-white font-bold">
-                                        {lecturer.SupervisorName.charAt(0)}{lecturer.SupervisorSurname.charAt(0)}
-                                      </div>  
-                                    )}
-                                  
                                     {lecturer.ProfilePicture ? (
                                           <img
                                           src={lecturer.ProfilePicture}
@@ -511,7 +380,6 @@ export const Inbox = () => {
                                     </p>
                                     <p className="text-gray-600 dark:text-gray-400">
                                       Student ID: {student.StudentID}
-                                      Student ID: {student.StudentID}
                                     </p>
                                 </div>
                             </motion.div>
@@ -531,7 +399,7 @@ export const Inbox = () => {
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     <img
-                                        src={examiner.ProfilePicture || avatar}
+                                        src={examiner.ProfilePicture}
                                         alt={examiner.Name}
                                         className="w-12 h-12 mr-4 rounded-full"
                                     />
@@ -555,9 +423,7 @@ export const Inbox = () => {
                             adminDetails.map((admin, index) => (
                                 <motion.div
                                     key={admin.ID}
-                                    key={admin.ID}
                                     className={`flex items-center p-4 mb-4 bg-white dark:bg-gray-900 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 w-full rounded-lg shadow-md ${borderColors[index % borderColors.length]} border-2`}
-                                    onClick={() => handlerAdminClick(admin)}
                                     onClick={() => handlerAdminClick(admin)}
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
@@ -565,13 +431,12 @@ export const Inbox = () => {
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     <img
-                                        src={admin.ProfilePicture || avatar}
+                                        src={admin.ProfilePicture}
                                         alt={admin.Name}
                                         className="w-12 h-12 mr-4 rounded-full"
                                     />
                                     <div className="flex flex-row flex-1 justify-items-center justify-between">
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                                            {admin.Title} {admin.Name} {admin.Surname}
                                             {admin.Title} {admin.Name} {admin.Surname}
                                         </h2>
                                         <p className="text-gray-600 dark:text-gray-400">
@@ -579,13 +444,11 @@ export const Inbox = () => {
                                         </p>
                                         <p className="text-gray-600 dark:text-gray-400">
                                             Department: {admin.Department}
-                                            Department: {admin.Department}
                                         </p>
                                     </div>
                                 </motion.div>
                             ))}
                     </div>
-                    ):
                     ):
                     console.log("There is nothing ")
                 }
@@ -598,15 +461,10 @@ export const Inbox = () => {
                         : role === 'Admin' ? selectedExaminer
                         : role === 'Examiner'? selectedAdmin
                         : null }
-                    data={role === 'Student' ? selectedLecturer 
-                        : role === 'Supervisor'? selectedStudent 
-                        : role === 'Admin' ? selectedExaminer
-                        : role === 'Examiner'? selectedAdmin
-                        : null }
                     role={role}
                     chatId={chatId}
                 />
-                
+                <Footer />
             </div>
 
             {/* Modal */}

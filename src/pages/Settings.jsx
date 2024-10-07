@@ -139,7 +139,7 @@ export const Settings = () => {
                         />
                     )}
                 </div>
-                
+                <Footer />
             </div>
             {/* Modal component */}
             {isNotificationModalOpen && (
