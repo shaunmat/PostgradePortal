@@ -66,7 +66,10 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                     <img src={data?.ProfilePicture || defaultAvatar} alt="Profile" className="w-10 h-10 rounded-full mr-4" />
                                     <div>
                                         <h3 className="text-lg font-bold">
-                                            {role === 'Student' ? `${data?.Title} ${data?.SupervisorSurname}` : `${data?.StudentName} ${data?.StudentSurname}`}
+                                            {role === 'Student' && `${data?.Title} ${data?.SupervisorSurname}`}
+                                            {role === 'Admin' && `${data?.Name} ${data?.Surname}`}
+                                            {role === 'Examiner' && `${data?.Name} ${data?.Surname}`}
+                                            {role !== 'Student' && role !== 'Admin' && role !== 'Examiner' && `${data?.StudentName} ${data?.StudentSurname}`}
                                         </h3>
                                         {/* Display Course Name instead of ID */}
                                         <p className="text-sm">
@@ -84,21 +87,18 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
 
                             <div className="msgs overflow-y-auto flex-grow scrollbar-hide">
                                 {/* Disclaimer with Badge */}
-                                {role === 'Student' ? (
-                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
-                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
-                                            <strong>Disclaimer</strong>
-                                            <p>Please be aware that this chat is for educational purposes only. Any topics discussed outside of this context are not permitted.</p>
-                                        </Badge>
-                                    </div>
-                                ) : (
-                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
-                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
-                                            <strong>Notice</strong>
-                                            <p>You have started a chat with a {role === 'Supervisor' ? 'student' : 'supervisor'}. Please keep the conversation professional and relevant to the course.</p>
-                                        </Badge>
-                                    </div>
-                                )}
+                                <div className="mb-4 mt-2 flex justify-center items-center">
+                                    <Badge color="info" className="text-center font-xs">
+                                        <strong>{role === 'Student' ? 'Disclaimer' : 'Notice'}</strong>
+                                        <p>
+                                            {role === 'Student'
+                                                ? "Please be aware that this chat is for educational purposes only. Any topics discussed outside of this context are not permitted."
+                                                : "You have started a chat with a student. Please keep the conversation professional and relevant to the course."
+                                            }
+                                        </p>
+                                    </Badge>
+                                </div>
+
                                 {messages.map((message) => (
                                     <div key={message.id} className="mb-4">
                                         <ChatBubble
