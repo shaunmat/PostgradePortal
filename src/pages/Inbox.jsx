@@ -312,7 +312,7 @@ export const Inbox = () => {
                                 ? 'Here you can view all your messages,  external examiners.'
                             : role === 'Examiner'
                                 ? 'Here you can view all your messages, with admins.'
-                            :'loading'}
+                            :'Something is wrong rn '}
                     </p>
                 </section>
                 {/* Display lecturers */}
