@@ -128,7 +128,7 @@ export const Inbox = () => {
                             });
                         });
                     } catch (error) {
-                        console.error("Error fetching students:", error);
+                        console.error("Error fetching students information:", error);
                     }
                     
                 } else if (role === 'Student' && StudentID) {
