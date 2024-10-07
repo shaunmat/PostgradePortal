@@ -136,6 +136,7 @@ export const SidebarComponent = () => {
       // { path: '/admin/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
+      { path: '/finalsubmissions', label: 'Final Submissions', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },
     ]
   };
