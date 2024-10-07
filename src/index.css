@@ -5,13 +5,7 @@
 @tailwind utilities;
 
 
-* {
-  box-sizing: border-box;
-}
-
-
 html {
-  scroll-behavior: smooth;
   scrollbar-width: none;
   transition: background-color 0.3s, color 0.3s;
 }
@@ -39,7 +33,6 @@ html, body, #root {
   font-family: 'Inter', sans-serif;
 }
 
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 10px;
@@ -53,4 +46,3 @@ html, body, #root {
 ::-webkit-scrollbar-track {
   background-color: #f4f4f4;
 }
-

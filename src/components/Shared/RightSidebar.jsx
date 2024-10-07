@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from "react";
-import { collection, onSnapshot, getDocs, updateDoc, getDoc } from "firebase/firestore";
+import { collection, onSnapshot, getDocs, updateDoc, getDoc, addDoc } from "firebase/firestore";
 import { HiBell, HiSearch, HiAcademicCap, HiCalendar, HiClock } from "react-icons/hi";
 import { db } from "../../backend/config"; // Firebase configuration
 import { useAuth } from "../../backend/authcontext";
@@ -43,7 +43,14 @@ export const RightSidebar = () => {
     const [quote, setQuote] = useState({ text: '', author: '' });
     const [currentMeetingRequest, setCurrentMeetingRequest] = useState(null);
     const [meetingRequests, setMeetingRequests] = useState([]);
+    const [meetingRequestStatus, setMeetingRequestStatus] = useState('');
     const audioRef = useRef(null); // Create a ref for the audio player
+
+      // State for announcement fields
+  const [announcementTitle, setAnnouncementTitle] = useState('');
+  const [announcementMessage, setAnnouncementMessage] = useState('');
+  const [announcementStatus, setAnnouncementStatus] = useState('');
+  const [announcementType, setAnnouncementType] = useState('info');
 
     // Function to fetch a random quote
     const fetchQuote = async () => {
@@ -130,6 +137,28 @@ export const RightSidebar = () => {
         }
     }, [Loading, UserData, UserRole]);
 
+      // Handle form submission
+  const handleAnnouncement = async (e) => {
+    e.preventDefault();
+
+    try {
+    // Add the new announcement to the collection
+    setDoc(doc(collection(db, 'Announcements'), `${UserData.ID}`), {
+        title: announcementTitle,
+        message: announcementMessage,
+        createdAt: new Date(),
+        name: `${UserData.Name} ${UserData.Surname}`,
+    })
+
+    // Update the status to indicate success
+    setAnnouncementStatus('Announcement created successfully!');
+    setAnnouncementTitle('');
+    setAnnouncementMessage('');
+    } catch (error) {
+      console.error('Error creating announcement: ', error);
+      setAnnouncementStatus('Failed to create announcement.');
+    }
+  };
 
     const checkIfDueSoon = (dueDate) => {
         const now = new Date();
@@ -514,464 +543,132 @@ export const RightSidebar = () => {
     };
         
     return (
-        <aside id="right-sidebar" className={`fixed z-40 top-0 right-0 w-16 md:w-48 lg:w-72 h-screen transition-transform translate-x-full md:translate-x-0 right-sidebar ${isDarkMode ? 'dark' : ''}`}>
-            <div className="h-full px-3 py-4 overflow-y-auto bg-transparent dark:bg-gray-800">
-                {UserRole === 'Student' && (
-                    <div className="mb-4">
-                        <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Student Panel</h3>
-                        <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h2 className="text-md font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
-                                <button
-                                    className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                                    onClick={() => {
-                                        setNotifications([]);
-                                        setNewNotificationIDs([]);
-                                        setPlaySound(false); // Reset sound playback state
-                                    }}
-                                >
-                                    Clear All
-                                </button>
-                            </div>
-                            <div className="p-4 space-y-4">
-                            {notifications.length > 0 ? (
-                                notifications.map((notification, index) => {
-                                    // Set border and icon background color based on notification type
-                                    const borderColor = notification.type === 'new'
-                                        ? 'border-[#FF8503]' // Color for new notifications
-                                        : notification.type === 'due'
-                                            ? 'border-[#590098]' // Color for due notifications
-                                            : 'border-[#007BFF]'; // Color for meeting notifications
-
-                                    const iconBgColor = notification.type === 'new'
-                                        ? 'bg-[#FF8503]' // Background color for new notifications
-                                        : notification.type === 'due'
-                                            ? 'bg-[#590098]' // Background color for due notifications
-                                            : 'bg-[#007BFF]'; // Background color for meeting notifications
-
-                                    return (
-                                        <motion.div
-                                            key={`${notification.id}-${notification.timestamp.getTime()}-${index}`} // Added index to ensure uniqueness
-                                            initial={{ opacity: 0, x: 100 }} // Initial state before the animation
-                                            animate={{ opacity: 1, x: 0 }} // Animation for when the component is displayed
-                                            exit={{ opacity: 0, x: 100 }} // Animation for when the component is removed
-                                            transition={{ duration: 0, ease: 'easeInOut' }} // Define the transition properties
-                                            className={`relative flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-l-4 ${borderColor} shadow-md transition duration-200 ease-in-out`} // Apply border color and shadow
-                                        >
-                                            {newNotificationIDs.includes(notification.id) && (
-                                                <span className="absolute top-2 right-2 block w-3 h-3 bg-red-600 rounded-full"></span> // Notification indicator
-                                            )}
-                                            <div className="flex flex-col space-y-1">
-                                                <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">{notification.message}</h3>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{notification.timestamp.toLocaleTimeString()}</p>
-                                            </div>
-                                            <div className={`p-2 rounded-full ${iconBgColor} text-white`}>
-                                                <HiBell className="h-5 w-5" />
-                                            </div>
-                                        </motion.div>
-                                    );
-                                })
-                            ) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
-                            )}
-
-                            </div>
-
-                            <ReactAudioPlayer
-                                ref={audioRef} // Set the ref here
-                                src={notificationSound} // Set the audio file
-                                controls={false} // No visible controls needed
-                                volume={1} // Set the desired volume level
-                            />
-
-                        </div>
-
-                        {/* Thought of the Day Section */}
-                        <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                            <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
-                            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
-                        </div>
-
-                        {/* Set meetings with supervisors or peers */}
-                        <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                            <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Schedule a Meeting</h2>
-                            <form onSubmit={handleRequestMeeting} className="mt-4">
-
-                                <label htmlFor="supervisorSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select supervisor:</label>
-                                <Select
-                                    className="mb-4 mt-2"
-                                    id="supervisorSelect"
-                                    required
-                                    onChange={(e) => setSupervisorId(e.target.value)}
-                                    value={supervisorId}
-                                >
-                                    <option disabled value="">Select a supervisor</option>
-                                    {supervisors.map(supervisor => (
-                                        <option key={supervisor.id} value={supervisor.id}>
-                                            {supervisor.Title} {supervisor.Surname}
-                                        </option>
-                                    ))}
-                                </Select>
-                                
-
-                                <label htmlFor="meetingDate" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
-                                <input
-                                    type="date"
-                                    id="meetingDate"
-                                    className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded"
-                                    value={meetingDate}
-                                    onChange={(e) => setMeetingDate(e.target.value)}
-                                    required
-                                />
-
-                                <label htmlFor="meetingTime" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
-                                <input
-                                    type="time"
-                                    id="meetingTime"
-                                    className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded"
-                                    value={meetingTime}
-                                    onChange={(e) => setMeetingTime(e.target.value)}
-                                    required
-                                />
-
-                                {/* Input field for reason of request */}
-                                <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
-                                <textarea
-                                    id="reason"
-                                    className="w-full p-2 border border-gray-300 rounded"
-                                    rows="2"
-                                    value={reason}
-                                    onChange={(e) => setReason(e.target.value)}
-                                    required
-                                ></textarea>
-
-
-                                <button
-                                    type="submit"
-                                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mt-4"
-                                >
-                                    Request Meeting
-                                </button>
-                            </form>
-                            {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>} {/* Display email status message */}
-                        </div>
-                    </div>
-                )}
-
-                {/* Supervisor-specific content */}
-                {UserRole === 'Supervisor' && (
-                    <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                        <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Supervisor Panel</h3>
-                        
-                        <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Meeting Requests</h2>
-                                <button
-                                    className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                                    onClick={() => {
-                                        setCurrentMeetingRequest([]); // Clear all meeting requests
-                                    }}
-                                >
-                                    Clear All
-                                </button>
-                            </div>
-
-                            <div className="p-3 space-y-1">
-                            <ReactAudioPlayer
-                                ref={audioRef} // Set the ref here
-                                src={notificationSound} // Set the audio file
-                                controls={false}
-                                volume={1} // Set the desired volume level
-                            />
-                            {meetingRequests.length > 0 ? meetingRequests.map((request, index) => {
-                                return (
-                                    <motion.div
-                                        key={index}
-                                        initial={{ opacity: 0, x: 100 }} // Start invisible and below the final position
-                                        animate={{ opacity: 1, x: 0 }} // Fade in and slide up
-                                        exit={{ opacity: 0, x: 100 }} // Fade out and slide up
-                                        transition={{ duration: 0, ease: 'easeInOut' }} // Animation duration and easing
-                                        className="flex flex-col p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-l-4 border-[#007BFF] shadow-md transition duration-200 ease-in-out" // Adjust border color as needed
-                                    >
-                                        {/* Meeting Details */}
-                                        <div className="flex flex-col mb-4">
-                                            <p className="text-sm mt-1 text-gray-800 dark:text-gray-300">
-                                                <strong>Student ID:</strong> {request.studentId}
-                                            </p>
-                                            <div className="flex items-center text-sm mt-1 text-gray-500 dark:text-gray-400">
-                                                Date: {request.meetingDate}
-                                            </div>
-                                            <div className="flex items-center text-sm mt-1 text-gray-500 dark:text-gray-400">
-                                                Time: {request.meetingTime}
-                                            </div>
-                                            <p className="text-sm mt-1 text-gray-500 dark:text-gray-400">
-                                                Reason: {request.reason}
-                                            </p>
-                                        </div>
-
-                                        {/* Action Buttons */}
-                                        <div className="flex space-x-1">
-                                            <button
-                                                onClick={() => handleResponse(request.id, 'accepted')} // Updated onClick to pass function properly
-                                                className="bg-green-500 text-white font-bold px-2 py-2 rounded-lg shadow hover:bg-green-600 transition"
-                                            >
-                                                Accept
-                                            </button>
-                                            <button
-                                                onClick={() => handleResponse(request.id, 'declined')} // Updated onClick to pass function properly
-                                                className="bg-red-500 text-white font-bold px-2 py-2 rounded-lg shadow hover:bg-red-600 transition"
-                                            >
-                                                Decline
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                );
-                            }) : (
-                                <p className="text-sm text-gray-500 dark:text-gray-400">No meeting requests available</p>
-                            )}
-                            </div>
-                        </div>
-
-
-                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
-                            </div>
-
-                            <ul className="space-y-2 p-4">
-                                {students.length > 0 ? (
-                                    students.map((student, index) => (
-                                        <li key={index} className="flex items-center space-x-4">
-                                            <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
-                                                <HiAcademicCap className="w-6 h-6" />
-                                            </button>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                                                    {student.Name} {student.Surname}
-                                                </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
-                                            </div>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
-                                )}
-                            </ul>
-                        </div>
-
-                        {/* Thought of the day */}
-                        <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                            <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
-                            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
-                        </div>
-
-                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
-                            </div>
-
-                            <div className="p-4">
-                                <form onSubmit={handleSendEmail}>
-                                    
-                                    {/* Student Selection */}
-                                    <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
-                                    <select
-                                        id="studentSelect"
-                                        className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                                        required
-                                        onChange={(e) => setSelectedStudentId(e.target.value)}
-                                        value={selectedStudentId}
-                                    >
-                                        <option value="">Select a Student</option>
-                                        {students.map(student => (
-                                            <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
-                                        ))}
-                                    </select>
-
-                                    {/* Meeting Date */}
-                                    <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
-                                    <input
-                                        type="date"
-                                        id="meetingDate"
-                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                                        value={meetingDate}
-                                        onChange={(e) => setMeetingDate(e.target.value)}
-                                        required
-                                    />
-
-                                    {/* Meeting Time */}
-                                    <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
-                                    <input 
-                                        type="time"
-                                        id="meetingTime"
-                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                                        value={meetingTime}
-                                        onChange={(e) => setMeetingTime(e.target.value)}
-                                        required 
-                                    />
-
-                                    {/* Submit Button */}
-                                    <button
-                                        type="submit"
-                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
-                                    >
-                                        Schedule Meeting
-                                    </button>
-                                </form>
-
-                                {/* Email Status Message */}
-                                {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
-                            </div>
-                        </div>
-
-                    </div>
-                )}
-
-                {
-                UserRole === 'Examiner' && (
-                    <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                        <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Examiner Panel</h3>
-                        
-                        <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
-                                <button
-                                    className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                                    onClick={() => {
-                                        setNotifications([]);
-                                        setNewNotificationIDs([]);
-                                        setPlaySound(false); // Reset sound playback state
-                                    }}
-                                >
-                                    Clear All
-                                </button>
-                            </div>
+        <aside 
+            id="right-sidebar" 
+            className={`fixed top-0 right-0 w-16 md:w-48 lg:w-72 h-screen transition-transform -translate-x-full md:translate-x-0 ${isDarkMode ? 'dark' : ''}z-40`}
             
-                            <div className="p-3 space-y-1">
-                                <ReactAudioPlayer
-                                    ref={audioRef}
-                                    src={notificationSound}
-                                    controls={false}
-                                    volume={1}
-                                />
+            >
+            <div className="h-full px-3 py-4 overflow-y-auto bg-transparent dark:bg-gray-800">
+                    {UserRole === 'Student' && (
+                        <div className="mb-4">
+                            <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Student Panel</h3>
+                            <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h2 className="text-md font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
+                                    <button
+                                        className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                                        onClick={() => {
+                                            setNotifications([]);
+                                            setNewNotificationIDs([]);
+                                            setPlaySound(false); // Reset sound playback state
+                                        }}
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+                                <div className="p-4 space-y-4">
                                 {notifications.length > 0 ? (
                                     notifications.map((notification, index) => {
+                                        // Set border and icon background color based on notification type
                                         const borderColor = notification.type === 'new'
-                                            ? 'border-[#FF8503]'
+                                            ? 'border-[#FF8503]' // Color for new notifications
                                             : notification.type === 'due'
-                                                ? 'border-[#590098]'
-                                                : 'border-[#007BFF]';
-            
+                                                ? 'border-[#590098]' // Color for due notifications
+                                                : 'border-[#007BFF]'; // Color for meeting notifications
+
                                         const iconBgColor = notification.type === 'new'
-                                            ? 'bg-[#FF8503]'
+                                            ? 'bg-[#FF8503]' // Background color for new notifications
                                             : notification.type === 'due'
-                                                ? 'bg-[#590098]'
-                                                : 'bg-[#007BFF]';
-            
+                                                ? 'bg-[#590098]' // Background color for due notifications
+                                                : 'bg-[#007BFF]'; // Background color for meeting notifications
+
                                         return (
                                             <motion.div
-                                                key={`${notification.id}-${notification.timestamp.getTime()}-${index}`}
-                                                initial={{ opacity: 0, x: 100 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: 100 }}
-                                                transition={{ duration: 0, ease: 'easeInOut' }}
-                                                className={`relative flex items-start p-4 border-l-4 ${borderColor} bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm`}
+                                                key={`${notification.id}-${notification.timestamp.getTime()}-${index}`} // Added index to ensure uniqueness
+                                                initial={{ opacity: 0, x: 100 }} // Initial state before the animation
+                                                animate={{ opacity: 1, x: 0 }} // Animation for when the component is displayed
+                                                exit={{ opacity: 0, x: 100 }} // Animation for when the component is removed
+                                                transition={{ duration: 0, ease: 'easeInOut' }} // Define the transition properties
+                                                className={`relative flex items-center justify-between p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-l-4 ${borderColor} shadow-md transition duration-200 ease-in-out`} // Apply border color and shadow
                                             >
-                                                <div className={`flex-shrink-0 w-10 h-10 ${iconBgColor} rounded-full flex items-center justify-center`}>
-                                                    {notification.type === 'new' && <i className="fas fa-bell text-white"></i>}
-                                                    {notification.type === 'due' && <i className="fas fa-exclamation-circle text-white"></i>}
-                                                    {notification.type === 'meeting' && <i className="fas fa-calendar-alt text-white"></i>}
+                                                {newNotificationIDs.includes(notification.id) && (
+                                                    <span className="absolute top-2 right-2 block w-3 h-3 bg-red-600 rounded-full"></span> // Notification indicator
+                                                )}
+                                                <div className="flex flex-col space-y-1">
+                                                    <h3 className="text-sm font-bold text-gray-800 dark:text-gray-200">{notification.message}</h3>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{notification.timestamp.toLocaleTimeString()}</p>
                                                 </div>
-                                                <div className="ml-4">
-                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notification.message}</p>
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                                                <div className={`p-2 rounded-full ${iconBgColor} text-white`}>
+                                                    <HiBell className="h-5 w-5" />
                                                 </div>
                                             </motion.div>
                                         );
                                     })
                                 ) : (
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available.</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">No notifications</p>
                                 )}
+
+                                </div>
+
+                                <ReactAudioPlayer
+                                    ref={audioRef} // Set the ref here
+                                    src={notificationSound} // Set the audio file
+                                    controls={false} // No visible controls needed
+                                    volume={1} // Set the desired volume level
+                                />
+
                             </div>
-                        </div>
-            
-                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
+
+                            {/* Thought of the Day Section */}
+                            <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
+                                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
                             </div>
-            
-                            <ul className="space-y-2 p-4">
-                                {students.length > 0 ? (
-                                    students.map((student, index) => (
-                                        <li key={index} className="flex items-center space-x-4">
-                                            <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
-                                                <HiAcademicCap className="w-6 h-6" />
-                                            </button>
-                                            <div>
-                                                <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                                                    {student.Name} {student.Surname}
-                                                </p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
-                                            </div>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
-                                )}
-                            </ul>
-                        </div>
-            
-                        <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                            <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
-                            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
-                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
-                        </div>
-            
-                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                                <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
-                            </div>
-            
-                            <div className="p-4">
-                                <form onSubmit={handleSendEmail}>
-                                    <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
-                                    <select
-                                        id="studentSelect"
-                                        className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+
+                            {/* Set meetings with supervisors or peers */}
+                            <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Schedule a Meeting</h2>
+                                <form onSubmit={handleRequestMeeting} className="mt-4">
+
+                                    <label htmlFor="supervisorSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select supervisor:</label>
+                                    <Select
+                                        className="mb-4 mt-2"
+                                        id="supervisorSelect"
                                         required
-                                        onChange={(e) => setSelectedStudentId(e.target.value)}
-                                        value={selectedStudentId}
+                                        onChange={(e) => setSupervisorId(e.target.value)}
+                                        value={supervisorId}
                                     >
-                                        <option value="">Select a Student</option>
-                                        {students.map(student => (
-                                            <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
+                                        <option disabled value="">Select a supervisor</option>
+                                        {supervisors.map(supervisor => (
+                                            <option key={supervisor.id} value={supervisor.id}>
+                                                {supervisor.Title} {supervisor.Surname}
+                                            </option>
                                         ))}
-                                    </select>
-            
-                                    <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
+                                    </Select>
+                                    
+
+                                    <label htmlFor="meetingDate" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
                                     <input
                                         type="date"
                                         id="meetingDate"
-                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded"
                                         value={meetingDate}
                                         onChange={(e) => setMeetingDate(e.target.value)}
                                         required
                                     />
-            
-                                    <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
-                                    <input 
+
+                                    <label htmlFor="meetingTime" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
+                                    <input
                                         type="time"
                                         id="meetingTime"
-                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded"
                                         value={meetingTime}
                                         onChange={(e) => setMeetingTime(e.target.value)}
-                                        required 
+                                        required
                                     />
-            
+
+                                    {/* Input field for reason of request */}
                                     <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
                                     <textarea
                                         id="reason"
@@ -981,187 +678,540 @@ export const RightSidebar = () => {
                                         onChange={(e) => setReason(e.target.value)}
                                         required
                                     ></textarea>
-            
+
+
                                     <button
                                         type="submit"
-                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mt-4"
                                     >
-                                        Schedule Meeting
+                                        Request Meeting
                                     </button>
                                 </form>
-            
-                                {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
+                                {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>} {/* Display email status message */}
                             </div>
                         </div>
-                    </div>
-                )
-            }
+                    )}
 
-            {/* Admin User Role */}
-            {UserRole === 'Admin' && (
-              <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
-                <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Admin Panel</h3>
+                    {/* Supervisor-specific content */}
+                    {UserRole === 'Supervisor' && (
+                        <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                            <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Supervisor Panel</h3>
+                            
+                            <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Meeting Requests</h2>
+                                    <button
+                                        className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                                        onClick={() => {
+                                            setCurrentMeetingRequest([]); // Clear all meeting requests
+                                        }}
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
+
+                                <div className="p-3 space-y-1">
+                                <ReactAudioPlayer
+                                    ref={audioRef} // Set the ref here
+                                    src={notificationSound} // Set the audio file
+                                    controls={false}
+                                    volume={1} // Set the desired volume level
+                                />
+                                {meetingRequests.length > 0 ? meetingRequests.map((request, index) => {
+                                    return (
+                                        <motion.div
+                                            key={index}
+                                            initial={{ opacity: 0, x: 100 }} // Start invisible and below the final position
+                                            animate={{ opacity: 1, x: 0 }} // Fade in and slide up
+                                            exit={{ opacity: 0, x: 100 }} // Fade out and slide up
+                                            transition={{ duration: 0, ease: 'easeInOut' }} // Animation duration and easing
+                                            className="flex flex-col p-3 rounded-lg bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 border-l-4 border-[#007BFF] shadow-md transition duration-200 ease-in-out" // Adjust border color as needed
+                                        >
+                                            {/* Meeting Details */}
+                                            <div className="flex flex-col mb-4">
+                                                <p className="text-sm mt-1 text-gray-800 dark:text-gray-300">
+                                                    <strong>Student ID:</strong> {request.studentId}
+                                                </p>
+                                                <div className="flex items-center text-sm mt-1 text-gray-500 dark:text-gray-400">
+                                                    Date: {request.meetingDate}
+                                                </div>
+                                                <div className="flex items-center text-sm mt-1 text-gray-500 dark:text-gray-400">
+                                                    Time: {request.meetingTime}
+                                                </div>
+                                                <p className="text-sm mt-1 text-gray-500 dark:text-gray-400">
+                                                    Reason: {request.reason}
+                                                </p>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div className="flex space-x-1">
+                                                <button
+                                                    onClick={() => handleResponse(request.id, 'accepted')} // Updated onClick to pass function properly
+                                                    className="bg-green-500 text-white font-bold px-2 py-2 rounded-lg shadow hover:bg-green-600 transition"
+                                                >
+                                                    Accept
+                                                </button>
+                                                <button
+                                                    onClick={() => handleResponse(request.id, 'declined')} // Updated onClick to pass function properly
+                                                    className="bg-red-500 text-white font-bold px-2 py-2 rounded-lg shadow hover:bg-red-600 transition"
+                                                >
+                                                    Decline
+                                                </button>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                }) : (
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">No meeting requests available</p>
+                                )}
+                                </div>
+                            </div>
+
+
+                            <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
+                                </div>
+
+                                <ul className="space-y-2 p-4">
+                                    {students.length > 0 ? (
+                                        students.map((student, index) => (
+                                            <li key={index} className="flex items-center space-x-4">
+                                                <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
+                                                    <HiAcademicCap className="w-6 h-6" />
+                                                </button>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                                                        {student.Name} {student.Surname}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
+                                                </div>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
+                                    )}
+                                </ul>
+                            </div>
+
+                            {/* Thought of the day */}
+                            <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
+                                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
+                            </div>
+
+                            <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
+                                </div>
+
+                                <div className="p-4">
+                                    <form onSubmit={handleSendEmail}>
+                                        
+                                        {/* Student Selection */}
+                                        <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
+                                        <select
+                                            id="studentSelect"
+                                            className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            required
+                                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                                            value={selectedStudentId}
+                                        >
+                                            <option value="">Select a Student</option>
+                                            {students.map(student => (
+                                                <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
+                                            ))}
+                                        </select>
+
+                                        {/* Meeting Date */}
+                                        <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
+                                        <input
+                                            type="date"
+                                            id="meetingDate"
+                                            className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            value={meetingDate}
+                                            onChange={(e) => setMeetingDate(e.target.value)}
+                                            required
+                                        />
+
+                                        {/* Meeting Time */}
+                                        <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
+                                        <input 
+                                            type="time"
+                                            id="meetingTime"
+                                            className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            value={meetingTime}
+                                            onChange={(e) => setMeetingTime(e.target.value)}
+                                            required 
+                                        />
+
+                                        {/* Submit Button */}
+                                        <button
+                                            type="submit"
+                                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                                        >
+                                            Schedule Meeting
+                                        </button>
+                                    </form>
+
+                                    {/* Email Status Message */}
+                                    {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
+                                </div>
+                            </div>
+
+                        </div>
+                    )}
+
+                    {
+                    UserRole === 'Examiner' && (
+                        <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                            <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Examiner Panel</h3>
+                            
+                            <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
+                                    <button
+                                        className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                                        onClick={() => {
+                                            setNotifications([]);
+                                            setNewNotificationIDs([]);
+                                            setPlaySound(false); // Reset sound playback state
+                                        }}
+                                    >
+                                        Clear All
+                                    </button>
+                                </div>
                 
-                <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
-                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                    <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
-                    <button
-                      className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
-                      onClick={() => {
-                        setNotifications([]);
-                        setNewNotificationIDs([]);
-                        setPlaySound(false); // Reset sound playback state
-                      }}
-                    >
-                      Clear All
-                    </button>
-                  </div>
-            
-                  <div className="p-3 space-y-1">
-                    <ReactAudioPlayer
-                      ref={audioRef}
-                      src={notificationSound}
-                      controls={false}
-                      volume={1}
-                    />
-                    {notifications.length > 0 ? (
-                      notifications.map((notification, index) => {
-                        const borderColor = notification.type === 'new'
-                          ? 'border-[#FF8503]'
-                          : notification.type === 'due'
-                            ? 'border-[#590098]'
-                            : 'border-[#007BFF]';
-            
-                        const iconBgColor = notification.type === 'new'
-                          ? 'bg-[#FF8503]'
-                          : notification.type === 'due'
-                            ? 'bg-[#590098]'
-                            : 'bg-[#007BFF]';
-            
-                        return (
-                          <motion.div
-                            key={`${notification.id}-${notification.timestamp.getTime()}-${index}`}
-                            initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 100 }}
-                            transition={{ duration: 0, ease: 'easeInOut' }}
-                            className={`relative flex items-start p-4 border-l-4 ${borderColor} bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm`}
-                          >
-                            <div className={`flex-shrink-0 w-10 h-10 ${iconBgColor} rounded-full flex items-center justify-center`}>
-                              {notification.type === 'new' && <i className="fas fa-bell text-white"></i>}
-                              {notification.type === 'due' && <i className="fas fa-exclamation-circle text-white"></i>}
-                              {notification.type === 'meeting' && <i className="fas fa-calendar-alt text-white"></i>}
+                                <div className="p-3 space-y-1">
+                                    <ReactAudioPlayer
+                                        ref={audioRef}
+                                        src={notificationSound}
+                                        controls={false}
+                                        volume={1}
+                                    />
+                                    {notifications.length > 0 ? (
+                                        notifications.map((notification, index) => {
+                                            const borderColor = notification.type === 'new'
+                                                ? 'border-[#FF8503]'
+                                                : notification.type === 'due'
+                                                    ? 'border-[#590098]'
+                                                    : 'border-[#007BFF]';
+                
+                                            const iconBgColor = notification.type === 'new'
+                                                ? 'bg-[#FF8503]'
+                                                : notification.type === 'due'
+                                                    ? 'bg-[#590098]'
+                                                    : 'bg-[#007BFF]';
+                
+                                            return (
+                                                <motion.div
+                                                    key={`${notification.id}-${notification.timestamp.getTime()}-${index}`}
+                                                    initial={{ opacity: 0, x: 100 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    exit={{ opacity: 0, x: 100 }}
+                                                    transition={{ duration: 0, ease: 'easeInOut' }}
+                                                    className={`relative flex items-start p-4 border-l-4 ${borderColor} bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm`}
+                                                >
+                                                    <div className={`flex-shrink-0 w-10 h-10 ${iconBgColor} rounded-full flex items-center justify-center`}>
+                                                        {notification.type === 'new' && <i className="fas fa-bell text-white"></i>}
+                                                        {notification.type === 'due' && <i className="fas fa-exclamation-circle text-white"></i>}
+                                                        {notification.type === 'meeting' && <i className="fas fa-calendar-alt text-white"></i>}
+                                                    </div>
+                                                    <div className="ml-4">
+                                                        <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notification.message}</p>
+                                                        <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        })
+                                    ) : (
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available.</p>
+                                    )}
+                                </div>
                             </div>
-                            <div className="ml-4">
-                              <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notification.message}</p>
-                              <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                
+                            <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
+                                </div>
+                
+                                <ul className="space-y-2 p-4">
+                                    {students.length > 0 ? (
+                                        students.map((student, index) => (
+                                            <li key={index} className="flex items-center space-x-4">
+                                                <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
+                                                    <HiAcademicCap className="w-6 h-6" />
+                                                </button>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
+                                                        {student.Name} {student.Surname}
+                                                    </p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
+                                                </div>
+                                            </li>
+                                        ))
+                                    ) : (
+                                        <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
+                                    )}
+                                </ul>
                             </div>
-                          </motion.div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available.</p>
+                
+                            <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
+                                <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
+                                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
+                            </div>
+                
+                            <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                                <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                    <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
+                                </div>
+                
+                                <div className="p-4">
+                                    <form onSubmit={handleSendEmail}>
+                                        <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
+                                        <select
+                                            id="studentSelect"
+                                            className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            required
+                                            onChange={(e) => setSelectedStudentId(e.target.value)}
+                                            value={selectedStudentId}
+                                        >
+                                            <option value="">Select a Student</option>
+                                            {students.map(student => (
+                                                <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
+                                            ))}
+                                        </select>
+                
+                                        <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
+                                        <input
+                                            type="date"
+                                            id="meetingDate"
+                                            className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            value={meetingDate}
+                                            onChange={(e) => setMeetingDate(e.target.value)}
+                                            required
+                                        />
+                
+                                        <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
+                                        <input 
+                                            type="time"
+                                            id="meetingTime"
+                                            className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                            value={meetingTime}
+                                            onChange={(e) => setMeetingTime(e.target.value)}
+                                            required 
+                                        />
+                
+                                        <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
+                                        <textarea
+                                            id="reason"
+                                            className="w-full p-2 border border-gray-300 rounded"
+                                            rows="2"
+                                            value={reason}
+                                            onChange={(e) => setReason(e.target.value)}
+                                            required
+                                        ></textarea>
+                
+                                        <button
+                                            type="submit"
+                                            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                                        >
+                                            Schedule Meeting
+                                        </button>
+                                    </form>
+                
+                                    {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
+                                </div>
+                            </div>
+                        </div>
+                    )
+                    }
+
+                    {/* Admin User Role */}
+                    {UserRole === 'Admin' && (
+                    <div className="overflow-y-auto bg-transparent no-scrollbar p-2 bg-gray-100 dark:bg-gray-700 rounded-xl">
+                        <h3 className="text-xl font-extrabold mb-2 text-gray-800 dark:text-gray-300">Admin Panel</h3>
+                        
+                        <div className="w-full min-h-80 bg-white dark:bg-gray-800 rounded-lg shadow-md no-scrollbar">
+                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                            <h2 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Notification Panel</h2>
+                            <button
+                            className="text-sm font-semibold text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300"
+                            onClick={() => {
+                                setNotifications([]);
+                                setNewNotificationIDs([]);
+                                setPlaySound(false); // Reset sound playback state
+                            }}
+                            >
+                            Clear All
+                            </button>
+                        </div>
+                    
+                        <div className="p-3 space-y-1">
+                            <ReactAudioPlayer
+                            ref={audioRef}
+                            src={notificationSound}
+                            controls={false}
+                            volume={1}
+                            />
+                            {notifications.length > 0 ? (
+                            notifications.map((notification, index) => {
+                                const borderColor = notification.type === 'new'
+                                ? 'border-[#FF8503]'
+                                : notification.type === 'due'
+                                    ? 'border-[#590098]'
+                                    : 'border-[#007BFF]';
+                    
+                                const iconBgColor = notification.type === 'new'
+                                ? 'bg-[#FF8503]'
+                                : notification.type === 'due'
+                                    ? 'bg-[#590098]'
+                                    : 'bg-[#007BFF]';
+                    
+                                return (
+                                <motion.div
+                                    key={`${notification.id}-${notification.timestamp.getTime()}-${index}`}
+                                    initial={{ opacity: 0, x: 100 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: 100 }}
+                                    transition={{ duration: 0, ease: 'easeInOut' }}
+                                    className={`relative flex items-start p-4 border-l-4 ${borderColor} bg-gray-50 dark:bg-gray-700 rounded-lg shadow-sm`}
+                                >
+                                    <div className={`flex-shrink-0 w-10 h-10 ${iconBgColor} rounded-full flex items-center justify-center`}>
+                                    {notification.type === 'new' && <i className="fas fa-bell text-white"></i>}
+                                    {notification.type === 'due' && <i className="fas fa-exclamation-circle text-white"></i>}
+                                    {notification.type === 'meeting' && <i className="fas fa-calendar-alt text-white"></i>}
+                                    </div>
+                                    <div className="ml-4">
+                                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{notification.message}</p>
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">{new Date(notification.timestamp).toLocaleString()}</p>
+                                    </div>
+                                </motion.div>
+                                );
+                            })
+                            ) : (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">No notifications available.</p>
+                            )}
+                        </div>
+                        </div>
+                    
+                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
+                            <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                                <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Create Announcements</h2>
+                            </div>
+                    
+                            <div className="p-4">
+                                <form onSubmit={handleAnnouncement}>
+                                <label htmlFor="announcementTitle" className="block text-sm font-medium text-gray-800 dark:text-gray-300">Announcement Title:</label>
+                                <input
+                                    type="text"
+                                    id="announcementTitle"
+                                    className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                    value={announcementTitle}
+                                    onChange={(e) => setAnnouncementTitle(e.target.value)}
+                                    required
+                                />
+                        
+                                <label htmlFor="announcementMessage" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Announcement Message:</label>
+                                <textarea
+                                    id="announcementMessage"
+                                    className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                    rows="2"
+                                    value={announcementMessage}
+                                    onChange={(e) => setAnnouncementMessage(e.target.value)}
+                                    required
+                                ></textarea>
+
+                                {/* Department Watermark text */}
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Announcement will be sent to all students</p>
+
+                        
+                                <button
+                                    type="submit"
+                                    className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                                >
+                                    Create Announcement
+                                </button>
+                                </form>
+                        
+                                {announcementStatus && <p className="mt-2 text-sm text-green-500">{announcementStatus}</p>}
+                            </div>
+
+                        </div>
+                    
+                        <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
+                        <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
+                        <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
+                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
+                        </div>
+                    
+                        <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar" style={{display : "none"}}>
+                        <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
+                            <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
+                        </div>
+                    
+                        <div className="p-4" style={{display : "none"}} >
+                            <form onSubmit={handleSendEmail}>
+                            <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
+                            <select
+                                id="studentSelect"
+                                className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                required
+                                onChange={(e) => setSelectedStudentId(e.target.value)}
+                                value={selectedStudentId}
+                            >
+                                <option value="">Select a Student</option>
+                                {students.map(student => (
+                                <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
+                                ))}
+                            </select>
+                    
+                            <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
+                            <input
+                                type="date"
+                                id="meetingDate"
+                                className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                value={meetingDate}
+                                onChange={(e) => setMeetingDate(e.target.value)}
+                                required
+                            />
+                    
+                            <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
+                            <input 
+                                type="time"
+                                id="meetingTime"
+                                className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                value={meetingTime}
+                                onChange={(e) => setMeetingTime(e.target.value)}
+                                required 
+                            />
+                    
+                            <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
+                            <textarea
+                                id="reason"
+                                className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
+                                rows="2"
+                                value={reason}
+                                onChange={(e) => setReason(e.target.value)}
+                                required
+                            ></textarea>
+                    
+                            <button
+                                type="submit"
+                                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
+                            >
+                                Schedule Meeting
+                            </button>
+                            </form>
+                    
+                            {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
+                        </div>
+                        </div>
+                    </div>
                     )}
-                  </div>
-                </div>
-            
-                <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                    <h2 className="text-md font-bold text-gray-800 dark:text-gray-300">Assigned Students</h2>
-                  </div>
-            
-                  <ul className="space-y-2 p-4">
-                    {students.length > 0 ? (
-                      students.map((student, index) => (
-                        <li key={index} className="flex items-center space-x-4">
-                          <button className="p-2 mr-2 bg-gray-200 rounded-xl dark:bg-gray-600">
-                            <HiAcademicCap className="w-6 h-6" />
-                          </button>
-                          <div>
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-300">
-                              {student.Name} {student.Surname}
-                            </p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{student.ID}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{student.StudentType}</p>
-                          </div>
-                        </li>
-                      ))
-                    ) : (
-                      <li className="text-sm text-gray-500 dark:text-gray-400">No students assigned</li>
-                    )}
-                  </ul>
-                </div>
-            
-                <div className="mt-4 dark:bg-gray-700 p-4 rounded-lg shadow-md">
-                  <h2 className="text-md font-bold text-gray-800 dark:text-gray-200">Thought of the Day</h2>
-                  <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">{quote.text}</p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">- {quote.author}</p>
-                </div>
-            
-                <div className="w-full min-h-80 mt-3 bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-y-auto no-scrollbar">
-                  <div className="flex items-center justify-between p-4 border-b dark:border-gray-700">
-                    <h4 className="text-md font-bold text-gray-800 dark:text-gray-300">Schedule a Meeting</h4>
-                  </div>
-            
-                  <div className="p-4">
-                    <form onSubmit={handleSendEmail}>
-                      <label htmlFor="studentSelect" className="block text-sm font-medium mb-1 text-gray-800 dark:text-gray-300">Select Student:</label>
-                      <select
-                        id="studentSelect"
-                        className="mt-3 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                        required
-                        onChange={(e) => setSelectedStudentId(e.target.value)}
-                        value={selectedStudentId}
-                      >
-                        <option value="">Select a Student</option>
-                        {students.map(student => (
-                          <option key={student.id} value={student.id}>{student.Name} {student.Surname}</option>
-                        ))}
-                      </select>
-            
-                      <label htmlFor="meetingDate" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Date:</label>
-                      <input
-                        type="date"
-                        id="meetingDate"
-                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                        value={meetingDate}
-                        onChange={(e) => setMeetingDate(e.target.value)}
-                        required
-                      />
-            
-                      <label htmlFor="meetingTime" className="block mt-3 text-sm font-medium text-gray-800 dark:text-gray-300">Meeting Time:</label>
-                      <input 
-                        type="time"
-                        id="meetingTime"
-                        className="mb-2 mt-2 w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                        value={meetingTime}
-                        onChange={(e) => setMeetingTime(e.target.value)}
-                        required 
-                      />
-            
-                      <label htmlFor="reason" className="block mt-4 text-sm font-medium text-gray-800 dark:text-gray-300">Reason for Meeting:</label>
-                      <textarea
-                        id="reason"
-                        className="w-full p-2 border border-gray-300 rounded bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                        rows="2"
-                        value={reason}
-                        onChange={(e) => setReason(e.target.value)}
-                        required
-                      ></textarea>
-            
-                      <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition mt-4 w-full"
-                      >
-                        Schedule Meeting
-                      </button>
-                    </form>
-            
-                    {emailStatus && <p className="mt-2 text-sm text-green-500">{emailStatus}</p>}
-                  </div>
-                </div>
-              </div>
-            )}
 
             </div>
         </aside>

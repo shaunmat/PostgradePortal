@@ -232,7 +232,7 @@ export const Tasks = () => {
                     setNewTaskName={setNewTaskName}
                     setNewTaskDescription={setNewTaskDescription}
                 />
-                <Footer />
+                
             </div>
         </div>
     );

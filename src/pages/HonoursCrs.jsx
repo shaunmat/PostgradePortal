@@ -473,7 +473,7 @@ export const HonoursCrs = () => {
                     </button>
                 </section>
 
-                <Footer />
+                
             </div>
         </div>
     );
