@@ -233,44 +233,111 @@ export const Dashboard = () => {
                         </section>
                     </>
                 ) : UserRole === 'Examiner' ? (
-                    <>
-                        <section className="mb-6">
-                            <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
-                                Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
-                            </h1>
-                            <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
-                                Here’s your overview for today
-                            </p>
-                        </section>
+                <>
+                    <section className="mb-6">
+                        <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
+                            Welcome Back <span className="text-[#FF8503] dark:text-[#FF8503]">{userName} {userSurname}</span>
+                        </h1>
+                        <p className="mt-2 text-lg font-normal text-gray-700 dark:text-gray-400">
+                            Here’s your overview for today, where you'll be contributing to the academic growth of our students.
+                        </p>
+                    </section>
 
-                        <section className="mt-8">
-                            <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Pending Reviews
-                            </h2>
-                            <ul className="mt-4">
-                                {pendingReviews.map(review => (
+                    {/* <section className="mt-8">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Pending Reviews
+                        </h2>
+                        <ul className="mt-4">
+                            {pendingReviews.length > 0 ? (
+                                pendingReviews.map(review => (
                                     <li key={review.id} className="border-b py-2">
                                         <h3 className="text-lg font-semibold">{review.title}</h3>
                                         <p className="text-gray-600">{review.description}</p>
                                     </li>
-                                ))}
-                            </ul>
-                        </section>
+                                ))
+                            ) : (
+                                <li className="py-2 text-gray-600">No pending reviews at the moment. Enjoy some time off!</li>
+                            )}
+                        </ul>
+                    </section>
 
-                        <section className="mt-10">
-                            <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
-                                Upcoming Deadlines
-                            </h2>
-                            <ul className="mt-4">
-                                {upcomingDeadlines.map(deadline => (
+                    <section className="mt-10">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Upcoming Deadlines
+                        </h2>
+                        <ul className="mt-4">
+                            {upcomingDeadlines.length > 0 ? (
+                                upcomingDeadlines.map(deadline => (
                                     <li key={deadline.id} className="border-b py-2">
                                         <h3 className="text-lg font-semibold">{deadline.title}</h3>
                                         <p className="text-gray-600">Due by: {deadline.date}</p>
                                     </li>
-                                ))}
-                            </ul>
-                        </section>
-                    </>
+                                ))
+                            ) : (
+                                <li className="py-2 text-gray-600">No upcoming deadlines. You're ahead of schedule!</li>
+                            )}
+                        </ul>
+                    </section> */}
+
+                    <section className="mt-10">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Research Review Focus
+                        </h2>
+                        <p className="mt-4 text-gray-600">
+                            As you review the submissions, focus on the following aspects to provide constructive feedback:
+                        </p>
+                        <ul className="list-disc list-inside mt-2 text-gray-600">
+                            <li>Relevance and clarity of the research question</li>
+                            <li>Methodological rigor and appropriateness</li>
+                            <li>Analysis and interpretation of data</li>
+                            <li>Contribution to the field of study</li>
+                            <li>Quality of writing and presentation</li>
+                        </ul>
+                        <p className="mt-4 text-gray-600">
+                            Your insights will be invaluable in guiding these aspiring researchers as they pursue their master's and PhD degrees.
+                        </p>
+                    </section>
+
+                    <section className="mt-10">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Tips for Effective Reviewing
+                        </h2>
+                        <ul className="list-disc list-inside mt-2 text-gray-600">
+                            <li>Start with a thorough read-through of the entire document before making notes.</li>
+                            <li>Provide clear, actionable feedback rather than vague comments.</li>
+                            <li>Use examples from the text to support your suggestions and critiques.</li>
+                            <li>Be mindful of the tone; aim for constructive rather than critical.</li>
+                        </ul>
+                    </section>
+
+                    <section className="mt-10">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Common Pitfalls to Avoid
+                        </h2>
+                        <ul className="list-disc list-inside mt-2 text-gray-600">
+                            <li>Overlooking the formatting guidelines provided by the institution.</li>
+                            <li>Failing to address major flaws while getting caught up in minor details.</li>
+                            <li>Not considering the submission's alignment with current trends and discussions in the field.</li>
+                            <li>Neglecting to provide positive feedback along with critiques.</li>
+                        </ul>
+                    </section>
+
+                    <section className="mt-10">
+                        <h2 className="text-2xl font-extrabold text-gray-800 dark:text-gray-200 tracking-wide">
+                            Helpful Resources for Reviewers
+                        </h2>
+                        <p className="mt-4 text-gray-600">
+                            Here are some resources that can assist you in the reviewing process:
+                        </p>
+                        <ul className="list-disc list-inside mt-2 text-gray-600">
+                            <li><a href="https://www.researchgate.net/" className="text-[#FF8503] hover:underline">ResearchGate</a> - A network for researchers to share and discover work.</li>
+                            <li><a href="https://www.jstor.org/" className="text-[#FF8503] hover:underline">JSTOR</a> - A digital library for academic journals, books, and primary sources.</li>
+                            <li><a href="https://www.academia.edu/" className="text-[#FF8503] hover:underline">Academia.edu</a> - A platform for academics to share research papers.</li>
+                            <li><a href="https://www.sciencedirect.com/" className="text-[#FF8503] hover:underline">ScienceDirect</a> - A leading full-text scientific database offering journal articles and book chapters.</li>
+                        </ul>
+                    </section>
+                </>
+
                 ) : UserRole === 'Admin'?(
                     <>
                         <section className="mb-6">
@@ -370,7 +437,7 @@ export const Dashboard = () => {
                 ):null}
 
                 {/* Footer */}
-                <Footer />
+                
             </div>
         </div>
     );

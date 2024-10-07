@@ -138,7 +138,7 @@ export const AdminSettings = () => {
                     </div>
                 </div>
 
-                <Footer />
+                
             </div>
             {/* Modal component */}
             {isModalOpen && (

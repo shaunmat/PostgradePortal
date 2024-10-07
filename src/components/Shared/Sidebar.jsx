@@ -133,7 +133,7 @@ export const SidebarComponent = () => {
     ],
     Admin:[
       { path: '/dashboard', label: 'Admin Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
-      // { path: '/admin/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
+      // { path: '/analytics', label: 'Analytics', icon: <HiChartPie className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
       { path: '/logout', label: 'Log Out', icon: <HiLogout className="w-6 h-6" />, action: handleLogout },

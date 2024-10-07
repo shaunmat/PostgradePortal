@@ -107,7 +107,7 @@ export const Honours = () => {
                     ))}
                 </div>
 
-                <Footer />
+                
             </div>
         </div>
     );

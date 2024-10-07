@@ -320,7 +320,7 @@ export const Assignments = () => {
                     isSubmittingFeedback={isSubmittingFeedback}
                 />
 
-                <Footer />
+                
             </div>
         </div>
     );

@@ -114,7 +114,7 @@ export const Milestones = () => {
                     milestone={selectedMilestone}
                 />
 
-                <Footer />
+                
             </div>
         </div>
     );

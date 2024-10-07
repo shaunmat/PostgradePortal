@@ -2,25 +2,115 @@
 import { Card, Button, Badge } from "flowbite-react";
 import { Footer } from "../components/Footer";
 import { Modal } from "flowbite-react";
-// import { Worker, Viewer } from "@react-pdf-viewer/core"; // PDF rendering engine
-// import "@react-pdf-viewer/core/lib/styles/index.css";
-// import "@react-pdf-viewer/default-layout/lib/styles/index.css";
-import { useState } from "react";
+import { db, storage } from "../backend/config";
+import { auth } from "../backend/config";
+import { useAuth } from "../backend/authcontext";
+import { collection, getDocs, query, where } from "firebase/firestore";
+import { useEffect, useState } from "react";
 
 
 export const Review = () => {
+    const { Loading, UserData } = useAuth();
+    const [role, setRole] = useState("");
+    const [ExaminerID, setSExaminerID] = useState("");
+    const [ExaminerName, setExaminerName] = useState("");
+    const [ExaminerSurname, setExaminerSurname] = useState("");
+    const [ExaminerEmail, setExaminerEmail] = useState("");
+    const [ExaminerDepartment, setExaminerDepartment] = useState("");
+    const [ExaminerImage, setExaminerImage] = useState("");
+    const [Modules, setModules] = useState([]);
     const [isModalOpen, setModalOpen] = useState(false);
     const [selectedPdf, setSelectedPdf] = useState("");
+    const [courseDetails, setCourseDetails] = useState(null);
+    const [assignments, setAssignments] = useState([]);
+    const [submissions, setSubmissions] = useState([]); // Store submissions for each assignment
+    const [selectedSubmission, setSelectedSubmission] = useState(null); // For feedback
+    const [feedbackFile, setFeedbackFile] = useState(null);
+    const [marks, setMarks] = useState('');
+    const [comments, setComments] = useState('');
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+    const [isFeedbackModalOpen, setFeedbackModalOpen] = useState(false);
+    const [isFeedbackSuccess, setFeedbackSuccess] = useState(false);
+    const [isFeedbackError, setFeedbackError] = useState(false);
+    const [supervisorDetails, setSupervisorDetails] = useState(null);
+
+    useEffect(() => {
+        if (!Loading && UserData) {
+            setRole(UserData.UserRole);
+            setSExaminerID(UserData.ID);
+        }
+
+        // console.log('UserData:', UserData);
+        // console.log('ExaminerID:', ExaminerID);
+
+        const fetchExaminerDetails = async () => {
+            try {
+                const examinerQuery = query(collection(db, 'Examiner'), where('ExaminerID', '==', Math.floor(ExaminerID)));
+                const examinerSnapshot = await getDocs(examinerQuery);
+                examinerSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    setExaminerName(data.Name);
+                    setExaminerSurname(data.Surname);
+                    setExaminerEmail(data.Email);
+                    setExaminerDepartment(data.Department);
+                    setExaminerImage(data.ProfilePicture);
+                });
+            } catch (error) {
+                console.error('Error fetching examiner details:', error);
+            }
+        }
+
+        const fetchSupervisor = async () => {
+            try {
+                const supervisorQuery = query(collection(db, 'Supervisor'));
+                const supervisorSnapshot = await getDocs(supervisorQuery);
+                supervisorSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    setSupervisorDetails(data);
+                });
+            } catch (error) {
+                console.error('Error fetching supervisor details:', error);
+            }
+        }
+
+        const fetchModules = async () => {
+            try {
+                const moduleRef = collection(db, 'Module');
+                const moduleSnapshot = await getDocs(moduleRef);
+                const moduleData = [];
+                moduleSnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    moduleData.push(data);
+                });
+                setModules(moduleData);
+            } catch (error) {
+                console.error('Error fetching modules:', error);
+            }
+
+            console.log('Modules:', Modules);
+
+            // // Fetch course details
+            // if (UserData && UserData.CourseID) {
+            //     fetchCourseDetails(UserData.CourseID);
+            // }
+
+        }
+
+
+
+
+
+        fetchSupervisor();
+        fetchExaminerDetails();
+        fetchModules();
+
+    }, [Loading, UserData]);
   
-    // Example of setting a test URL to ensure the PDF viewer is functioning
-    const handleViewClick = () => {
-        setSelectedPdf("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf");
-        setModalOpen(true);
-    };
   
   return (
     <div className="p-4 sm:ml-6 sm:mr-6 lg:ml-72 lg:mr-72">
-      <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">        {/* Review Section Header */}
+      <div className="p-4 border-2 border-gray-200  rounded-lg dark:border-gray-700 dark:bg-gray-800">        
+        {/* Review Section Header */}
         <section className="mb-6">
           <h1 className="text-3xl font-extrabold tracking-wider text-gray-800 dark:text-gray-200">
             Review Submissions
@@ -43,9 +133,6 @@ export const Review = () => {
               <div className="flex gap-2">
                   <Button
                   gradientDuoTone="orangeToPink"
-                  onClick={() =>
-                    handleViewClick("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf")
-                  }
                 >
                   View
                 </Button>
@@ -113,9 +200,7 @@ export const Review = () => {
               </div>
               <div className="flex gap-2">
                 <Button gradientDuoTone="orangeToPink" 
-                    onClick={() =>
-                    handleViewClick("https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf")
-                    }
+
                 >View</Button>
                 <Button gradientDuoTone="orangeToPink">Download</Button>
               </div>
@@ -128,7 +213,7 @@ export const Review = () => {
           <p className="text-gray-500">Additional resources and feedback tools can be added here.</p>
         </Card>
 
-        <Footer />
+        
 
         {/* PDF Review Modal */}
         {/* <ViewPopupModal
@@ -141,30 +226,3 @@ export const Review = () => {
   );
 };
 
-// const ViewPopupModal = ({ isOpen, onClose, pdfUrl }) => {
-//     return (
-//       <Modal show={isOpen} onClose={onClose} size="7xl">
-//         <Modal.Header>View Thesis Submission</Modal.Header>
-//         <Modal.Body>
-//           <div className="h-[75vh] overflow-y-auto">
-//             {/* Worker component for rendering PDFs */}
-//             <Worker workerUrl="https://unpkg.com/pdfjs-dist@3.7.107/build/pdf.worker.min.js">
-//               <Viewer
-//                 fileUrl={pdfUrl}
-//                 renderError={() => (
-//                   <div className="text-center text-red-500">
-//                     Unable to load the document. Please check the URL or try again later.
-//                   </div>
-//                 )}
-//               />
-//             </Worker>
-//           </div>
-//         </Modal.Body>
-//         <Modal.Footer>
-//           <Button onClick={onClose} gradientDuoTone="purpleToBlue">
-//             Close
-//           </Button>
-//         </Modal.Footer>
-//       </Modal>
-//     );
-//   };
