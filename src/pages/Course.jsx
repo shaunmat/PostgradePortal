@@ -140,7 +140,7 @@ export const Course = () => {
                     </section>
                 )}
 
-                <Footer />
+                
             </div>
         </div>
     );

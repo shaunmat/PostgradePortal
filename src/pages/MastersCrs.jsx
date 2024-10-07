@@ -444,7 +444,7 @@ export const MastersCrs = () => {
                     setNewTopicDescription={setNewTopicDescription}
                 />
 
-                <Footer />
+                
             </div>
         </div>
     );

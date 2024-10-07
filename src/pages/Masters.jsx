@@ -105,7 +105,7 @@ export const Masters = () => {
                     ))}
                 </div>
 
-                <Footer />
+                
             </div>
         </div>
     );

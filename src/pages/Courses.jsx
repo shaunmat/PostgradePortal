@@ -127,7 +127,7 @@ export const Courses = () => {
                     }
                 </div>
 
-                <Footer />
+                
             </div>
         </div>
     );
