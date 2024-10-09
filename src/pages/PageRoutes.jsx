@@ -27,8 +27,8 @@ import { MastersCrs } from './MastersCrs';
 import { Students } from './Students';
 import { StudentsData } from './StudentData';
 import { PhDCrs } from './PhDCrs';
-import { FinalSubmissions } from "./FinalSubmissions";
-import { Details } from "./Details";
+// import { FinalSubmissions } from "./FinalSubmissions";
+// import { Details } from "./Details";
 
 // Memoize the Sidebar and RightSidebar components to prevent re-renders
 const MemoizedSidebarComponent = memo(SidebarComponent);
@@ -88,8 +88,8 @@ export const PageRoutes = () => {
           <Route path="/settings" element={<Settings />} />
           <Route path="/review-submissions" element={<Review />} />
           <Route path='/analytics' element={<AdminAnalytics />} />
-          <Route path="/finalSubmissions" element={< FinalSubmissions/>} />
-          <Route path="/Details/:UserID" element={< Details/>} />
+          {/* <Route path="/finalSubmissions" element={< FinalSubmissions/>} /> */}
+          {/* <Route path="/Details/:UserID" element={< Details/>} /> */}
           {/* <Route path="*" element={<Navigate to="/dashboard" />} /> Redirect all undefined routes to Dashboard */}
 
         </Routes>
