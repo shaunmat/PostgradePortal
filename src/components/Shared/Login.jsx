@@ -167,6 +167,7 @@ export const Login = () => {
                     <div className="flex justify-center">
                         <button
                             type="submit"
+                            id='login'
                             className="w-full mt-10 px-4 py-2 text-base font-medium text-white bg-[#FF8503] rounded-lg hover:bg-[#FF8503] dark:bg-gray-700 dark:hover:bg-gray-600"
                             disabled={loading} // Disable button while loading
                         >
