@@ -5,7 +5,6 @@ import './index.css'
 import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider } from './context/ThemeContext'
 import { AuthProvider } from './backend/authcontext.jsx'
-import webdriver from 'selenium-webdriver'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
