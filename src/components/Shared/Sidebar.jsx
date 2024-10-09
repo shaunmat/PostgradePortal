@@ -133,6 +133,7 @@ export const SidebarComponent = () => {
     ],
     Admin:[
       { path: '/dashboard', label: 'Admin Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
+      { path: '/dashboard', label: 'Admin Dashboard', icon: <HiChartPie className="w-6 h-6" /> },
       // { path: '/admin/review-submissions', label: 'Reviews', icon: <HiFlag className="w-6 h-6" /> },
       { path: '/inbox', label: 'Inbox', icon: <HiMail className="w-6 h-6" /> },
       { path: '/settings', label: 'Settings', icon: <HiUserGroup className="w-6 h-6" /> },
@@ -148,13 +149,24 @@ export const SidebarComponent = () => {
     Admin: adminSidebarImg,
   }[UserRole] || studentSidebarImg; // Default to studentSidebarImg if UserRole is undefined
 
+  // Determine the background image based on the user role
+  const backgroundImage = {
+    Student: studentSidebarImg,
+    Supervisor: supervisorSidebarImg,
+    Examiner: examinerSidebarImg,
+    Admin: adminSidebarImg,
+  }[UserRole] || studentSidebarImg; // Default to studentSidebarImg if UserRole is undefined
+
   return (
     <aside
       id="sidebar-multi-level-sidebar"
       className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar"
+      className="fixed top-0 left-0 z-40 w-72 h-screen transition-transform -translate-x-full sm:translate-x-0 sidebar"
       aria-label="Sidebar"
     >
       <div className="h-full px-4 py-4 overflow-y-auto bg-cover bg-center bg-no-repeat dark:bg-gray-800"
+        style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(${backgroundImage})`
+       }}
         style={{ backgroundImage: `linear-gradient(rgba(0,0,0,0.3),rgba(0,0,0,0.3)),url(${backgroundImage})`
        }}
       >

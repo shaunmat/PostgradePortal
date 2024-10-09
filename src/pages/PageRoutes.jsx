@@ -22,10 +22,13 @@ import { HonoursCrs } from './HonoursCrs';
 import { motion } from 'framer-motion';
 import { AdminDashboard } from '../pages/AdminPages/AdminDashboard';
 import { AdminSettings } from '../pages/AdminPages/AdminSettings';
+import { AdminAnalytics } from './AdminPages/AdminAnalytics';
 import { MastersCrs } from './MastersCrs';
 import { Students } from './Students';
 import { StudentsData } from './StudentData';
 import { PhDCrs } from './PhDCrs';
+import { FinalSubmissions } from "./FinalSubmissions";
+import { Details } from "./Details";
 
 // Memoize the Sidebar and RightSidebar components to prevent re-renders
 const MemoizedSidebarComponent = memo(SidebarComponent);
@@ -50,16 +53,16 @@ export const PageRoutes = () => {
 
   // Memoize the routes based on userRole
   const routes = useMemo(() => {
-    if (userRole === 'Admin') {
-      return (
-        <Routes>
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-          {/* <Route path="/admin/reports" element={<AdminReports />} /> */}
-          <Route path="/admin/*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
-        </Routes>
-      );
-    } else {
+    // if (userRole === 'Admin') {
+    //   return (
+    //     <Routes>
+    //       <Route path="/admin/dashboard" element={<AdminDashboard />} />
+    //       <Route path="/admin/settings" element={<AdminSettings />} />
+    //       {/* <Route path="/admin/reports" element={<AdminReports />} /> */}
+    //       <Route path="/admin/*" element={<Navigate to="/admin/dashboard" />} /> {/* Redirect all undefined routes to Admin Dashboard */}
+    //     </Routes>
+    //   );
+    // } else {
       return (
         <Routes>
           <Route path="/dashboard" element={<Dashboard />} />
@@ -84,12 +87,14 @@ export const PageRoutes = () => {
           <Route path="/milestones" element={<Milestones />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/review-submissions" element={<Review />} />
+          <Route path='/analytics' element={<AdminAnalytics />} />
+          <Route path="/finalSubmissions" element={< FinalSubmissions/>} />
+          <Route path="/Details/:UserID" element={< Details/>} />
           {/* <Route path="*" element={<Navigate to="/dashboard" />} /> Redirect all undefined routes to Dashboard */}
 
         </Routes>
       );
-    }
-  }, [userRole]);
+  }, [userRole, setUserRole]);
 
   const handleStart = useCallback(() => setLoading(true), []);
   const handleComplete = useCallback(() => setLoading(false), []);

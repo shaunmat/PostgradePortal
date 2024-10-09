@@ -399,7 +399,7 @@ export const Inbox = () => {
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     <img
-                                        src={examiner.ProfilePicture || avatar}
+                                        src={examiner.ProfilePicture}
                                         alt={examiner.Name}
                                         className="w-12 h-12 mr-4 rounded-full"
                                     />
@@ -431,7 +431,7 @@ export const Inbox = () => {
                                     whileHover={{ scale: 1.05 }}
                                 >
                                     <img
-                                        src={admin.ProfilePicture || avatar}
+                                        src={admin.ProfilePicture}
                                         alt={admin.Name}
                                         className="w-12 h-12 mr-4 rounded-full"
                                     />
@@ -464,7 +464,7 @@ export const Inbox = () => {
                     role={role}
                     chatId={chatId}
                 />
-                
+                <Footer />
             </div>
 
             {/* Modal */}

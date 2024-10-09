@@ -44,11 +44,12 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                 <>
                     {/* Overlay */}
                     <motion.div
-                        className="fixed inset-0 bg-black bg-opacity-50 z-40"
+                        className="fixed inset-0 z-40 bg-black bg-opacity-50"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
+                        onClick={onClose} // Close modal on clicking the overlay
                     />
 
                     {/* Modal window */}
@@ -66,18 +67,14 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                     <img src={data?.ProfilePicture || defaultAvatar} alt="Profile" className="w-10 h-10 rounded-full mr-4" />
                                     <div>
                                         <h3 className="text-lg font-bold">
-                                            {role === 'Student' && `${data?.Title} ${data?.SupervisorSurname}`}
-                                            {role === 'Admin' && `${data?.Name} ${data?.Surname}`}
-                                            {role === 'Examiner' && `${data?.Name} ${data?.Surname}`}
-                                            {role !== 'Student' && role !== 'Admin' && role !== 'Examiner' && `${data?.StudentName} ${data?.StudentSurname}`}
+                                            {role === 'Student' ? `${data?.Title} ${data?.SupervisorSurname}` 
+                                            : role === 'Supervisor'? ` ${data?.StudentName} ${data?.StudentSurname}`
+                                            : role === 'Admin'? `${data?.Title} ${data?.Name} ${data?.Surname}`
+                                            : role === 'Examiner'? `${data?.Title} ${data?.Name} ${data?.Surname}`
+                                            : 'something is wrong'}
                                         </h3>
                                         {/* Display Course Name instead of ID */}
-                                        <p className="text-sm">
-                                            {role === 'Student' && data?.courseName}
-                                            {role === 'Admin' && data?.AdminType}
-                                            {role === 'Examiner' && data?.ExaminerType}
-                                            {role !== 'Student' && role !== 'Admin' && role !== 'Examiner' && data?.StudentType}
-                                        </p>
+                                        <p className="text-sm">{role === 'Student' ? data?.courseName : data?.StudentType}</p>
                                     </div>
                                 </div>
                                 <button onClick={onClose} className="text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white">
@@ -99,6 +96,25 @@ export const Modal = ({ chatId, isOpen, onClose, data, role }) => {
                                     </Badge>
                                 </div>
 
+                                {role === 'Student' ? (
+                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
+                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
+                                            <strong>Disclaimer</strong>
+                                            <p>Please be aware that this chat is for educational purposes only. Any topics discussed outside of this context are not permitted.</p>
+                                        </Badge>
+                                    </div>
+                                ) : (
+                                    <div className="mb-4 mt-2 flex justify-center items-center"> {/* Center the content */}
+                                        <Badge color="info" className="text-center font-xs"> {/* Center the text */}
+                                            <strong>Notice</strong>
+                                            <p>You have started a chat with a {role === 'Supervisor' ? 'student' 
+                                                                                : role === 'Student' ? 'supervisor' 
+                                                                                : role === 'Examiner' ?'admin'
+                                                                                :role === 'Admin' ? 'examiner'
+                                                                                : null}. Please keep the conversation professional and relevant to the course.</p>
+                                        </Badge>
+                                    </div>
+                                )}
                                 {messages.map((message) => (
                                     <div key={message.id} className="mb-4">
                                         <ChatBubble
